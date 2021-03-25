@@ -43,7 +43,7 @@ func Redis_SelectCommentOnid(comment_id int) (int, Comment) {
 		return 0, comment
 	} else if err != nil { //其他情况2失败
 		Redislog.Println("Redis_SelectCommentOnid err:", err)
-		return 3, comment
+		return 2, comment
 	}
 	comment.Comment_id, _ = strconv.Atoi(string(args[0].([]byte)))
 	comment.Post_id, _ = strconv.Atoi(string(args[1].([]byte)))
