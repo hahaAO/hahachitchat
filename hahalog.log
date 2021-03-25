@@ -1,0 +1,611 @@
+DBLOG2021/03/08 09:40:35 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 17:10:29 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 18:22:15 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 18:25:30 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 18:36:25 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 18:40:04 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 18:40:17 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 18:45:25 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 18:46:37 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 19:03:42 Successfully connect to postgres hahaDB!
+ServerLOG2021/03/08 19:03:45 json err: json: cannot unmarshal object into Go struct field .u_name of type string
+ServerLOG2021/03/08 19:04:48 22 注册成功
+DBLOG2021/03/08 19:05:08 Successfully connect to postgres hahaDB!
+ServerLOG2021/03/08 19:07:19 22 登陆成功
+DBLOG2021/03/08 19:36:09 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 19:36:34 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 19:36:51 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 19:37:48 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 19:38:03 Successfully connect to postgres hahaDB!
+ServerLOG2021/03/08 19:38:03 errjson json: cannot unmarshal string into Go struct field .u_id of type int
+ServerLOG2021/03/08 19:38:03 body: {"u_id":"q","post_name":"post1","post_txt":"this is a post."}
+DBLOG2021/03/08 19:40:55 Successfully connect to postgres hahaDB!
+DBLOG2021/03/08 19:54:05 Successfully connect to postgres hahadb!
+DBLOG2021/03/08 19:54:05 Successfully off to postgres hahadb!
+DBLOG2021/03/08 19:54:16 Successfully connect to postgres hahadb!
+DBLOG2021/03/08 19:54:16 Successfully off to postgres hahadb!
+DBLOG2021/03/09 19:38:03 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 19:58:57 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 19:59:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 19:59:15 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 19:59:21 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 20:00:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 20:13:53 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 20:14:19 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 20:27:22 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 20:27:35 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 20:31:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 20:53:30 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 21:06:23 Successfully connect to postgres hahadb!
+DBLOG2021/03/09 22:18:16 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 09:15:02 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 10:31:33 Successfully connect to postgres hahadb!
+ServerLOG2021/03/11 10:33:49 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+DBLOG2021/03/11 11:10:55 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:14:08 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:14:49 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:15:15 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:20:42 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:22:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:23:25 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:23:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:24:39 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:24:47 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:26:26 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:27:17 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:27:33 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:27:42 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:28:11 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:28:55 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:29:05 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:29:14 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:30:22 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:30:57 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:47:27 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:47:40 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:47:48 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:48:09 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:48:36 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:48:50 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:49:11 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:49:17 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:49:58 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 11:50:20 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 15:50:45 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 15:51:18 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 15:51:29 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 21:55:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 21:56:16 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 21:58:08 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 21:59:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:00:19 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:00:30 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:01:26 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:06:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:10:35 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:12:49 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:29:39 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:31:04 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:49:56 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 22:56:45 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 23:00:45 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 23:03:51 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 23:08:19 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 23:27:08 Successfully connect to postgres hahadb!
+DBLOG2021/03/11 23:27:53 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:29:45 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:29:56 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:30:15 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:30:52 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:30:59 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:31:03 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:31:13 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:31:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:32:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:32:22 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:33:15 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:33:25 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:33:41 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:34:01 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:34:48 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:34:58 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:35:20 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:35:35 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:36:40 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:36:55 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:37:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:38:14 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:38:43 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:38:52 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:39:07 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:39:26 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:39:39 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:41:00 Successfully connect to postgres hahadb!
+DBLOG2021/03/12 00:41:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/13 19:53:04 Successfully connect to postgres hahadb!
+DBLOG2021/03/14 15:21:13 Successfully connect to postgres hahadb!
+DBLOG2021/03/14 15:23:14 SelectPostOnid err: sql: expected 6 destination arguments in Scan, not 5
+DBLOG2021/03/14 15:24:01 SelectPostOnid err: sql: expected 6 destination arguments in Scan, not 5
+DBLOG2021/03/14 15:24:04 SelectPostOnid err: sql: expected 6 destination arguments in Scan, not 5
+ServerLOG2021/03/14 15:24:34 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+ServerLOG2021/03/14 15:24:44 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+ServerLOG2021/03/14 15:24:53 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+DBLOG2021/03/14 15:24:58 SelectPostOnid err: sql: expected 6 destination arguments in Scan, not 5
+DBLOG2021/03/14 15:27:13 Successfully connect to postgres hahadb!
+ServerLOG2021/03/14 15:27:18 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+DBLOG2021/03/14 15:28:20 Successfully connect to postgres hahadb!
+ServerLOG2021/03/14 15:28:21 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+ServerLOG2021/03/14 15:28:45 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+DBLOG2021/03/14 15:28:48 SelectPostOnid err: sql: expected 6 destination arguments in Scan, not 5
+DBLOG2021/03/14 15:29:55 Successfully connect to postgres hahadb!
+DBLOG2021/03/14 15:29:58 SelectPostOnid err: sql: expected 6 destination arguments in Scan, not 5
+DBLOG2021/03/14 15:30:54 Successfully connect to postgres hahadb!
+DBLOG2021/03/14 15:32:59 Successfully connect to postgres hahadb!
+DBLOG2021/03/15 22:50:49 Successfully connect to postgres hahadb!
+DBLOG2021/03/15 23:12:32 Successfully connect to postgres hahadb!
+ServerLOG2021/03/15 23:13:05 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+ServerLOG2021/03/15 23:13:11 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+ServerLOG2021/03/15 23:14:02 参数不能转为int strconv.Atoi: parsing "": invalid syntax
+DBLOG2021/03/15 23:15:18 SelectPostOnid err: sql: Scan error on column index 5, name "post_txthtml": converting NULL to string is unsupported
+ServerLOG2021/03/15 23:18:15 errjson invalid character 'a' looking for beginning of value
+ServerLOG2021/03/15 23:18:15 body: ata
+ServerLOG2021/03/15 23:19:17 errjson invalid character 'a' looking for beginning of value
+ServerLOG2021/03/15 23:19:17 body: ata
+ServerLOG2021/03/15 23:19:37 errjson invalid character 'a' looking for beginning of value
+ServerLOG2021/03/15 23:19:37 body: ata
+ServerLOG2021/03/15 23:21:19 errjson invalid character 'a' looking for beginning of value
+ServerLOG2021/03/15 23:21:19 body: ata
+ServerLOG2021/03/15 23:21:36 errjson invalid character 'a' looking for beginning of value
+ServerLOG2021/03/15 23:21:36 body: ata
+ServerLOG2021/03/15 23:21:50 errjson invalid character 'a' looking for beginning of value
+ServerLOG2021/03/15 23:21:50 body: ata
+ServerLOG2021/03/15 23:28:12 errjson invalid character 'j' looking for beginning of object key string
+ServerLOG2021/03/15 23:28:12 body: {"u_id":19,"post_name":"juju","post_txt":"jujuxtxt",jfd}
+ServerLOG2021/03/15 23:29:22 errjson unexpected end of JSON input
+ServerLOG2021/03/15 23:29:22 body: {"u_id":19,"post_name":"}
+DBLOG2021/03/15 23:34:19 Successfully connect to postgres hahadb!
+ServerLOG2021/03/15 23:35:54 errjson unexpected end of JSON input
+ServerLOG2021/03/15 23:35:54 body: {"u_id":19,"}
+DBLOG2021/03/15 23:36:05 Successfully connect to postgres hahadb!
+ServerLOG2021/03/15 23:36:09 errjson unexpected end of JSON input
+ServerLOG2021/03/15 23:36:09 body: {"u_id":19,"}
+DBLOG2021/03/15 23:37:15 Successfully connect to postgres hahadb!
+DBLOG2021/03/15 23:40:14 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 10:11:28 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 10:59:11 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 10:59:11 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:00:11 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:00:11 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:00:46 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:00:46 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:01:31 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:01:31 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:08:06 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:08:06 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:08:26 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:08:26 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:08:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:08:38 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:12:05 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:12:05 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:12:18 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:12:18 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:12:23 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:12:23 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:13:47 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:13:47 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:17:34 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:17:34 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:18:13 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:18:13 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:19:22 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:19:22 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:19:32 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:19:32 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:20:19 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:20:19 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:20:35 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:20:35 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:20:52 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:20:52 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:21:05 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:28:02 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:28:17 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:30:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:31:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:31:38 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:33:25 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:33:25 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:35:20 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:35:58 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:36:17 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:36:30 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:36:37 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:36:37 Successfully off to postgres hahadb!
+DBLOG2021/03/16 11:36:48 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:48:00 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:48:35 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:48:42 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:52:05 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:52:05 Redis_SelectCommentOnid err: ERR wrong number of arguments for 'hvals' command
+DBLOG2021/03/16 11:52:17 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:52:17 Redis_SelectCommentOnid err: ERR wrong number of arguments for 'hvals' command
+DBLOG2021/03/16 11:52:42 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 11:52:42 Redis_SelectCommentOnid err: redigo: unexpected type for Int, got type []interface {}
+DBLOG2021/03/16 11:53:58 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:05:28 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:05:28 Successfully off to postgres hahadb!
+DBLOG2021/03/16 12:06:58 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:06:58 Successfully off to postgres hahadb!
+DBLOG2021/03/16 12:07:43 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:15:18 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:26:23 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:26:23 Successfully off to postgres hahadb!
+DBLOG2021/03/16 12:27:45 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:27:45 Successfully off to postgres hahadb!
+DBLOG2021/03/16 12:28:06 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:28:06 Successfully off to postgres hahadb!
+DBLOG2021/03/16 12:29:08 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:35:31 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 12:41:06 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:04:08 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:04:24 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:05:27 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:05:27 Redis_CreateComment err: redigo: unexpected type for Bool, got type string
+DBLOG2021/03/16 13:07:05 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:09:14 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:18:35 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:19:06 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:20:09 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:20:09 Redis_SelectCommentOnid err: parsing time "2" as "2006-01-02T15:04:05.999999999Z07:00": cannot parse "2" as "2006"
+DBLOG2021/03/16 13:20:56 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:20:56 Redis_SelectCommentOnid err: parsing time "2" as "2006-01-02T15:04:05.999999999Z07:00": cannot parse "2" as "2006"
+DBLOG2021/03/16 13:24:46 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:32:46 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 13:33:41 Successfully connect to postgres hahadb!
+DBLOG2021/03/16 15:09:48 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:09:48 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:10:27 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:10:27 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:11:36 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:11:36 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:12:02 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:12:02 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:12:14 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:12:14 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:12:39 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:12:39 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:16:45 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:16:45 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:16:56 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:16:56 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:17:06 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:17:06 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:20:39 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:20:39 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:21:21 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:21:21 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:21:44 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:21:44 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:22:05 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:22:05 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:24:11 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:24:11 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:24:37 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:24:37 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:25:13 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:25:13 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:25:19 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:25:19 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:30:50 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:30:50 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:31:01 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:31:01 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:32:04 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:32:04 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:32:26 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:32:26 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:32:39 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:32:39 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:35:16 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:35:16 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:35:43 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:35:43 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:36:04 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:36:04 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:43:42 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:43:42 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:43:42 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:44:32 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:44:32 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:44:32 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:45:09 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:45:09 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:45:09 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:45:46 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:45:46 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:45:46 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:47:18 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:47:18 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:47:18 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:47:35 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:47:35 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:47:35 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:49:50 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:49:50 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:49:50 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:50:32 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:50:32 Redis_open strat OK: nihao
+DBLOG2021/03/16 15:50:32 Successfully off to postgres hahadb!
+DBLOG2021/03/16 15:54:08 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 15:54:08 Redis_open strat OK: nihao
+DBLOG2021/03/16 16:10:02 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 16:10:02 Redis_open strat OK: nihao
+DBLOG2021/03/16 16:10:05 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 16:10:05 Redis_open strat OK: nihao
+DBLOG2021/03/16 16:10:07 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 16:10:07 Redis_open strat OK: nihao
+DBLOG2021/03/16 16:10:32 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 16:10:32 Redis_open strat OK: nihao
+DBLOG2021/03/16 16:10:47 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 16:10:47 Redis_open strat OK: nihao
+DBLOG2021/03/16 16:19:11 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 16:19:11 Redis_open strat OK: nihao
+DBLOG2021/03/16 16:33:42 Successfully connect to postgres hahadb!
+RedisLOG2021/03/16 16:33:42 Redis_open strat OK: nihao
+DBLOG2021/03/20 22:32:56 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:32:56 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:33:00 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:33:00 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:33:07 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:33:07 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:34:08 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:34:08 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:34:21 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:34:21 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:36:31 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:36:31 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:38:24 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:38:24 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:38:35 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:38:35 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:38:42 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:38:42 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:39:15 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:39:15 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:39:18 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:39:18 Successfully off to postgres hahadb!
+DBLOG2021/03/20 22:45:21 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 22:45:21 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:05:41 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:05:41 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:05:41 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:05:41 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:05:48 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:05:48 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:05:48 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:05:48 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:05:55 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:05:55 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:05:55 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:05:55 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:06:18 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:06:18 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:06:18 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:06:18 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:14:29 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:14:29 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:14:29 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:14:29 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:15:02 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:15:02 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:15:02 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:15:02 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:15:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:15:10 Successfully off to postgres hahadb!
+DBLOG2021/03/20 23:15:10 Successfully connect to postgres hahadb!
+DBLOG2021/03/20 23:15:10 Successfully off to postgres hahadb!
+DBLOG2021/03/25 13:42:16 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:42:38 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:42:45 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:42:45 SelectUserOnid: sql: expected 6 destination arguments in Scan, not 5
+DBLOG2021/03/25 13:43:17 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:43:17 SelectUserOnid: sql: expected 6 destination arguments in Scan, not 5
+DBLOG2021/03/25 13:43:59 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:44:26 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:44:26 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:44:48 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:44:48 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:44:48 Successfully connect to postgres hahadb!
+DBLOG2021/03/25 13:45:53 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:45:53 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:45:53 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:46:20 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:46:20 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:46:20 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:46:36 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:46:36 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:46:36 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:47:13 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:47:13 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:47:13 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:47:20 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:47:20 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:47:20 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:47:20 SelectCommentOnid err: sql: Scan error on column index 5, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:51:26 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:51:26 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:51:26 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:51:26 SelectCommentOnid err: sql: Scan error on column index 5, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:33 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:53:33 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:53:33 SelectPostOnid err: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:33 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:33 SelectCommentOnid err: sql: Scan error on column index 5, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:41 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:53:41 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:53:41 SelectPostOnid err: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:41 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:41 SelectCommentOnid err: sql: Scan error on column index 5, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:58 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:53:58 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:53:58 SelectPostOnid err: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:58 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:53:58 SelectCommentOnid err: sql: Scan error on column index 5, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:56:00 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 13:56:00 Redis_open strat OK: nihao
+DBLOG2021/03/25 13:56:00 SelectPostOnid err: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:56:00 AllSelectPost err1: sql: Scan error on column index 6, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 13:56:00 SelectCommentOnid err: sql: Scan error on column index 5, name "img_id": converting NULL to string is unsupported
+DBLOG2021/03/25 15:48:24 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:48:24 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:48:48 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:48:48 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:49:27 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:49:27 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:49:31 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:49:31 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:49:53 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:49:53 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:50:08 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:50:08 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:50:45 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:50:45 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:51:54 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:51:54 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:52:04 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:52:04 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:52:12 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:52:12 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:52:37 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:52:37 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:53:02 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:53:02 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:54:18 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:54:18 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:54:38 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:54:38 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:55:51 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:55:51 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:56:03 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:56:03 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:56:20 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:56:20 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:56:50 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:56:50 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:56:53 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:56:53 Redis_open strat OK: nihao
+DBLOG2021/03/25 15:57:12 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 15:57:12 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:03:19 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:03:19 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:03:58 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:03:58 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:04:06 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:04:06 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:07:29 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:07:29 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:07:58 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:07:58 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:26:28 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:26:28 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:37:22 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:37:22 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:37:28 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:37:28 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:37:32 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:37:32 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:37:55 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:37:55 Redis_open strat OK: nihao
+DBLOG2021/03/25 16:38:38 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 16:38:38 Redis_open strat OK: nihao
+DBLOG2021/03/25 17:02:08 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 17:02:08 Redis_open strat OK: nihao
+DBLOG2021/03/25 19:50:36 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 19:50:36 Redis_open strat OK: nihao
+DBLOG2021/03/25 19:51:07 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 19:51:07 Redis_open strat OK: nihao
+DBLOG2021/03/25 19:51:29 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 19:51:29 Redis_open strat OK: nihao
+DBLOG2021/03/25 19:59:47 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 19:59:47 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:00:25 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:00:25 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:01:24 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:01:24 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:01:36 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:01:36 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:01:59 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:01:59 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:02:15 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:02:15 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:02:43 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:02:43 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:03:54 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:03:54 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:04:01 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:04:01 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:04:06 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:04:06 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:05:35 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:05:35 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:05:43 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:05:43 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:05:49 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:05:49 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:06:04 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:06:04 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:06:20 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:06:20 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:06:30 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:06:30 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:33:17 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:33:17 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:34:06 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:34:06 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:36:10 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:36:10 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:38:20 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:38:20 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:38:55 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:38:55 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:40:31 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:40:31 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:41:17 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:41:17 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:42:22 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:42:22 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:44:26 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:44:26 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:45:32 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:45:32 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:48:40 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:48:40 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:49:06 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:49:06 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:49:55 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:49:55 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:52:07 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:52:07 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:52:37 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:52:37 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:54:22 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:54:22 Redis_open strat OK: nihao
+DBLOG2021/03/25 20:58:46 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 20:58:46 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:00:06 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:00:06 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:00:47 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:00:47 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:01:58 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:01:58 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:02:20 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:02:20 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:03:30 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:03:30 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:09:05 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:09:05 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:22:52 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:22:52 Redis_open strat OK: nihao
+DBLOG2021/03/25 21:38:23 Successfully connect to postgres hahadb!
+RedisLOG2021/03/25 21:38:23 Redis_open strat OK: nihao
