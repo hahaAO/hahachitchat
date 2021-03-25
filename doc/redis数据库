@@ -1,2 +1,2 @@
-//有序集合 名posthotdesc 键"member"(postid) 值"score"(posthot)//命令中键值是反过来的
+//有序集合 存了comment
 
