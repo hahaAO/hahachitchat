@@ -84,7 +84,7 @@ URL如下
 		"img_id":"(字符串)"
 	}
 
-    /deletepostonid //根据帖子唯一id删除帖子
+    /deletepostonid //根据帖子唯一id删除帖子及帖子里的评论
         请求 POST //
 	{
 		"post_id":(int型)

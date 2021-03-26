@@ -272,16 +272,27 @@ func SelectUsernamepassword(name string, password string) (int, User) {
 	}
 }
 
-//根据post_id 删除帖子 (int型，1则成功，2则有其他问题)
+//根据post_id 删除帖子及帖子里的评论 (int型，1则成功，2则有其他问题)
 func DeletePostOnid(post_id int) int {
-	_, err := DB.Exec(`DELETE FROM "post" WHERE "post_id" = $1;`, post_id)
+	tx, err := DB.Begin()
+	defer tx.Rollback()
 	if err != nil { //有其他问题
 		DBlog.Println("DeletePostOnid err1:", err)
 		return 2
-	} else { //删除成功
-		DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
-		return 1
 	}
+	_, err = tx.Exec(`DELETE FROM "post" WHERE "post_id" = $1;`, post_id) //删除帖子
+	if err != nil {                                                       //有其他问题
+		DBlog.Println("DeletePostOnid err2:", err)
+		return 2
+	}
+	_, err = tx.Exec(`DELETE FROM "comment" WHERE "post_id" = $1;`, post_id) //帖子里的评论
+	if err != nil {                                                          //有其他问题
+		DBlog.Println("DeletePostOnid err3:", err)
+		return 2
+	}
+	DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
+	tx.Commit()
+	return 1
 }
 
 //redis缓存中的也删掉	根据comment_id 删除评论 (int型，1则成功，2则有其他问题)
