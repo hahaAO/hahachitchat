@@ -279,6 +279,7 @@ func DeletePostOnid(post_id int) int {
 		DBlog.Println("DeletePostOnid err1:", err)
 		return 2
 	} else { //删除成功
+		DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
 		return 1
 	}
 }

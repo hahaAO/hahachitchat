@@ -32,6 +32,7 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		}
 		ctlen := len("multipart/form-data")                                 //只需要前面一截判断内容类型,后面一截是标识
 		if r.Header.Get("Content-Type")[0:ctlen] != "multipart/form-data" { //内容类型不正确
+			Serverlog.Println("uploadimg err内容类型不正确", err)
 			goods.State = 2
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -40,7 +41,7 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		imgfilehear := r.MultipartForm.File["image"][0] //获取表单里的图片文件
 		imgfile, err := imgfilehear.Open()              //把解码出的表单文件当成一个文件打开
 		if err != nil {                                 //文件打开失败
-			Serverlog.Println("err", err)
+			Serverlog.Println("uploadimg err文件打开失败", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -51,7 +52,7 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		saveFile, _ := os.Create(filedocandname) //创建文件
 		_, err = io.Copy(saveFile, imgfile)      //复制保存
 		if err != nil {                          //复制保存失败
-			Serverlog.Println("err", err)
+			Serverlog.Println("uploadimg err复制保存失败", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -60,7 +61,7 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		object := r.MultipartForm.Value["object"][0]                          //对象的类型
 		object_id, err := strconv.Atoi(r.MultipartForm.Value["object_id"][0]) //对象的id
 		if err != nil {                                                       //object_id不能转化为int型
-			Serverlog.Println("err", err)
+			Serverlog.Println("uploadimg err object_id不能转化为int型", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
