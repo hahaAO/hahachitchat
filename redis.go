@@ -1,4 +1,5 @@
 //redis做缓存
+//使用连接池
 //目前做了comment表的缓存
 package main
 
@@ -10,17 +11,27 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-var redis_conn redis.Conn
+var redisClient *redis.Pool
 
 func Redis_open() {
-	redis_conn, _ = redis.Dial("tcp", ":6379",
-		// redis.DialKeepAlive(300*time.Second),
-		// redis.DialConnectTimeout(30*time.Second),
-		redis.DialReadTimeout(20*time.Second),
-		redis.DialWriteTimeout(20*time.Second))
-	if err != nil {
-		return
+	//初始化连接池
+	redisClient = &redis.Pool{
+		MaxIdle:     2,
+		MaxActive:   10,
+		IdleTimeout: 180 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", ":6379")
+			if err != nil {
+				return nil, err
+			}
+			// 选择db
+			c.Do("SELECT", 0)
+			return c, nil
+		},
 	}
+	//测试连接
+	redis_conn := redisClient.Get()
+	defer redis_conn.Close()
 	redis_conn.Do("FLUSHALL") //初始化redis
 	ee, err := redis.String(redis_conn.Do("PING", "nihao"))
 	if err != nil {
@@ -31,11 +42,15 @@ func Redis_open() {
 }
 
 func Redis_close() {
-	redis_conn.Close()
+	//关闭连接池
+	Redislog.Println("Redis_close")
+	redisClient.Close()
 }
 
 //根据comment_id获取comment (int型，0无此id，1则成功,2则失败)（comment）
 func Redis_SelectCommentOnid(comment_id int) (int, Comment) {
+	redis_conn := redisClient.Get()
+	defer redis_conn.Close()
 	var comment Comment
 	args, err := redis.Values((redis_conn.Do(
 		"HVALS", fmt.Sprintf("comment::%d", comment_id))))
@@ -57,6 +72,8 @@ func Redis_SelectCommentOnid(comment_id int) (int, Comment) {
 
 //把数据库的comment写入缓存 (int型，0失败，1则成功)
 func Redis_CreateComment(comment Comment) int {
+	redis_conn := redisClient.Get()
+	defer redis_conn.Close()
 	_, err := redis.String(
 		redis_conn.Do(
 			"HMSET", fmt.Sprintf("comment::%d", comment.Comment_id),
@@ -75,6 +92,8 @@ func Redis_CreateComment(comment Comment) int {
 
 //根据comment_id删除comment (int型，0则失败，1则成功)
 func Redis_DeleteCommentOnid(comment_id int) int {
+	redis_conn := redisClient.Get()
+	defer redis_conn.Close()
 	_, err := redis_conn.Do(
 		"DEL", fmt.Sprintf("comment::%d", comment_id))
 	if err != nil { //其他情况0失败
