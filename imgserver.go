@@ -23,7 +23,7 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		}
 		err := r.ParseMultipartForm(8388608) //解析表单 即最大8M  8*1024*1024
 		if err != nil {                      //解析表单出错
-			Serverlog.Println("uploadimg err", err)
+			Serverlog.Println("uploadimg err解析表单出错", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -94,9 +94,9 @@ func getimg(w http.ResponseWriter, r *http.Request) {
 		// 	w.WriteHeader(404)
 		// 	return
 		// }
-
 		//现在直接用这个发图片
 		http.ServeFile(w, r, img_f)
+		hearset(w, r)
 		return
 	}
 }
