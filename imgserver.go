@@ -96,7 +96,6 @@ func getimg(w http.ResponseWriter, r *http.Request) {
 		// }
 		//现在直接用这个发图片
 		http.ServeFile(w, r, img_f)
-		hearset(w, r)
 		return
 	}
 }
