@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -89,13 +88,15 @@ func getimg(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/*")
 		img_id := r.FormValue("img_id") //获取图片id
 		img_f := fmt.Sprintf("./imgdoc/%s", img_id)
-		content, err := ioutil.ReadFile(img_f) //读取图片到内存
-		if err != nil {
-			// Serverlog.Println("getimg", err)//可能是没有该图片
-			w.WriteHeader(404)
-			return
-		}
-		w.Write(content)
+		// content, err := ioutil.ReadFile(img_f) //读取图片到内存
+		// if err != nil {
+		// 	// Serverlog.Println("getimg", err)//可能是没有该图片
+		// 	w.WriteHeader(404)
+		// 	return
+		// }
+
+		//现在直接用这个发图片
+		http.ServeFile(w, r, img_f)
 		return
 	}
 }
