@@ -38,7 +38,7 @@ func main() {
 	Mux1.HandleFunc("/allposthot", allposthot)
 	Mux1.HandleFunc("/selectpostidbyuid", selectpostidbyuid)
 	Mux1.HandleFunc("/uploadimg", uploadimg)
-	Mux1.HandleFunc("/getimg/", getimg)
+	Mux1.HandleFunc("/getimg", getimg)
 
 	server := &http.Server{
 		Addr:    socket,

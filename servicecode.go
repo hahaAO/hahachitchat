@@ -11,6 +11,7 @@ import (
 //统一设置响应头的跨域和内容类型
 func hearset(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 }
 
@@ -269,7 +270,7 @@ func selectpostonid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("参数不能转为int", err)
+			Serverlog.Printf("selectpostonid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
 			return
 		}
 		sint, spost := SelectPostOnid(Post_id)
@@ -348,7 +349,7 @@ func allcommentidonpostid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("参数不能转为int", err)
+			Serverlog.Printf("allcommentidonpostid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
 			return
 		}
 		aint, acommentids := AllCommentidOnpostid(Post_id)
@@ -386,7 +387,7 @@ func selectcommentonid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("参数不能转为int", err)
+			Serverlog.Printf("selectcommentonid 参数%s不能转为int,err:%s\n", r.FormValue("comment_id"), err)
 			return
 		}
 		sint, scomment := SelectCommentOnid(Comment_id)
@@ -461,7 +462,7 @@ func selectuseronid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("参数不能转为int", err)
+			Serverlog.Printf("selectuseronid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
 			return
 		}
 		sint, suser := SelectUserOnid(U_id)
@@ -530,7 +531,7 @@ func selectpostidbyuid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("参数不能转为int", err)
+			Serverlog.Printf("selectpostidbyuid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
 			return
 		}
 		sint, spostids := SelectPostidByuid(u_id)

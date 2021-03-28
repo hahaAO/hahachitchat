@@ -17,6 +17,7 @@ func init() {
 	if err != nil {
 		log.Fatalln("Failed to open hahalog!")
 	}
+
 	DBlog = log.New(logfile, "DBLOG", log.Ldate|log.Ltime)
 	Serverlog = log.New(logfile, "ServerLOG", log.Ldate|log.Ltime)
 	Redislog = log.New(logfile, "RedisLOG", log.Ldate|log.Ltime)
