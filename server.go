@@ -28,7 +28,7 @@ func main() {
 	Mux1.HandleFunc("/login", login)
 	Mux1.HandleFunc("/createpost", createpost)
 	Mux1.HandleFunc("/createcomment", createcomment)
-	Mux1.HandleFunc("/allselectpostid", allselectpostid)
+	Mux1.HandleFunc("/allpostid", allpostid)
 	Mux1.HandleFunc("/selectpostonid", selectpostonid)
 	Mux1.HandleFunc("/deletepostonid", deletepostonid)
 	Mux1.HandleFunc("/allcommentidonpostid", allcommentidonpostid)
@@ -36,7 +36,7 @@ func main() {
 	Mux1.HandleFunc("/deletecommentonid", deletecommentonid)
 	Mux1.HandleFunc("/selectuseronid", selectuseronid)
 	Mux1.HandleFunc("/allposthot", allposthot)
-	Mux1.HandleFunc("/selectpostidbyuid", selectpostidbyuid)
+	Mux1.HandleFunc("/allpostidonuid", allpostidonuid)
 	Mux1.HandleFunc("/uploadimg", uploadimg)
 	Mux1.HandleFunc("/getimg", getimg)
 

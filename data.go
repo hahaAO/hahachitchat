@@ -31,3 +31,9 @@ type Comment struct {
 	Comment_time time.Time `json:"comment_time"` //评论时间
 	Img_id       string    `json:"img_id"`       //图片唯一id用作评论图
 }
+
+type Session struct {
+	Id     string //用户id
+	Randid string //随机的唯一id
+	Expire int    //存活时间单位为秒
+}

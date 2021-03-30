@@ -1,6 +1,7 @@
 //redis做缓存
 //使用连接池
 //目前做了comment表的缓存
+//加上了session缓存
 package main
 
 import (
@@ -101,4 +102,43 @@ func Redis_DeleteCommentOnid(comment_id int) int {
 		return 0
 	}
 	return 1 //删除成功
+}
+
+//把初始化后的session存入Redis (int型，0则失败，1则成功)
+func Redis_CreateSession(session Session) int {
+	redis_conn := redisClient.Get()
+	defer redis_conn.Close()
+	_, err := redis.String(
+		redis_conn.Do(
+			"SET",
+			fmt.Sprintf("session::%s", session.Randid), //随机的id作为键
+			session.Id, //真实的id作为值
+			"EX",
+			session.Expire, //过期时间
+		))
+	if err != nil { //0则失败
+		Redislog.Println("Redis_CreateSession err:", err)
+		return 0
+	}
+	return 1 //插入成功
+}
+
+//检查客户session的ranid 如果正确则设置对应id (int型，0则没有，1则session正确 设置其id，其他情况3)
+func Redis_SelectSession(session *Session) int {
+	redis_conn := redisClient.Get()
+	defer redis_conn.Close()
+	id, err := redis.String( //把真的session拿出来对比
+		redis_conn.Do(
+			"GET",
+			fmt.Sprintf("session::%s", session.Randid), //随机的id作为键
+		))
+	if err == redis.ErrNil { //没有这个随机id
+		return 0
+	} else if err != nil { //其他情况3
+		Redislog.Println("Redis_SelectSession err:", err)
+		return 3
+	}
+	//查询成功
+	session.Id = id //设置其id
+	return 1
 }

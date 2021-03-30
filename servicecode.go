@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
 //统一设置响应头的跨域和内容类型
 func hearset(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	ref := strings.TrimSuffix(r.Referer(), "/")
+	w.Header().Set("Access-Control-Allow-Origin", ref)
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 }
@@ -73,6 +76,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 func login(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
+
 	if r.Method == "GET" {
 		var receiver struct { //接收 请求参数里的东西
 			U_name     string `json:"u_name"`
@@ -87,6 +91,18 @@ func login(w http.ResponseWriter, r *http.Request) {
 		receiver.U_password = r.FormValue("u_password")
 		sint, suser := SelectUsernamepassword(receiver.U_name, receiver.U_password)
 		if sint == 1 { //1已注册密码准确
+			//设置cookie与session
+			session := CreateSession(suser.U_id)  //先初始化sesion
+			cookie := session.ParseToCookie()     //再初始化cookie （把session转化为cookie)
+			http.SetCookie(w, &cookie)            //把cookie写入响应头 设置cookie
+			rint := Redis_CreateSession(*session) //把session存入Redis
+			if rint != 1 {                        //设置session失败
+				goods.State = 3
+				goods_byte, _ := json.Marshal(goods)
+				w.Write(goods_byte)
+				return
+			}
+			//设置session cookie成功
 			goods.State = 1
 			goods.U_id = suser.U_id
 			goods.U_nickname = suser.U_nickname
@@ -116,139 +132,41 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func createpost(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
-	if r.Method == "POST" {
-		var receiver struct { //接收 请求体里的东西
-			U_id         int    `json:"u_id"`
-			Post_name    string `json:"post_name"`
-			Post_txt     string `json:"post_txt"`
-			Post_txthtml string `json:"post_txthtml"` //帖子内容的html
-		}
-		var goods struct { //响应体里的东西
-			State   int `json:"state"`
-			Post_id int `json:"post_id"`
-		}
-		body := make([]byte, r.ContentLength)
-		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
-		err := json.Unmarshal(body, &receiver)
-		if err != nil {
-			Serverlog.Println("errjson", err)
-			Serverlog.Println("body:", string(body)) //用于查看请求体里的东西
-			goods.State = 3                          //3则有其他问题
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		}
-		cint, cpost_id := CreatePost(receiver.U_id, receiver.Post_name, receiver.Post_txt, receiver.Post_txthtml)
-		if cint == 0 { //0则失败
-			goods.State = 0
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		} else if cint == 1 { //1则成功
-			goods.State = 1 //创建成功
-			goods.Post_id = cpost_id
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		} else if cint == 2 { //2则无此人id
-			goods.State = 2 //则无此人id
-			goods.Post_id = cpost_id
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		} else { //3则有其他问题
-			goods.State = 3 //有其他问题
-			goods.Post_id = cpost_id
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		}
-	}
-}
-func createcomment(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
-	if r.Method == "POST" {
-		var receiver struct { //接收 请求体里的东西
-			Post_id     int    `json:"post_id"`
-			U_id        int    `json:"u_id"`
-			Comment_txt string `json:"comment_txt"`
-		}
-		var goods struct { //响应体里的东西
-			State      int `json:"state"` //(int型，0则失败，1则成功，2则无此人id，3则无帖子id，4则有其他问题)
-			Comment_id int `json:"comment_id"`
-		}
-		body := make([]byte, r.ContentLength)
-		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
-		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
-		err := json.Unmarshal(body, &receiver)
-		if err != nil {
-			Serverlog.Println("errjson", err)
-			goods.State = 4 //4则有其他问题
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		}
-		cint, ccomid := CreateComment(receiver.Post_id, receiver.U_id, receiver.Comment_txt)
-		if cint == 1 { //成功
-			goods.State = 1
-			goods.Comment_id = ccomid
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			Serverlog.Println("创建评论成功")
-			return
-		} else if cint == 2 { //无此人id
-			goods.State = 2
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			Serverlog.Println("无此人id")
-			return
-		} else if cint == 3 { //无此帖子id
-			goods.State = 3
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			Serverlog.Println("无此帖子id")
-			return
-		} else { //失败
-			goods.State = 0
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			Serverlog.Println("插入失败")
-			return
-		}
-	}
-}
-func allselectpostid(w http.ResponseWriter, r *http.Request) {
+func selectuseronid(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
-			State   int   `json:"state"` //(int型，0则失败，1则成功，2则有其他问题)
-			Postids []int `json:"postids"`
+			State      int       `json:"state"` //(int型，0则没有此人，1则成功，2则有其他问题)
+			U_nickname string    `json:"u_nickname"`
+			U_time     time.Time `json:"u_time"`
+			Img_id     string    `json:"img_id"`
 		}
-		aint, aposts := AllSelectPost()
-		if aint == 1 { //查询成功
-			goods.State = 1
-			along := len(aposts)
-			for i := 0; i < along; i++ {
-				apost := aposts[i]
-				goods.Postids = append(goods.Postids, apost.Post_id)
-			}
+		U_id, err := strconv.Atoi(r.FormValue("u_id"))
+		if err != nil { //参数不能转为int
+			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			// Serverlog.Println("查询成功")
+			Serverlog.Printf("selectuseronid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
 			return
-		} else if aint == 0 { //没有帖子
-			goods.State = 1
+		}
+		sint, suser := SelectUserOnid(U_id)
+		if sint == 1 { //已注册
+			goods.State = 1 //1则成功
+			goods.U_nickname = suser.U_nickname
+			goods.U_time = suser.U_time
+			goods.Img_id = suser.Img_id
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			// Serverlog.Println("没有帖子")
+			return
+		} else if sint == 0 { //无此人
+			goods.State = 0 //无此人
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
 			return
 		} else {
-			goods.State = 0
+			goods.State = 2 //其他问题
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			// Serverlog.Println("查询失败")
 			return
 		}
 	}
@@ -301,77 +219,6 @@ func selectpostonid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func deletepostonid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
-	if r.Method == "POST" {
-		var receiver struct { //接收 请求体里的东西
-			Post_id int `json:"post_id"`
-		}
-		var goods struct { //响应体里的东西
-			State int `json:"state"` //(int型，0则失败没有该帖子，1则成功，2则有其他问题)
-		}
-		body := make([]byte, r.ContentLength)
-		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
-		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
-		err := json.Unmarshal(body, &receiver)
-		if err != nil {
-			Serverlog.Println("errjson", err)
-			goods.State = 2 //2则有其他问题
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		}
-		dint := DeletePostOnid(receiver.Post_id)
-		if dint == 1 { //成功
-			goods.State = 1
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			Serverlog.Println(receiver.Post_id, "删除成功")
-			return
-		} else { //删除失败
-			goods.State = 0
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			// Serverlog.Println("删除失败")
-			return
-		}
-	}
-}
-func allcommentidonpostid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
-	if r.Method == "GET" {
-		var goods struct { //响应体里的东西
-			State      int   `json:"state"` //(int型，0则失败没有该帖子，1则成功，2则有其他问题)
-			Commentids []int `json:"commentids"`
-		}
-		Post_id, err := strconv.Atoi(r.FormValue("post_id"))
-		if err != nil { //参数不能转为int
-			goods.State = 2
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			Serverlog.Printf("allcommentidonpostid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
-			return
-		}
-		aint, acommentids := AllCommentidOnpostid(Post_id)
-		if aint == 0 { //没有评论
-			goods.State = 0
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		} else if aint == 1 { //成功
-			goods.State = 1
-			goods.Commentids = acommentids
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		} else { //出问题
-			goods.State = 2
-			goods_byte, _ := json.Marshal(goods)
-			w.Write(goods_byte)
-			return
-		}
-	}
-}
 func selectcommentonid(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
 	if r.Method == "GET" {
@@ -414,73 +261,69 @@ func selectcommentonid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func deletecommentonid(w http.ResponseWriter, r *http.Request) {
+func allpostid(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
-	if r.Method == "POST" {
-		var receiver struct { //接收 请求体里的东西
-			Comment_id int `json:"comment_id"`
-		}
+	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
-			State int `json:"state"` //(int型，0则失败没有该评论，1则成功，2则有其他问题)
+			State   int   `json:"state"` //(int型，0则失败，1则成功，2则有其他问题)
+			Postids []int `json:"postids"`
 		}
-		body := make([]byte, r.ContentLength)
-		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
-		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
-		err := json.Unmarshal(body, &receiver)
-		if err != nil {
-			Serverlog.Println("errjson", err)
-			goods.State = 2 //2则有其他问题
+		aint, aposts := AllSelectPost()
+		if aint == 1 { //查询成功
+			goods.State = 1
+			along := len(aposts)
+			for i := 0; i < along; i++ {
+				apost := aposts[i]
+				goods.Postids = append(goods.Postids, apost.Post_id)
+			}
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
+			// Serverlog.Println("查询成功")
 			return
-		}
-		dint := DeleteCommentOnid(receiver.Comment_id)
-		if dint == 1 {
-			goods.State = 1 //1则成功
+		} else if aint == 0 { //没有帖子
+			goods.State = 1
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
+			// Serverlog.Println("没有帖子")
 			return
-		} else { //2则有其他问题
-			goods.State = 2 //2则有其他问题
+		} else {
+			goods.State = 0
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
+			// Serverlog.Println("查询失败")
 			return
 		}
 	}
 }
-func selectuseronid(w http.ResponseWriter, r *http.Request) {
+func allcommentidonpostid(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
-			State      int       `json:"state"` //(int型，0则没有此人，1则成功，2则有其他问题)
-			U_nickname string    `json:"u_nickname"`
-			U_time     time.Time `json:"u_time"`
-			Img_id     string    `json:"img_id"`
+			State      int   `json:"state"` //(int型，0则失败没有该帖子，1则成功，2则有其他问题)
+			Commentids []int `json:"commentids"`
 		}
-		U_id, err := strconv.Atoi(r.FormValue("u_id"))
+		Post_id, err := strconv.Atoi(r.FormValue("post_id"))
 		if err != nil { //参数不能转为int
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Printf("selectuseronid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
+			Serverlog.Printf("allcommentidonpostid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
 			return
 		}
-		sint, suser := SelectUserOnid(U_id)
-		if sint == 1 { //已注册
-			goods.State = 1 //1则成功
-			goods.U_nickname = suser.U_nickname
-			goods.U_time = suser.U_time
-			goods.Img_id = suser.Img_id
+		aint, acommentids := AllCommentidOnpostid(Post_id)
+		if aint == 0 { //没有评论
+			goods.State = 0
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
-		} else if sint == 0 { //无此人
-			goods.State = 0 //无此人
+		} else if aint == 1 { //成功
+			goods.State = 1
+			goods.Commentids = acommentids
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
-		} else {
-			goods.State = 2 //其他问题
+		} else { //出问题
+			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
@@ -519,7 +362,7 @@ func allposthot(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func selectpostidbyuid(w http.ResponseWriter, r *http.Request) {
+func allpostidonuid(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
@@ -548,6 +391,209 @@ func selectpostidbyuid(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			goods.State = 2
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		}
+	}
+}
+
+//以下操作需要验证cookie
+func createpost(w http.ResponseWriter, r *http.Request) {
+	hearset(w, r)
+	//验证cookie
+	session := VerifyCookie(r)
+	if session == nil { //验证失败
+		w.WriteHeader(401)
+		return
+	}
+	//验证成功
+	if r.Method == "POST" {
+		var receiver struct { //接收 请求体里的东西
+			U_id         int    `json:"u_id"`
+			Post_name    string `json:"post_name"`
+			Post_txt     string `json:"post_txt"`
+			Post_txthtml string `json:"post_txthtml"` //帖子内容的html
+		}
+		var goods struct { //响应体里的东西
+			State   int `json:"state"`
+			Post_id int `json:"post_id"`
+		}
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
+		err := json.Unmarshal(body, &receiver)
+		if err != nil {
+			Serverlog.Println("errjson", err)
+			Serverlog.Println("body:", string(body)) //用于查看请求体里的东西
+			goods.State = 3                          //3则有其他问题
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		}
+		cint, cpost_id := CreatePost(receiver.U_id, receiver.Post_name, receiver.Post_txt, receiver.Post_txthtml)
+		if cint == 0 { //0则失败
+			goods.State = 0
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		} else if cint == 1 { //1则成功
+			goods.State = 1 //创建成功
+			goods.Post_id = cpost_id
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		} else if cint == 2 { //2则无此人id
+			goods.State = 2 //则无此人id
+			goods.Post_id = cpost_id
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		} else { //3则有其他问题
+			goods.State = 3 //有其他问题
+			goods.Post_id = cpost_id
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		}
+	}
+}
+func createcomment(w http.ResponseWriter, r *http.Request) {
+	hearset(w, r)
+	//验证cookie
+	session := VerifyCookie(r)
+	if session == nil { //验证失败
+		w.WriteHeader(401)
+		return
+	}
+	//验证成功
+	if r.Method == "POST" {
+		var receiver struct { //接收 请求体里的东西
+			Post_id     int    `json:"post_id"`
+			U_id        int    `json:"u_id"`
+			Comment_txt string `json:"comment_txt"`
+		}
+		var goods struct { //响应体里的东西
+			State      int `json:"state"` //(int型，0则失败，1则成功，2则无此人id，3则无帖子id，4则有其他问题)
+			Comment_id int `json:"comment_id"`
+		}
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
+		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
+		err := json.Unmarshal(body, &receiver)
+		if err != nil {
+			Serverlog.Println("errjson", err)
+			goods.State = 4 //4则有其他问题
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		}
+		cint, ccomid := CreateComment(receiver.Post_id, receiver.U_id, receiver.Comment_txt)
+		if cint == 1 { //成功
+			goods.State = 1
+			goods.Comment_id = ccomid
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			Serverlog.Println("创建评论成功")
+			return
+		} else if cint == 2 { //无此人id
+			goods.State = 2
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			Serverlog.Println("无此人id")
+			return
+		} else if cint == 3 { //无此帖子id
+			goods.State = 3
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			Serverlog.Println("无此帖子id")
+			return
+		} else { //失败
+			goods.State = 0
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			Serverlog.Println("插入失败")
+			return
+		}
+	}
+}
+func deletepostonid(w http.ResponseWriter, r *http.Request) {
+	hearset(w, r)
+	//验证cookie
+	session := VerifyCookie(r)
+	if session == nil { //验证失败
+		w.WriteHeader(401)
+		return
+	}
+	//验证成功
+	if r.Method == "POST" {
+		var receiver struct { //接收 请求体里的东西
+			Post_id int `json:"post_id"`
+		}
+		var goods struct { //响应体里的东西
+			State int `json:"state"` //(int型，0则失败没有该帖子，1则成功，2则有其他问题)
+		}
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
+		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
+		err := json.Unmarshal(body, &receiver)
+		if err != nil {
+			Serverlog.Println("errjson", err)
+			goods.State = 2 //2则有其他问题
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		}
+		dint := DeletePostOnid(receiver.Post_id)
+		if dint == 1 { //成功
+			goods.State = 1
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			Serverlog.Println(receiver.Post_id, "删除成功")
+			return
+		} else { //删除失败
+			goods.State = 0
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			// Serverlog.Println("删除失败")
+			return
+		}
+	}
+}
+func deletecommentonid(w http.ResponseWriter, r *http.Request) {
+	hearset(w, r)
+	//验证cookie
+	session := VerifyCookie(r)
+	if session == nil { //验证失败
+		w.WriteHeader(401)
+		return
+	}
+	//验证成功
+	if r.Method == "POST" {
+		var receiver struct { //接收 请求体里的东西
+			Comment_id int `json:"comment_id"`
+		}
+		var goods struct { //响应体里的东西
+			State int `json:"state"` //(int型，0则失败没有该评论，1则成功，2则有其他问题)
+		}
+		body := make([]byte, r.ContentLength)
+		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
+		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
+		err := json.Unmarshal(body, &receiver)
+		if err != nil {
+			Serverlog.Println("errjson", err)
+			goods.State = 2 //2则有其他问题
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		}
+		dint := DeleteCommentOnid(receiver.Comment_id)
+		if dint == 1 {
+			goods.State = 1 //1则成功
+			goods_byte, _ := json.Marshal(goods)
+			w.Write(goods_byte)
+			return
+		} else { //2则有其他问题
+			goods.State = 2 //2则有其他问题
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return

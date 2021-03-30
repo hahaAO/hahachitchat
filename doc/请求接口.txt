@@ -60,7 +60,7 @@ URL如下
 		"comment_id":(int型)
 	}
 
-    /allselectpostid //获取所有帖子的id
+    /allpostid //获取所有帖子的id
         请求 GET //
         返回    //
 	{
@@ -162,7 +162,7 @@ URL如下
 		
 	}
 
-	/selectpostidbyuid //根据用户id获取属于该用户的所有帖子
+	/allpostidonuid //根据用户id获取属于该用户的所有帖子
         请求 GET //
 	{
 		"u_id":(int型),
