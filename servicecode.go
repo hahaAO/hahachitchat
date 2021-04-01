@@ -16,7 +16,6 @@ func hearset(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("Cache-Control", "max-age=100")
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
@@ -222,6 +221,8 @@ func selectpostonid(w http.ResponseWriter, r *http.Request) {
 }
 func selectcommentonid(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
+	w.Header().Set("Cache-Control", "max-age=100") //缓存到本地100秒
+
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
 			State        int       `json:"state"` //(int型，0则无此评论id，1则成功，2则有其他问题)
