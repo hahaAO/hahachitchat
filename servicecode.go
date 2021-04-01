@@ -16,6 +16,7 @@ func hearset(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Cache-Control", "max-age=3600")
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
