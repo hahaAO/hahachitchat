@@ -97,10 +97,10 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 
 func getimg(w http.ResponseWriter, r *http.Request) {
 	hearset(w, r)
+	w.Header().Set("Content-Type", "image/*")
 	if r.Method == "GET" {
-		w.Header().Set("Content-Type", "image/*")
-		img_id := r.FormValue("img_id") //获取图片id
-		img_f := fmt.Sprintf("./imgdoc/%s", img_id)
+		// img_id := r.FormValue("img_id") //获取图片id
+		// img_f := fmt.Sprintf("./imgdoc/%s", img_id)
 		// content, err := ioutil.ReadFile(img_f) //读取图片到内存
 		// if err != nil {
 		// 	// Imglog.Println("getimg", err)//可能是没有该图片
@@ -108,6 +108,8 @@ func getimg(w http.ResponseWriter, r *http.Request) {
 		// 	return
 		// }
 		//现在直接用这个发图片
+		img_f := fmt.Sprintf("./imgdoc/%s", r.URL.Path[len("/getimg/"):])
+		//也可以用path.Base(r.URL.RequestURI())最后一个路径段
 		http.ServeFile(w, r, img_f)
 		return
 	}
