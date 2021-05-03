@@ -111,7 +111,11 @@ func SelectPostOnid(post_id int) (int, Post) {
 func SelectCommentOnid(comment_id int) (int, Comment) {
 	sint, scomment := Redis_SelectCommentOnid(comment_id) //先读redis缓存
 	if sint == 1 {                                        //redis中有此comment
-		return 1, scomment
+		if scomment.Post_id == 0 { //Redis中为空值
+			return 0, scomment
+		} else { //Redis中存在
+			return 1, scomment
+		}
 	} else { //redis中无此id	或	redis出错	要到postgres中查
 		var comment Comment
 		err := DB.QueryRow(`SELECT * FROM "comment" WHERE comment_id = $1`, comment_id).Scan(
@@ -122,14 +126,18 @@ func SelectCommentOnid(comment_id int) (int, Comment) {
 			&comment.Comment_time,
 			&comment.Img_id)
 		if err == sql.ErrNoRows { //无此id0
+			comment.Comment_id = comment_id
+			comment.Post_id = 0
+			Redis_CreateComment(comment) //把数据库的comment 空值 写入redis
 			return 0, comment
 		} else if err != nil { //其他情况3
 			DBlog.Println("SelectCommentOnid err:", err)
 			return 3, comment
 		}
 		//查到有此id1
-		Redis_CreateComment(comment) //把数据库的comment写入redis (int型，0失败，1则成功)
+		Redis_CreateComment(comment) //把数据库的comment写入redis
 		return 1, comment
+
 	}
 }
 
