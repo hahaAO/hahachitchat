@@ -5,27 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
-
-	"github.com/nsqio/go-nsq"
 )
 
-const pdnsqdAddr = "127.0.0.1:4150"           //生产者只能指定一个nsqd
-var cmnsqdsAddrs = []string{"127.0.0.1:4150"} //消费者能指定多个nsqd
-var deleteImg_producer *nsq.Producer          //删除图片id的生产者
+var deleteImg_ch chan string
 
 //创建图片文件夹
 func init() {
 	os.Mkdir("./imgdoc", os.ModePerm)
-	cfg := nsq.NewConfig()
-	deleteImg_producer, err = nsq.NewProducer(pdnsqdAddr, cfg) //初始化创建生产者 绑定nsqd
-	if err != nil {
-		log.Fatal(err)
-	}
-	go deleteImg_consum() //启动一个协程去订阅id删除图片
+	deleteImg_ch = make(chan string, 10) //初始化创建待删除图片消息队列
+	go deleteImg_consum()                //启动一个协程去订阅id删除图片
 }
 
 func uploadimg(w http.ResponseWriter, r *http.Request) {
@@ -115,38 +106,20 @@ func getimg(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//把要删除的图片id放进指定nsqd的topic
+//把要删除的图片id放进通道
 func deleteImg_produce(id string) {
 	if id == "" { //空则不用发送 发送空的东西到消息队列会引发错误
 		return
 	}
-	if err := deleteImg_producer.Publish("deleteImgid", []byte(id)); err != nil { //把图片id推送到队列
-		Imglog.Println("deleteImg_produce error: " + err.Error()) //推送出错则记录
-	}
+	deleteImg_ch <- id
 }
 
-//创建消费者 从订阅的消息队列中获取要删除的图片id
+//获取要删除的图片id并删除
 func deleteImg_consum() {
-	cfg := nsq.NewConfig()
-	consumer, err := nsq.NewConsumer("deleteImgid", "comsumer01", cfg) //创建消费者 管道comsumer01 绑定主题deleteImgid
-	if err != nil {
-		Imglog.Fatal(err)
+	for id := range deleteImg_ch {
+		err := DeleteImg(id)
+		if err != nil {
+			Imglog.Println("deleteImg_consumer Remove err:", err)
+		}
 	}
-	//添加处理回调
-	consumer.AddHandler(nsq.HandlerFunc(
-		func(message *nsq.Message) error {
-			id := string(message.Body)         //拿到id
-			err := os.Remove("./imgdoc/" + id) //转化为路径并删除
-			if err != nil {
-				Imglog.Println("deleteImg_consumer Remove err:", err) //没有删除成功有两种情况：操作出错，图片不存在
-				return nil                                            //默认为图片不存在,不用再返回消息队列
-			}
-			Imglog.Println("delete OK Img:", id) //删除成功
-			return nil
-		}))
-	//用消费者 连接订阅的nsqd
-	if err := consumer.ConnectToNSQDs(cmnsqdsAddrs); err != nil {
-		Imglog.Fatal(err, " deleteImg_consumer err")
-	}
-	<-consumer.StopChan
 }
