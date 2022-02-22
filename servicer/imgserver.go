@@ -2,7 +2,8 @@
 package servicer
 
 import (
-	"code/Hahachitchat/db"
+	"code/Hahachitchat/dataLayer"
+	"code/Hahachitchat/definition"
 	"code/Hahachitchat/utils"
 	"encoding/json"
 	"fmt"
@@ -12,13 +13,11 @@ import (
 	"strconv"
 )
 
-var deleteImg_ch chan string
-
 //创建图片文件夹
 func init() {
 	os.Mkdir("./imgdoc", os.ModePerm)
-	deleteImg_ch = make(chan string, 10) //初始化创建待删除图片消息队列
-	go deleteImg_consum()                //启动一个协程去订阅id删除图片
+	definition.DeleteImg_ch = make(chan string, 10) //初始化创建待删除图片消息队列
+	go dataLayer.DeleteImg_consum()                 //启动一个协程去订阅id删除图片
 }
 
 func Uploadimg(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +28,7 @@ func Uploadimg(w http.ResponseWriter, r *http.Request) {
 		}
 		err := r.ParseMultipartForm(8388608) //解析表单 即最大8M  8*1024*1024
 		if err != nil {                      //解析表单出错
-			utils.Imglog.Println("uploadimg err解析表单出错", err)
+			dataLayer.Imglog.Println("uploadimg err解析表单出错", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -37,7 +36,7 @@ func Uploadimg(w http.ResponseWriter, r *http.Request) {
 		}
 		ctlen := len("multipart/form-data")                                 //只需要前面一截判断内容类型,后面一截是标识
 		if r.Header.Get("Content-Type")[0:ctlen] != "multipart/form-data" { //内容类型不正确
-			utils.Imglog.Println("uploadimg err内容类型不正确", err)
+			dataLayer.Imglog.Println("uploadimg err内容类型不正确", err)
 			goods.State = 2
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -46,7 +45,7 @@ func Uploadimg(w http.ResponseWriter, r *http.Request) {
 		imgfilehear := r.MultipartForm.File["image"][0] //获取表单里的图片文件
 		imgfile, err := imgfilehear.Open()              //把解码出的表单文件当成一个文件打开
 		if err != nil {                                 //文件打开失败
-			utils.Imglog.Println("uploadimg err文件打开失败", err)
+			dataLayer.Imglog.Println("uploadimg err文件打开失败", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -57,7 +56,7 @@ func Uploadimg(w http.ResponseWriter, r *http.Request) {
 		saveFile, _ := os.Create(filedocandname) //创建文件
 		_, err = io.Copy(saveFile, imgfile)      //复制保存
 		if err != nil {                          //复制保存失败
-			utils.Imglog.Println("uploadimg err复制保存失败", err)
+			dataLayer.Imglog.Println("uploadimg err复制保存失败", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -66,13 +65,13 @@ func Uploadimg(w http.ResponseWriter, r *http.Request) {
 		object := r.MultipartForm.Value["object"][0]                          //对象的类型
 		object_id, err := strconv.Atoi(r.MultipartForm.Value["object_id"][0]) //对象的id
 		if err != nil {                                                       //object_id不能转化为int型
-			utils.Imglog.Println("uploadimg err object_id不能转化为int型", err)
+			dataLayer.Imglog.Println("uploadimg err object_id不能转化为int型", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
 			return
 		}
-		sint := db.UpdateObjectimgid(object, object_id, img_id)
+		sint := dataLayer.UpdateObjectimgid(object, object_id, img_id)
 		if sint == 1 {
 			goods.State = 1
 			goodsjson, _ := json.Marshal(goods)
@@ -105,23 +104,5 @@ func Getimg(w http.ResponseWriter, r *http.Request) {
 		//也可以用path.Base(r.URL.RequestURI())最后一个路径段
 		http.ServeFile(w, r, img_f)
 		return
-	}
-}
-
-//把要删除的图片id放进通道
-func DeleteImg_produce(id string) {
-	if id == "" { //空则不用发送 发送空的东西到消息队列会引发错误
-		return
-	}
-	deleteImg_ch <- id
-}
-
-//获取要删除的图片id并删除
-func deleteImg_consum() {
-	for id := range deleteImg_ch {
-		err := utils.DeleteImg(id)
-		if err != nil {
-			utils.Imglog.Println("deleteImg_consumer Remove err:", err)
-		}
 	}
 }

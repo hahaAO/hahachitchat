@@ -2,11 +2,8 @@
 package main
 
 import (
-	// "fmt"
-
-	"code/Hahachitchat/db"
+	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/servicer"
-	"code/Hahachitchat/utils"
 	"net/http"
 )
 
@@ -21,10 +18,10 @@ func defaulttest(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	db.DB_open()
-	defer db.DB_close()
-	db.Redis_open()
-	defer db.Redis_close()
+	dataLayer.DB_open()
+	defer dataLayer.DB_close()
+	dataLayer.Redis_open()
+	defer dataLayer.Redis_close()
 	Mux1 := http.NewServeMux()
 	Mux1.HandleFunc("/", defaulttest)
 	Mux1.HandleFunc("/register", servicer.Register)
@@ -50,6 +47,6 @@ func main() {
 	}
 	err := server.ListenAndServe()
 	if err != nil { //无法监听端口
-		utils.Serverlog.Fatal("List", socket)
+		dataLayer.Serverlog.Fatal("List", socket)
 	}
 }

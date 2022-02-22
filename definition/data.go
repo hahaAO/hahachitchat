@@ -49,3 +49,5 @@ type Session struct {
 	Randid string //随机的唯一id
 	Expire int    //存活时间单位为秒
 }
+
+var DeleteImg_ch chan string
