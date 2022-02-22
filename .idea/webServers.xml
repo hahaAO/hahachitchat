@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="9f05f204-5140-413a-85d6-a6e19edb6ad2" name="bilibolo">
+        <fileTransfer rootFolder="/root" accessType="SFTP" host="104.168.236.16" port="22" sshConfigId="ea99a667-1a06-4eaa-be88-b8bc9364d9bc" sshConfig="root@104.168.236.16:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

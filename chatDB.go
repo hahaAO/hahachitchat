@@ -4,21 +4,17 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	_ "github.com/lib/pq"
 )
 
-type People struct {
-	No   string `json:"no"`
-	Name string `json:"name"`
-	Sex  string `json:"sex"`
-}
-
 const (
 	host     = "localhost"
 	port     = 5432
-	user     = "haha"
-	password = "haha"
+	user     = "postgres"
+	password = "vgdvgd111"
 	dbname   = "hahadb"
 )
 
@@ -38,6 +34,15 @@ func DB_open() {
 	if err != nil {
 		panic(err)
 	}
+
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: DB,
+	}), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	gormDB.AutoMigrate(&User{}, &Post{}, &Comment{})
+
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
 }
 

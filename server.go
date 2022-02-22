@@ -18,10 +18,10 @@ func defaulttest(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	//DB_open()
-	//defer DB_close()
-	//Redis_open()
-	//defer Redis_close()
+	DB_open()
+	defer DB_close()
+	Redis_open()
+	defer Redis_close()
 	Mux1 := http.NewServeMux()
 	Mux1.HandleFunc("/", defaulttest)
 	Mux1.HandleFunc("/register", register)
