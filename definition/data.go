@@ -1,6 +1,6 @@
 //对应数据库中表的结构
 //不使用外键
-package main
+package definition
 
 import "time"
 

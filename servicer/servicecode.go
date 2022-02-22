@@ -1,7 +1,9 @@
 //处理前端的请求以及调用数据库函数对操作数据库进行操作
-package main
+package servicer
 
 import (
+	"code/Hahachitchat/db"
+	"code/Hahachitchat/utils"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -10,7 +12,7 @@ import (
 )
 
 //统一设置响应头的跨域和内容类型
-func hearset(w http.ResponseWriter, r *http.Request) {
+func Hearset(w http.ResponseWriter, r *http.Request) {
 	ref := strings.TrimSuffix(r.Referer(), "/")
 	w.Header().Set("Access-Control-Allow-Origin", ref)
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -18,8 +20,8 @@ func hearset(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 }
 
-func register(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Register(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "POST" {
 		var receiver struct { //接收 请求体里的东西
 			U_name     string `json:"u_name"`
@@ -34,14 +36,14 @@ func register(w http.ResponseWriter, r *http.Request) {
 		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
 		err := json.Unmarshal(body, &receiver)
 		if err != nil {
-			Serverlog.Println("json err:", err)
-			Serverlog.Println("body:", string(body)) //用于查看请求体里的东西
+			utils.Serverlog.Println("json err:", err)
+			utils.Serverlog.Println("body:", string(body)) //用于查看请求体里的东西
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
 		}
-		sint, suser := SelectUserOnname(receiver.U_name)
+		sint, suser := db.SelectUserOnname(receiver.U_name)
 		if sint == 1 { //已注册
 			goods.State = 0
 			goods.U_id = suser.U_id
@@ -50,13 +52,13 @@ func register(w http.ResponseWriter, r *http.Request) {
 			// Serverlog.Println(goods.U_id,"已注册")
 			return
 		} else if sint == 0 { //未注册
-			cint, cuser := CreateUser(receiver.U_name, receiver.U_password, receiver.U_nickname)
+			cint, cuser := db.CreateUser(receiver.U_name, receiver.U_password, receiver.U_nickname)
 			if cint == 1 { //注册成功
 				goods.State = 1
 				goods.U_id = cuser.U_id
 				goods_byte, _ := json.Marshal(goods)
 				w.Write(goods_byte)
-				Serverlog.Println(goods.U_id, "注册成功")
+				utils.Serverlog.Println(goods.U_id, "注册成功")
 				return
 			} else if cint == 0 { //注册失败
 				goods.State = 2
@@ -74,8 +76,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func login(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Login(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 
 	if r.Method == "GET" {
 		var receiver struct { //接收 请求参数里的东西
@@ -89,14 +91,14 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		receiver.U_name = r.FormValue("u_name")
 		receiver.U_password = r.FormValue("u_password")
-		sint, suser := SelectUsernamepassword(receiver.U_name, receiver.U_password)
+		sint, suser := db.SelectUsernamepassword(receiver.U_name, receiver.U_password)
 		if sint == 1 { //1已注册密码准确
 			//设置cookie与session
-			session := CreateSession(suser.U_id)  //先初始化sesion
-			cookie := session.ParseToCookie()     //再初始化cookie （把session转化为cookie)
-			http.SetCookie(w, &cookie)            //把cookie写入响应头 设置cookie
-			rint := Redis_CreateSession(*session) //把session存入Redis
-			if rint != 1 {                        //设置session失败
+			session := utils.CreateSession(suser.U_id) //先初始化sesion
+			cookie := utils.ParseToCookie(session)     //再初始化cookie （把session转化为cookie)
+			http.SetCookie(w, &cookie)                 //把cookie写入响应头 设置cookie
+			rint := db.Redis_CreateSession(*session)   //把session存入Redis
+			if rint != 1 {                             //设置session失败
 				goods.State = 3
 				goods_byte, _ := json.Marshal(goods)
 				w.Write(goods_byte)
@@ -108,7 +110,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			goods.U_nickname = suser.U_nickname
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println(goods.U_id, "登陆成功")
+			utils.Serverlog.Println(goods.U_id, "登陆成功")
 			return
 		} else if sint == 2 { //2已注册密码错误
 			goods.State = 2
@@ -132,8 +134,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func selectuseronid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Selectuseronid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
 			State      int       `json:"state"` //(int型，0则没有此人，1则成功，2则有其他问题)
@@ -146,10 +148,10 @@ func selectuseronid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Printf("selectuseronid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
+			utils.Serverlog.Printf("selectuseronid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
 			return
 		}
-		sint, suser := SelectUserOnid(U_id)
+		sint, suser := db.SelectUserOnid(U_id)
 		if sint == 1 { //已注册
 			goods.State = 1 //1则成功
 			goods.U_nickname = suser.U_nickname
@@ -171,8 +173,8 @@ func selectuseronid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func selectpostonid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Selectpostonid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
 			State        int       `json:"state"` //(int型，0则失败，1则成功，2则有其他问题),
@@ -188,10 +190,10 @@ func selectpostonid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Printf("selectpostonid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
+			utils.Serverlog.Printf("selectpostonid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
 			return
 		}
-		sint, spost := SelectPostOnid(Post_id)
+		sint, spost := db.SelectPostOnid(Post_id)
 		if sint == 1 { //查到了
 			goods.State = 1
 			goods.U_id = spost.U_id
@@ -219,8 +221,8 @@ func selectpostonid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func selectcommentonid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Selectcommentonid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	w.Header().Set("Cache-Control", "max-age=100") //缓存到本地100秒
 
 	if r.Method == "GET" {
@@ -236,10 +238,10 @@ func selectcommentonid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Printf("selectcommentonid 参数%s不能转为int,err:%s\n", r.FormValue("comment_id"), err)
+			utils.Serverlog.Printf("selectcommentonid 参数%s不能转为int,err:%s\n", r.FormValue("comment_id"), err)
 			return
 		}
-		sint, scomment := SelectCommentOnid(Comment_id)
+		sint, scomment := db.SelectCommentOnid(Comment_id)
 		if sint == 0 { //无此评论id
 			goods.State = 0
 			goods_byte, _ := json.Marshal(goods)
@@ -263,14 +265,14 @@ func selectcommentonid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func allpostid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Allpostid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
 			State   int   `json:"state"` //(int型，0则失败，1则成功，2则有其他问题)
 			Postids []int `json:"postids"`
 		}
-		aint, aposts := AllSelectPost()
+		aint, aposts := db.AllSelectPost()
 		if aint == 1 { //查询成功
 			goods.State = 1
 			along := len(aposts)
@@ -297,8 +299,8 @@ func allpostid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func allcommentidonpostid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Allcommentidonpostid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
 			State      int   `json:"state"` //(int型，0则失败没有该帖子，1则成功，2则有其他问题)
@@ -309,10 +311,10 @@ func allcommentidonpostid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Printf("allcommentidonpostid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
+			utils.Serverlog.Printf("allcommentidonpostid 参数%s不能转为int,err:%s\n", r.FormValue("post_id"), err)
 			return
 		}
-		aint, acommentids := AllCommentidOnpostid(Post_id)
+		aint, acommentids := db.AllCommentidOnpostid(Post_id)
 		if aint == 0 { //没有评论
 			goods.State = 0
 			goods_byte, _ := json.Marshal(goods)
@@ -332,16 +334,16 @@ func allcommentidonpostid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func allposthot(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Allposthot(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "GET" {
 
 		var goods struct { //响应体里的东西
-			State    int             `json:"state"` //(int型，0则失败，1则成功)
-			Hot_desc []Post_idandhot `json:"hot_desc"`
+			State    int                   `json:"state"` //(int型，0则失败，1则成功)
+			Hot_desc []utils.Post_idandhot `json:"hot_desc"`
 		}
-
-		goods.Hot_desc, err = Allposthot()
+		var err error
+		goods.Hot_desc, err = utils.Allposthot()
 
 		if err != nil {
 			goods.State = 0
@@ -364,8 +366,8 @@ func allposthot(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func allpostidonuid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Allpostidonuid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "GET" {
 		var goods struct { //响应体里的东西
 			State   int   `json:"state"` //(int型，0则没有帖子，1则成功，2则有其他问题),
@@ -376,10 +378,10 @@ func allpostidonuid(w http.ResponseWriter, r *http.Request) {
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Printf("selectpostidbyuid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
+			utils.Serverlog.Printf("selectpostidbyuid 参数%s不能转为int,err:%s\n", r.FormValue("u_id"), err)
 			return
 		}
-		sint, spostids := SelectPostidByuid(u_id)
+		sint, spostids := db.SelectPostidByuid(u_id)
 		if sint == 1 {
 			goods.State = 1
 			goods.Postids = spostids
@@ -401,10 +403,10 @@ func allpostidonuid(w http.ResponseWriter, r *http.Request) {
 }
 
 //以下操作需要验证cookie
-func createpost(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Createpost(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	//验证cookie
-	session := VerifyCookie(r)
+	session := utils.VerifyCookie(r)
 	if session == nil { //验证失败
 		w.WriteHeader(401)
 		return
@@ -425,14 +427,14 @@ func createpost(w http.ResponseWriter, r *http.Request) {
 		r.Body.Read(body) // 调用 Read 方法读取请求实体并将返回内容存放到上面创建的字节切片
 		err := json.Unmarshal(body, &receiver)
 		if err != nil {
-			Serverlog.Println("errjson", err)
-			Serverlog.Println("body:", string(body)) //用于查看请求体里的东西
-			goods.State = 3                          //3则有其他问题
+			utils.Serverlog.Println("errjson", err)
+			utils.Serverlog.Println("body:", string(body)) //用于查看请求体里的东西
+			goods.State = 3                                //3则有其他问题
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
 		}
-		cint, cpost_id := CreatePost(receiver.U_id, receiver.Post_name, receiver.Post_txt, receiver.Post_txthtml)
+		cint, cpost_id := db.CreatePost(receiver.U_id, receiver.Post_name, receiver.Post_txt, receiver.Post_txthtml)
 		if cint == 0 { //0则失败
 			goods.State = 0
 			goods_byte, _ := json.Marshal(goods)
@@ -459,10 +461,10 @@ func createpost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func createcomment(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Createcomment(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	//验证cookie
-	session := VerifyCookie(r)
+	session := utils.VerifyCookie(r)
 	if session == nil { //验证失败
 		w.WriteHeader(401)
 		return
@@ -483,45 +485,45 @@ func createcomment(w http.ResponseWriter, r *http.Request) {
 		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
 		err := json.Unmarshal(body, &receiver)
 		if err != nil {
-			Serverlog.Println("errjson", err)
+			utils.Serverlog.Println("errjson", err)
 			goods.State = 4 //4则有其他问题
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
 		}
-		cint, ccomid := CreateComment(receiver.Post_id, receiver.U_id, receiver.Comment_txt)
+		cint, ccomid := db.CreateComment(receiver.Post_id, receiver.U_id, receiver.Comment_txt)
 		if cint == 1 { //成功
 			goods.State = 1
 			goods.Comment_id = ccomid
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("创建评论成功")
+			utils.Serverlog.Println("创建评论成功")
 			return
 		} else if cint == 2 { //无此人id
 			goods.State = 2
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("无此人id")
+			utils.Serverlog.Println("无此人id")
 			return
 		} else if cint == 3 { //无此帖子id
 			goods.State = 3
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("无此帖子id")
+			utils.Serverlog.Println("无此帖子id")
 			return
 		} else { //失败
 			goods.State = 0
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println("插入失败")
+			utils.Serverlog.Println("插入失败")
 			return
 		}
 	}
 }
-func deletepostonid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Deletepostonid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	//验证cookie
-	session := VerifyCookie(r)
+	session := utils.VerifyCookie(r)
 	if session == nil { //验证失败
 		w.WriteHeader(401)
 		return
@@ -539,18 +541,18 @@ func deletepostonid(w http.ResponseWriter, r *http.Request) {
 		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
 		err := json.Unmarshal(body, &receiver)
 		if err != nil {
-			Serverlog.Println("errjson", err)
+			utils.Serverlog.Println("errjson", err)
 			goods.State = 2 //2则有其他问题
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
 		}
-		dint := DeletePostOnid(receiver.Post_id)
+		dint := db.DeletePostOnid(receiver.Post_id)
 		if dint == 1 { //成功
 			goods.State = 1
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
-			Serverlog.Println(receiver.Post_id, "删除成功")
+			utils.Serverlog.Println(receiver.Post_id, "删除成功")
 			return
 		} else { //删除失败
 			goods.State = 0
@@ -561,10 +563,10 @@ func deletepostonid(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-func deletecommentonid(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Deletecommentonid(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	//验证cookie
-	session := VerifyCookie(r)
+	session := utils.VerifyCookie(r)
 	if session == nil { //验证失败
 		w.WriteHeader(401)
 		return
@@ -582,13 +584,13 @@ func deletecommentonid(w http.ResponseWriter, r *http.Request) {
 		// Serverlog.Println("body:",string(body))//用于查看请求体里的东西
 		err := json.Unmarshal(body, &receiver)
 		if err != nil {
-			Serverlog.Println("errjson", err)
+			utils.Serverlog.Println("errjson", err)
 			goods.State = 2 //2则有其他问题
 			goods_byte, _ := json.Marshal(goods)
 			w.Write(goods_byte)
 			return
 		}
-		dint := DeleteCommentOnid(receiver.Comment_id)
+		dint := db.DeleteCommentOnid(receiver.Comment_id)
 		if dint == 1 {
 			goods.State = 1 //1则成功
 			goods_byte, _ := json.Marshal(goods)

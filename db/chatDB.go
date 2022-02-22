@@ -1,7 +1,10 @@
 //操作数据库的函数
-package main
+package db
 
 import (
+	"code/Hahachitchat/definition"
+	"code/Hahachitchat/servicer"
+	"code/Hahachitchat/utils"
 	"database/sql"
 	"fmt"
 	"gorm.io/driver/postgres"
@@ -41,20 +44,20 @@ func DB_open() {
 	if err != nil {
 		panic(err)
 	}
-	gormDB.AutoMigrate(&User{}, &Post{}, &Comment{})
+	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{})
 
-	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
+	utils.DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
 }
 
 //关闭数据库连接
 func DB_close() {
 	DB.Close()
-	DBlog.Printf("Successfully off to postgres %s!\n", dbname)
+	utils.DBlog.Printf("Successfully off to postgres %s!\n", dbname)
 }
 
 //根据uid返回user （未注册0 已注册1 其他情况3）（User）
-func SelectUserOnid(a int) (int, User) {
-	var user User
+func SelectUserOnid(a int) (int, definition.User) {
+	var user definition.User
 	err := DB.QueryRow(`SELECT * FROM "user"
 	WHERE "u_id"=$1`, a).Scan(
 		&user.U_id,
@@ -67,15 +70,15 @@ func SelectUserOnid(a int) (int, User) {
 	if err == sql.ErrNoRows {
 		return 0, user //未注册
 	} else if err != nil {
-		DBlog.Println("SelectUserOnid:", err)
+		utils.DBlog.Println("SelectUserOnid:", err)
 		return 3, user //其他问题
 	}
 	return 1, user //已注册
 }
 
 //根据name获取user （未注册0 已注册1 其他情况3）（User）
-func SelectUserOnname(name string) (int, User) {
-	var user User
+func SelectUserOnname(name string) (int, definition.User) {
+	var user definition.User
 	err := DB.QueryRow(`SELECT * FROM "user" WHERE u_name = $1`, name).Scan(
 		&user.U_id,
 		&user.U_name,
@@ -86,15 +89,15 @@ func SelectUserOnname(name string) (int, User) {
 	if err == sql.ErrNoRows {
 		return 0, user //未注册
 	} else if err != nil {
-		DBlog.Println("SelectUserOnname err:", err)
+		utils.DBlog.Println("SelectUserOnname err:", err)
 		return 3, user //其他问题
 	}
 	return 1, user //已注册
 }
 
 //根据post id获取post （无此id0 查到有此id1 其他情况3）（Post）
-func SelectPostOnid(post_id int) (int, Post) {
-	var post Post
+func SelectPostOnid(post_id int) (int, definition.Post) {
+	var post definition.Post
 	err := DB.QueryRow(`SELECT * FROM "post" WHERE post_id = $1`, post_id).Scan(
 		&post.Post_id,
 		&post.U_id,
@@ -106,14 +109,14 @@ func SelectPostOnid(post_id int) (int, Post) {
 	if err == sql.ErrNoRows {
 		return 0, post //无此id0
 	} else if err != nil {
-		DBlog.Println("SelectPostOnid err:", err)
+		utils.DBlog.Println("SelectPostOnid err:", err)
 		return 3, post //其他情况3
 	}
 	return 1, post //查到有此id1
 }
 
 //加了读redis缓存的功能		根据comment_id获取comment (int型，0无此id，1则成功,2则失败)（comment）
-func SelectCommentOnid(comment_id int) (int, Comment) {
+func SelectCommentOnid(comment_id int) (int, definition.Comment) {
 	sint, scomment := Redis_SelectCommentOnid(comment_id) //先读redis缓存
 	if sint == 1 {                                        //redis中有此comment
 		if scomment.Post_id == 0 { //Redis中为空值
@@ -122,7 +125,7 @@ func SelectCommentOnid(comment_id int) (int, Comment) {
 			return 1, scomment
 		}
 	} else { //redis中无此id	或	redis出错	要到postgres中查
-		var comment Comment
+		var comment definition.Comment
 		err := DB.QueryRow(`SELECT * FROM "comment" WHERE comment_id = $1`, comment_id).Scan(
 			&comment.Comment_id,
 			&comment.Post_id,
@@ -136,7 +139,7 @@ func SelectCommentOnid(comment_id int) (int, Comment) {
 			Redis_CreateComment(comment) //把数据库的comment 空值 写入redis
 			return 0, comment
 		} else if err != nil { //其他情况3
-			DBlog.Println("SelectCommentOnid err:", err)
+			utils.DBlog.Println("SelectCommentOnid err:", err)
 			return 3, comment
 		}
 		//查到有此id1
@@ -147,8 +150,8 @@ func SelectCommentOnid(comment_id int) (int, Comment) {
 }
 
 //获取所有帖子的post (int，0则没有帖子，1则成功，2则有其他问题)（ []int）
-func AllSelectPost() (int, []Post) {
-	var posts []Post
+func AllSelectPost() (int, []definition.Post) {
+	var posts []definition.Post
 	rows, err := DB.Query(`SELECT * FROM "post"`)
 	defer rows.Close()
 	if err == sql.ErrNoRows { //没有帖子
@@ -157,7 +160,7 @@ func AllSelectPost() (int, []Post) {
 		return 2, posts
 	}
 	for rows.Next() {
-		var post Post
+		var post definition.Post
 		err = rows.Scan(
 			&post.Post_id,
 			&post.U_id,
@@ -167,7 +170,7 @@ func AllSelectPost() (int, []Post) {
 			&post.Post_txthtml,
 			&post.Img_id)
 		if err != nil {
-			DBlog.Println("AllSelectPost err1:", err)
+			utils.DBlog.Println("AllSelectPost err1:", err)
 			return 2, posts
 		}
 		posts = append(posts, post)
@@ -186,14 +189,14 @@ func AllCommentidOnpostid(post_id int) (int, []int) {
 	if err == sql.ErrNoRows { //没有评论
 		return 0, commentids
 	} else if err != nil {
-		DBlog.Println("AllCommentidOnpostid err1:", err)
+		utils.DBlog.Println("AllCommentidOnpostid err1:", err)
 		return 2, commentids
 	}
 	for rows.Next() {
 		var commentid int
 		err = rows.Scan(&commentid)
 		if err != nil {
-			DBlog.Println("AllCommentidOnpostid err2:", err)
+			utils.DBlog.Println("AllCommentidOnpostid err2:", err)
 			return 2, commentids
 		}
 		commentids = append(commentids, commentid)
@@ -205,12 +208,12 @@ func AllCommentidOnpostid(post_id int) (int, []int) {
 }
 
 //根据name password Unickname插入user （注册失败0 注册成功1）（User）
-func CreateUser(Uname string, Upassword string, Unickname string) (int, User) {
-	var user User
+func CreateUser(Uname string, Upassword string, Unickname string) (int, definition.User) {
+	var user definition.User
 	_, err := DB.Exec(`INSERT INTO "user" ("u_name","u_password","u_nickname")
     VALUES ($1,$2,$3)`, Uname, Upassword, Unickname)
 	if err != nil {
-		DBlog.Println("CreateUser err1:", err)
+		utils.DBlog.Println("CreateUser err1:", err)
 		return 0, user //其他问题,注册失败
 	}
 	sint, suser := SelectUserOnname(Uname)
@@ -230,7 +233,7 @@ func CreatePost(u_id int, post_name string, post_txt string, post_txthtml string
 		err := DB.QueryRow(`INSERT INTO "post" ("u_id","post_name","post_txt","post_txthtml")
         VALUES ($1,$2,$3,$4) RETURNING post_id`, u_id, post_name, post_txt, post_txthtml).Scan(&post_id)
 		if err != nil {
-			DBlog.Println("CreatePost err1:", err)
+			utils.DBlog.Println("CreatePost err1:", err)
 			return 3, post_id //其他问题,插入失败
 		}
 		//插入成功
@@ -255,7 +258,7 @@ func CreateComment(post_id int, u_id int, comment_txt string) (int, int) {
 			err := DB.QueryRow(`INSERT INTO "comment" ("post_id","u_id","comment_txt")
             VALUES ($1,$2,$3) RETURNING comment_id`, post_id, u_id, comment_txt).Scan(&comment_id)
 			if err != nil {
-				DBlog.Println("CreateComment err1:", err)
+				utils.DBlog.Println("CreateComment err1:", err)
 				return 0, comment_id //其他问题,插入失败
 			}
 			//插入成功
@@ -269,8 +272,8 @@ func CreateComment(post_id int, u_id int, comment_txt string) (int, int) {
 }
 
 //根据name password查询 （未注册0 已注册密码正确1 已注册密码错误2 其他情况3）  （User）
-func SelectUsernamepassword(name string, password string) (int, User) {
-	var user User
+func SelectUsernamepassword(name string, password string) (int, definition.User) {
+	var user definition.User
 	sint, user := SelectUserOnname(name)
 	if sint == 0 { //未注册0
 		return 0, user
@@ -290,25 +293,25 @@ func DeletePostOnid(post_id int) int {
 	var Img_id string                                                                              //要删除的图片id
 	rows, err := DB.Query(`DELETE FROM "comment" WHERE "post_id" = $1 RETURNING img_id;`, post_id) //删除帖子里的评论，顺带读出图片id
 	if err != nil {                                                                                //有其他问题
-		DBlog.Println("DeletePostOnid err1:", err)
+		utils.DBlog.Println("DeletePostOnid err1:", err)
 		return 2
 	}
 	defer rows.Close()
 	for rows.Next() {
 		err = rows.Scan(&Img_id) //读出图片id
 		if err != nil {
-			DBlog.Println("DeletePostOnid err2:", err)
+			utils.DBlog.Println("DeletePostOnid err2:", err)
 			return 2
 		}
-		deleteImg_produce(Img_id) //把要删除的图片id发到消息队列
+		servicer.DeleteImg_produce(Img_id) //把要删除的图片id发到消息队列
 	}
 	err = DB.QueryRow(`DELETE FROM "post" WHERE "post_id" = $1 RETURNING img_id;`, post_id).Scan(&Img_id) //删除帖子，顺带读出图片id
 	if err != nil {                                                                                       //有其他问题
-		DBlog.Println("DeletePostOnid err3:", err)
+		utils.DBlog.Println("DeletePostOnid err3:", err)
 		return 2
 	}
-	deleteImg_produce(Img_id) //把要删除的图片id发到消息队列
-	DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
+	servicer.DeleteImg_produce(Img_id) //把要删除的图片id发到消息队列
+	utils.DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
 	return 1
 }
 
@@ -318,11 +321,11 @@ func DeleteCommentOnid(comment_id int) int {
 	err := DB.QueryRow(`DELETE FROM "comment" WHERE "comment_id" = $1 RETURNING img_id;`,
 		comment_id).Scan(&Img_id)
 	if err != nil { //有其他问题
-		DBlog.Println("DeleteCommentOnid err1:", err)
+		utils.DBlog.Println("DeleteCommentOnid err1:", err)
 		return 2
 	} else { //删除成功
 		Redis_DeleteCommentOnid(comment_id) //redis缓存中的也删掉
-		deleteImg_produce(Img_id)           //把要删除的图片id发到消息队列
+		servicer.DeleteImg_produce(Img_id)  //把要删除的图片id发到消息队列
 		return 1
 	}
 }
@@ -341,7 +344,7 @@ func SelectPostidByuid(u_id int) (int, []int) {
 		var postid int
 		err = rows.Scan(&postid)
 		if err != nil {
-			DBlog.Println("SelectPostidByuid:", err)
+			utils.DBlog.Println("SelectPostidByuid:", err)
 			return 2, postids //2则有其他问题
 		}
 		postids = append(postids, postid)
@@ -362,7 +365,7 @@ func UpdateObjectimgid(object string, object_id int, img_id string) int {
 	sql := fmt.Sprintf(`UPDATE "%s" SET img_id = $1 WHERE	"%s_id" = $2;`, object, objecthead)
 	_, err := DB.Exec(sql, img_id, object_id)
 	if err != nil { //object不正确会报错，但是object_id不存在则不会报错
-		DBlog.Println("UpdateObjectimgid err", err)
+		utils.DBlog.Println("UpdateObjectimgid err", err)
 		return 0
 	}
 	return 1

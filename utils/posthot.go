@@ -1,8 +1,9 @@
 //热度统计
 //计算总热度  postid-posthot
-package main
+package utils
 
 import (
+	"code/Hahachitchat/db"
 	"errors"
 )
 
@@ -33,7 +34,7 @@ type post_idandcommenthot struct {
 func allpost_timehot() ([]post_idandtimehot, error) {
 	var results []post_idandtimehot
 	var err error
-	aint, aposts := AllSelectPost()
+	aint, aposts := db.AllSelectPost()
 	if aint == 1 { //查询成功
 		along := len(aposts)
 		for i := 0; i < along; i++ {
@@ -60,7 +61,7 @@ func allpost_commenthot(post_ids []int) ([]post_idandcommenthot, error) {
 	var err error
 	for i := 0; i < plong; i++ {
 		results[i].post_id = post_ids[i]
-		aint, apcomids := AllCommentidOnpostid(results[i].post_id)
+		aint, apcomids := db.AllCommentidOnpostid(results[i].post_id)
 		if aint == 1 { //查询成功
 			along := int64(len(apcomids))                         //评论数
 			results[i].post_commenthot = along * commenthotweight //评论热度

@@ -1,7 +1,9 @@
 //提供存取图片的服务，未来可能移动到另一个服务器
-package main
+package servicer
 
 import (
+	"code/Hahachitchat/db"
+	"code/Hahachitchat/utils"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -19,15 +21,15 @@ func init() {
 	go deleteImg_consum()                //启动一个协程去订阅id删除图片
 }
 
-func uploadimg(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Uploadimg(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	if r.Method == "POST" { //注意内容不是json 而是"multipart/form-data"
 		var goods struct { //响应体里的东西
 			State int `json:"state"` //失败返回0,成功返回1,内容类型不正确返回2
 		}
 		err := r.ParseMultipartForm(8388608) //解析表单 即最大8M  8*1024*1024
 		if err != nil {                      //解析表单出错
-			Imglog.Println("uploadimg err解析表单出错", err)
+			utils.Imglog.Println("uploadimg err解析表单出错", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -35,7 +37,7 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		}
 		ctlen := len("multipart/form-data")                                 //只需要前面一截判断内容类型,后面一截是标识
 		if r.Header.Get("Content-Type")[0:ctlen] != "multipart/form-data" { //内容类型不正确
-			Imglog.Println("uploadimg err内容类型不正确", err)
+			utils.Imglog.Println("uploadimg err内容类型不正确", err)
 			goods.State = 2
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -44,18 +46,18 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		imgfilehear := r.MultipartForm.File["image"][0] //获取表单里的图片文件
 		imgfile, err := imgfilehear.Open()              //把解码出的表单文件当成一个文件打开
 		if err != nil {                                 //文件打开失败
-			Imglog.Println("uploadimg err文件打开失败", err)
+			utils.Imglog.Println("uploadimg err文件打开失败", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
 			return
 		}
-		img_id := timeRandId() //图片唯一id
+		img_id := utils.TimeRandId() //图片唯一id
 		filedocandname := fmt.Sprintf("./imgdoc/%s", img_id)
 		saveFile, _ := os.Create(filedocandname) //创建文件
 		_, err = io.Copy(saveFile, imgfile)      //复制保存
 		if err != nil {                          //复制保存失败
-			Imglog.Println("uploadimg err复制保存失败", err)
+			utils.Imglog.Println("uploadimg err复制保存失败", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
@@ -64,13 +66,13 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 		object := r.MultipartForm.Value["object"][0]                          //对象的类型
 		object_id, err := strconv.Atoi(r.MultipartForm.Value["object_id"][0]) //对象的id
 		if err != nil {                                                       //object_id不能转化为int型
-			Imglog.Println("uploadimg err object_id不能转化为int型", err)
+			utils.Imglog.Println("uploadimg err object_id不能转化为int型", err)
 			goods.State = 0
 			goodsjson, _ := json.Marshal(goods)
 			w.Write(goodsjson)
 			return
 		}
-		sint := UpdateObjectimgid(object, object_id, img_id)
+		sint := db.UpdateObjectimgid(object, object_id, img_id)
 		if sint == 1 {
 			goods.State = 1
 			goodsjson, _ := json.Marshal(goods)
@@ -86,8 +88,8 @@ func uploadimg(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getimg(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+func Getimg(w http.ResponseWriter, r *http.Request) {
+	Hearset(w, r)
 	w.Header().Set("Content-Type", "image/*")
 	if r.Method == "GET" {
 		// img_id := r.FormValue("img_id") //获取图片id
@@ -107,7 +109,7 @@ func getimg(w http.ResponseWriter, r *http.Request) {
 }
 
 //把要删除的图片id放进通道
-func deleteImg_produce(id string) {
+func DeleteImg_produce(id string) {
 	if id == "" { //空则不用发送 发送空的东西到消息队列会引发错误
 		return
 	}
@@ -117,9 +119,9 @@ func deleteImg_produce(id string) {
 //获取要删除的图片id并删除
 func deleteImg_consum() {
 	for id := range deleteImg_ch {
-		err := DeleteImg(id)
+		err := utils.DeleteImg(id)
 		if err != nil {
-			Imglog.Println("deleteImg_consumer Remove err:", err)
+			utils.Imglog.Println("deleteImg_consumer Remove err:", err)
 		}
 	}
 }

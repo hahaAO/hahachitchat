@@ -2,9 +2,11 @@
 //使用连接池
 //目前做了comment表的缓存
 //加上了session缓存
-package main
+package db
 
 import (
+	"code/Hahachitchat/definition"
+	"code/Hahachitchat/utils"
 	"fmt"
 	"strconv"
 	"time"
@@ -36,29 +38,29 @@ func Redis_open() {
 	redis_conn.Do("FLUSHALL") //初始化redis
 	ee, err := redis.String(redis_conn.Do("PING", "nihao"))
 	if err != nil {
-		Redislog.Println("Redis_open error:", err)
+		utils.Redislog.Println("Redis_open error:", err)
 		return
 	}
-	Redislog.Println("Redis_open strat OK:", ee)
+	utils.Redislog.Println("Redis_open strat OK:", ee)
 }
 
 func Redis_close() {
 	//关闭连接池
-	Redislog.Println("Redis_close")
+	utils.Redislog.Println("Redis_close")
 	redisClient.Close()
 }
 
 //根据comment_id获取comment (int型，0无此id，1则成功,2则失败)（comment）
-func Redis_SelectCommentOnid(comment_id int) (int, Comment) {
+func Redis_SelectCommentOnid(comment_id int) (int, definition.Comment) {
 	redis_conn := redisClient.Get()
 	defer redis_conn.Close()
-	var comment Comment
+	var comment definition.Comment
 	args, err := redis.Values((redis_conn.Do(
 		"HVALS", fmt.Sprintf("comment::%d", comment_id))))
 	if err == redis.ErrNil || len(args) == 0 { //无此id0
 		return 0, comment
 	} else if err != nil { //其他情况2失败
-		Redislog.Println("Redis_SelectCommentOnid err:", err)
+		utils.Redislog.Println("Redis_SelectCommentOnid err:", err)
 		return 2, comment
 	}
 	comment.Comment_id, _ = strconv.Atoi(string(args[0].([]byte)))
@@ -72,7 +74,7 @@ func Redis_SelectCommentOnid(comment_id int) (int, Comment) {
 }
 
 //把数据库的comment写入缓存 (int型，0失败，1则成功)
-func Redis_CreateComment(comment Comment) int {
+func Redis_CreateComment(comment definition.Comment) int {
 	redis_conn := redisClient.Get()
 	defer redis_conn.Close()
 	_, err := redis.String(
@@ -85,7 +87,7 @@ func Redis_CreateComment(comment Comment) int {
 			"comment_time", comment.Comment_time.UnixNano(), //精确到纳秒的时间戳
 			"img_id", comment.Img_id))
 	if err != nil { //其他情况3
-		Redislog.Println("Redis_CreateComment err:", err)
+		utils.Redislog.Println("Redis_CreateComment err:", err)
 		return 0
 	}
 	return 1 //插入成功
@@ -98,14 +100,14 @@ func Redis_DeleteCommentOnid(comment_id int) int {
 	_, err := redis_conn.Do(
 		"DEL", fmt.Sprintf("comment::%d", comment_id))
 	if err != nil { //其他情况0失败
-		Redislog.Println("Redis_DeleteCommentOnid:", err)
+		utils.Redislog.Println("Redis_DeleteCommentOnid:", err)
 		return 0
 	}
 	return 1 //删除成功
 }
 
 //把初始化后的session存入Redis (int型，0则失败，1则成功)
-func Redis_CreateSession(session Session) int {
+func Redis_CreateSession(session definition.Session) int {
 	redis_conn := redisClient.Get()
 	defer redis_conn.Close()
 	_, err := redis.String(
@@ -117,14 +119,14 @@ func Redis_CreateSession(session Session) int {
 			session.Expire, //过期时间
 		))
 	if err != nil { //0则失败
-		Redislog.Println("Redis_CreateSession err:", err)
+		utils.Redislog.Println("Redis_CreateSession err:", err)
 		return 0
 	}
 	return 1 //插入成功
 }
 
 //检查客户session的ranid 如果正确则设置对应id (int型，0则没有，1则session正确 设置其id，其他情况3)
-func Redis_SelectSession(session *Session) int {
+func Redis_SelectSession(session *definition.Session) int {
 	redis_conn := redisClient.Get()
 	defer redis_conn.Close()
 	id, err := redis.String( //把真的session拿出来对比
@@ -135,7 +137,7 @@ func Redis_SelectSession(session *Session) int {
 	if err == redis.ErrNil { //没有这个随机id
 		return 0
 	} else if err != nil { //其他情况3
-		Redislog.Println("Redis_SelectSession err:", err)
+		utils.Redislog.Println("Redis_SelectSession err:", err)
 		return 3
 	}
 	//查询成功

@@ -4,6 +4,9 @@ package main
 import (
 	// "fmt"
 
+	"code/Hahachitchat/db"
+	"code/Hahachitchat/servicer"
+	"code/Hahachitchat/utils"
 	"net/http"
 )
 
@@ -12,34 +15,34 @@ const (
 )
 
 func defaulttest(w http.ResponseWriter, r *http.Request) {
-	hearset(w, r)
+	servicer.Hearset(w, r)
 	str := []byte("nihaonihao!")
 	w.Write(str)
 }
 
 func main() {
-	DB_open()
-	defer DB_close()
-	Redis_open()
-	defer Redis_close()
+	db.DB_open()
+	defer db.DB_close()
+	db.Redis_open()
+	defer db.Redis_close()
 	Mux1 := http.NewServeMux()
 	Mux1.HandleFunc("/", defaulttest)
-	Mux1.HandleFunc("/register", register)
-	Mux1.HandleFunc("/login", login)
-	Mux1.HandleFunc("/createpost", createpost)
-	Mux1.HandleFunc("/createcomment", createcomment)
-	Mux1.HandleFunc("/allpostid", allpostid)
+	Mux1.HandleFunc("/register", servicer.Register)
+	Mux1.HandleFunc("/login", servicer.Login)
+	Mux1.HandleFunc("/createpost", servicer.Createpost)
+	Mux1.HandleFunc("/createcomment", servicer.Createcomment)
+	Mux1.HandleFunc("/allpostid", servicer.Allpostid)
 
-	Mux1.HandleFunc("/selectpostonid", selectpostonid)
-	Mux1.HandleFunc("/deletepostonid", deletepostonid)
-	Mux1.HandleFunc("/allcommentidonpostid", allcommentidonpostid)
-	Mux1.HandleFunc("/selectcommentonid", selectcommentonid)
-	Mux1.HandleFunc("/deletecommentonid", deletecommentonid)
-	Mux1.HandleFunc("/selectuseronid", selectuseronid)
-	Mux1.HandleFunc("/allposthot", allposthot)
-	Mux1.HandleFunc("/allpostidonuid", allpostidonuid)
-	Mux1.HandleFunc("/uploadimg", uploadimg)
-	Mux1.HandleFunc("/getimg/", getimg)
+	Mux1.HandleFunc("/selectpostonid", servicer.Selectpostonid)
+	Mux1.HandleFunc("/deletepostonid", servicer.Deletepostonid)
+	Mux1.HandleFunc("/allcommentidonpostid", servicer.Allcommentidonpostid)
+	Mux1.HandleFunc("/selectcommentonid", servicer.Selectcommentonid)
+	Mux1.HandleFunc("/deletecommentonid", servicer.Deletecommentonid)
+	Mux1.HandleFunc("/selectuseronid", servicer.Selectuseronid)
+	Mux1.HandleFunc("/allposthot", servicer.Allposthot)
+	Mux1.HandleFunc("/allpostidonuid", servicer.Allpostidonuid)
+	Mux1.HandleFunc("/uploadimg", servicer.Uploadimg)
+	Mux1.HandleFunc("/getimg/", servicer.Getimg)
 
 	server := &http.Server{
 		Addr:    socket,
@@ -47,6 +50,6 @@ func main() {
 	}
 	err := server.ListenAndServe()
 	if err != nil { //无法监听端口
-		Serverlog.Fatal("List", socket)
+		utils.Serverlog.Fatal("List", socket)
 	}
 }

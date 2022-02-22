@@ -1,5 +1,5 @@
 //日志文件路径和记录格式的设置
-package main
+package utils
 
 import (
 	"log"

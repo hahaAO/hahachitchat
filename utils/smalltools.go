@@ -1,7 +1,9 @@
 //放一些零碎的小工具
-package main
+package utils
 
 import (
+	"code/Hahachitchat/db"
+	"code/Hahachitchat/definition"
 	"math/rand"
 	"net/http"
 	"os"
@@ -15,7 +17,7 @@ func init() {
 }
 
 //根据时间戳加上随机数生成唯一图片id 或者生成唯一session
-func timeRandId() string {
+func TimeRandId() string {
 	kaishi := time.Now().UnixNano()
 	timeid := strconv.FormatInt(kaishi, 10)
 	randid := strconv.FormatInt(rand.Int63(), 10)
@@ -23,16 +25,16 @@ func timeRandId() string {
 }
 
 //输入id生成session
-func CreateSession(id int) *Session {
-	return &Session{
+func CreateSession(id int) *definition.Session {
+	return &definition.Session{
 		Id:     strconv.FormatInt(int64(id), 10), //真实id
-		Randid: timeRandId(),                     //随机生成
+		Randid: TimeRandId(),                     //随机生成
 		Expire: int(3600 * 48),                   //默认两天,
 	}
 }
 
 //把初始化后的session转换为cookie
-func (session *Session) ParseToCookie() http.Cookie {
+func ParseToCookie(session *definition.Session) http.Cookie {
 	return http.Cookie{
 		Name:     "randid",
 		Value:    session.Randid,
@@ -42,8 +44,8 @@ func (session *Session) ParseToCookie() http.Cookie {
 }
 
 //把cookie转换为session（需要验证）
-func ParseToSession(cookie http.Cookie) *Session {
-	return &Session{
+func ParseToSession(cookie http.Cookie) *definition.Session {
+	return &definition.Session{
 		//id未知 验证成功再设置
 		Randid: cookie.Value,
 		//过期时间无所谓
@@ -51,13 +53,13 @@ func ParseToSession(cookie http.Cookie) *Session {
 }
 
 //验证cookie 正确返回 (对应session) 错误返回 (nil)
-func VerifyCookie(r *http.Request) *Session {
-	var session *Session
+func VerifyCookie(r *http.Request) *definition.Session {
+	var session *definition.Session
 	for _, cookienow := range r.Cookies() { //遍历所有cookie
 		if cookienow.Name == "randid" { //找到的cookie("name"为"randid")
-			session = ParseToSession(*cookienow) //初始化对应session 设置session的randid
-			sint := Redis_SelectSession(session) //验证session 设置session的id
-			if sint == 1 {                       //验证成功
+			session = ParseToSession(*cookienow)    //初始化对应session 设置session的randid
+			sint := db.Redis_SelectSession(session) //验证session 设置session的id
+			if sint == 1 {                          //验证成功
 				return session
 			} else { //验证失败
 				return nil
