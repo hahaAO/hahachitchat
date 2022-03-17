@@ -89,7 +89,7 @@ func SelectUserById(db *gorm.DB, a uint64) (definition.DBcode, *definition.User)
 	return definition.DB_EXIST, &user //已注册
 }
 
-//根据replyid返回reply
+// SelectReplyById 根据replyid返回reply
 func SelectReplyById(db *gorm.DB, replyId uint64) (definition.DBcode, *definition.Reply) {
 	getDB(&db)
 	var reply definition.Reply
@@ -103,6 +103,22 @@ func SelectReplyById(db *gorm.DB, replyId uint64) (definition.DBcode, *definitio
 		return definition.DB_ERROR, nil //其他问题
 	}
 	return definition.DB_EXIST, &reply
+}
+
+// 根据userid返回Message
+func SelectMessageByUid(db *gorm.DB, uId uint64) (definition.DBcode, []definition.Message) {
+	getDB(&db)
+	var messages []definition.Message
+	err := db.Model(&definition.Message{}).
+		Where("u_id = ?", uId).
+		Find(&messages).Error
+	if err == gorm.ErrRecordNotFound {
+		return definition.DB_NOEXIST, nil //没有未读消息
+	} else if err != nil {
+		DBlog.Println("[SelectMessageByUid]:", err)
+		return definition.DB_ERROR, nil //其他问题
+	}
+	return definition.DB_EXIST, messages
 }
 
 //根据commendid返回reply
@@ -412,6 +428,46 @@ func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId strin
 	} else {
 		return code, 0
 	}
+}
+
+// 增加未读消息
+func CreateMessage(messageType definition.MessageType, messageId uint64) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var userId uint64
+		switch messageType {
+		case definition.MessageTypeComment:
+			var comment definition.Comment
+			if err := tx.Model(&definition.Comment{}).Where("comment_id = ?", messageId).First(&comment).
+				Error; err != nil {
+				return definition.DB_ERROR, nil
+			}
+			userId = comment.UId
+		case definition.MessageTypeReply:
+			var reply definition.Reply
+			if err := tx.Model(&definition.Reply{}).Where("reply_id = ?", messageId).First(&reply).
+				Error; err != nil {
+				return definition.DB_ERROR, nil
+			}
+			userId = reply.UId
+		case definition.MessageTypeChat:
+			var chat definition.Chat
+			if err := tx.Model(&definition.Chat{}).Where("chat_id = ?", messageId).First(&chat).
+				Error; err != nil {
+				return definition.DB_ERROR, nil
+			}
+			userId = chat.AddresseeId
+		}
+		unreadMessage := definition.Message{
+			UId:         userId,
+			MessageType: messageType,
+			MessageId:   messageId,
+		}
+		if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
+			return definition.DB_ERROR, nil
+		}
+		return definition.DB_SUCCESS, nil
+	})
+	return code
 }
 
 // DeletePostOnid 根据post_id 删除帖子及帖子里的评论

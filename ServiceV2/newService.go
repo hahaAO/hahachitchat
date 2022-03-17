@@ -38,6 +38,7 @@ func StartService(port string) {
 	needSessionRoute.GET("/subscribed-user/:u_id", GetUserSubscribedUser)
 	needSessionRoute.GET("/user-saved/:u_id", GetUserSavedPost)
 	needSessionRoute.GET("/allchat/", GetAllChat)
+	needSessionRoute.GET("/user_state", GetUserState)
 
 	needSessionRoute.POST("/create-post", CreatePost)
 	needSessionRoute.POST("/create-comment", CreateComment)

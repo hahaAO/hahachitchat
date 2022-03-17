@@ -11,6 +11,14 @@ const ( // 帖子分区
 	Market     ZoneType = 3 //交易区
 )
 
+type MessageType = uint8 //
+
+const ( // 消息类型
+	MessageTypeComment MessageType = 1 //评论
+	MessageTypeReply   MessageType = 2 //回复
+	MessageTypeChat    MessageType = 3 //私聊
+)
+
 var DeleteImg_ch chan string
 
 type Session struct {

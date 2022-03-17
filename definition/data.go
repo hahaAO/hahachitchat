@@ -78,12 +78,11 @@ func (Chat) TableName() string {
 }
 
 type Message struct {
-	UId           uint64 `gorm:"column:u_id; primaryKey"` //用户id,唯一主键
-	UnreadComment string `gorm:"column:unread_comment"`   //未读评论id,数组格式为:"1 2 3"
-	UnreadReply   string `gorm:"column:unread_reply"`     //未读回复id,数组格式为:"1 2 3"
-	UnreadChat    string `gorm:"column:unread_chat"`      //未读私聊id,数组格式为:"1 2 3"
+	UId         uint64      `gorm:"column:u_id; index"`         // 用户id
+	MessageType MessageType `gorm:"column:message_type; index"` // 消息类型
+	MessageId   uint64      `gorm:"column:message_id"`          // 消息id
 }
 
 func (Message) TableName() string {
-	return "message"
+	return "Message"
 }

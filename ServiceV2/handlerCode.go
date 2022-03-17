@@ -377,7 +377,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true) // 把cookie写入响应头 设置cookie
+				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
@@ -475,6 +475,7 @@ func CreateComment(c *gin.Context) {
 			StateMessage: "创建评论成功",
 			CommentId:    ccomid,
 		})
+		go dataLayer.CreateMessage(definition.MessageTypeComment, ccomid) // 消息提醒
 	case definition.DB_NOEXIST_USER: // 无此人id
 		c.JSON(http.StatusOK, definition.CreateCommentResponse{
 			State:        definition.BadRequest,
@@ -516,6 +517,7 @@ func CreateReply(c *gin.Context) {
 			StateMessage: "创建回复成功",
 			ReplyId:      cReplyId,
 		})
+		go dataLayer.CreateMessage(definition.MessageTypeReply, cReplyId) // 消息提醒
 	case definition.DB_NOEXIST_USER: // 无此人id
 		c.JSON(http.StatusOK, definition.CreateReplyResponse{
 			State:        definition.BadRequest,
@@ -598,6 +600,7 @@ func CreateChat(c *gin.Context) {
 			StateMessage: "发送私聊成功",
 			ChatId:       cChatId,
 		})
+		go dataLayer.CreateMessage(definition.MessageTypeChat, cChatId) // 消息提醒
 	case definition.DB_NOEXIST_USER:
 		c.JSON(http.StatusOK, definition.CreateChatResponse{
 			State:        definition.BadRequest,
@@ -865,10 +868,7 @@ func SavePost(c *gin.Context) {
 		savedPost, err := utils.StringToArr(suser.SavedPost)
 		if err != nil {
 			dataLayer.Serverlog.Println("[SavePost] err: ", err)
-			c.JSON(http.StatusOK, definition.SavePostResponse{
-				State:        definition.ServerError,
-				StateMessage: "服务端数据库出错",
-			})
+			SetDBParamErrorResponse(c)
 			return
 		}
 
@@ -928,10 +928,7 @@ func CancelSavePost(c *gin.Context) {
 		savedPost, err := utils.StringToArr(suser.SavedPost)
 		if err != nil {
 			dataLayer.Serverlog.Println("[CancelSavePost] err: ", err)
-			c.JSON(http.StatusOK, definition.CancelSavePostResponse{
-				State:        definition.ServerError,
-				StateMessage: "服务端数据库出错",
-			})
+			SetDBParamErrorResponse(c)
 			return
 		}
 
@@ -991,10 +988,7 @@ func Subscribe(c *gin.Context) {
 		subscribed, err := utils.StringToArr(suser.Subscribed)
 		if err != nil {
 			dataLayer.Serverlog.Println("[Subscribe] err: ", err)
-			c.JSON(http.StatusOK, definition.SubscribeResponse{
-				State:        definition.ServerError,
-				StateMessage: "服务端数据库出错",
-			})
+			SetDBParamErrorResponse(c)
 			return
 		}
 
@@ -1054,10 +1048,7 @@ func CancelSubscribe(c *gin.Context) {
 		subscribed, err := utils.StringToArr(suser.Subscribed)
 		if err != nil {
 			dataLayer.Serverlog.Println("[Subscribe] err: ", err)
-			c.JSON(http.StatusOK, definition.CancelSubscribeResponse{
-				State:        definition.ServerError,
-				StateMessage: "服务端数据库出错",
-			})
+			SetDBParamErrorResponse(c)
 			return
 		}
 
@@ -1128,10 +1119,7 @@ func GetUserSavedPost(c *gin.Context) {
 		savedPost, err := utils.StringToArr(suser.SavedPost)
 		if err != nil {
 			dataLayer.Serverlog.Println("[GetUserSavedPost] err: ", err)
-			c.JSON(http.StatusOK, definition.GetUserSavedPostResponse{
-				State:        definition.ServerError,
-				StateMessage: "服务端数据库出错",
-			})
+			SetDBParamErrorResponse(c)
 			return
 		}
 
@@ -1183,10 +1171,7 @@ func GetUserSubscribedUser(c *gin.Context) {
 		subscribed, err := utils.StringToArr(suser.Subscribed)
 		if err != nil {
 			dataLayer.Serverlog.Println("[GetUserSavedPost] err: ", err)
-			c.JSON(http.StatusOK, definition.GetUserSubscribedUserResponse{
-				State:        definition.ServerError,
-				StateMessage: "服务端数据库出错",
-			})
+			SetDBParamErrorResponse(c)
 			return
 		}
 
@@ -1255,6 +1240,38 @@ func GetAllChat(c *gin.Context) {
 		SetServerErrorResponse(c)
 	}
 
+}
+
+func GetUserState(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUserIdStr, ok := myUserId.(string)
+	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	code, messages := dataLayer.SelectMessageByUid(nil, myUid)
+	switch code {
+	case definition.DB_EXIST:
+		c.JSON(http.StatusOK, definition.GetUserStateResponse{
+			State:               definition.Success,
+			StateMessage:        "查询用户状态成功",
+			MyUserId:            myUid,
+			UnreadMessageNumber: len(messages),
+		})
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.GetUserStateResponse{
+			State:               definition.Success,
+			StateMessage:        "查询用户状态成功",
+			MyUserId:            myUid,
+			UnreadMessageNumber: 0,
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
 }
 
 // 以上的是有登录态才能正常响应的

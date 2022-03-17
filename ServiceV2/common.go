@@ -42,3 +42,10 @@ func SetDBErrorResponse(c *gin.Context) {
 		StateMessage: "数据库出错",
 	})
 }
+
+func SetDBParamErrorResponse(c *gin.Context) {
+	c.JSON(http.StatusOK, definition.CommonResponse{
+		State:        definition.ServerError,
+		StateMessage: "数据库存储的数据解析出错",
+	})
+}

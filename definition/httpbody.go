@@ -233,3 +233,10 @@ type GetAllChatResponse struct {
 	StateMessage string                `json:"state_message"`
 	ChatInfos    map[uint64][]ChatInfo `json:"chat_infos"` // 根据uid获取私聊消息
 }
+
+type GetUserStateResponse struct {
+	State               int    `json:"state"`
+	StateMessage        string `json:"state_message"`
+	MyUserId            uint64 `json:"my_user_id"`
+	UnreadMessageNumber int    `json:"unread_message_number"`
+}
