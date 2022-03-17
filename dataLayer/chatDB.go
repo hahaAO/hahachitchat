@@ -355,30 +355,34 @@ func CreateComment(post_id uint64, u_id uint64, comment_txt string) (definition.
 // CreateReply 根据commentId uId replyTxt target插入reply
 func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		scode, _ := SelectUserById(tx, uId)           //查u_id
-		scode2, _ := SelectCommentById(tx, commentId) //查comment
-		scode3, _ := SelectReplyById(tx, target)      //查target
-		if target == 0 {                              // 直接回复层主
+		scode, _ := SelectUserById(tx, uId)                 //查u_id
+		scode2, comment := SelectCommentById(tx, commentId) //查comment
+		scode3, targetReply := SelectReplyById(tx, target)  //查targetReply
+
+		var targetUid uint64
+		if target == 0 { // 直接回复层主
 			scode3 = definition.DB_EXIST
+			targetUid = comment.UId
+		} else {
+			targetUid = targetReply.UId
 		}
 		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST && scode3 == definition.DB_EXIST { // 评论和用户和回复目标都存在
 			reply := definition.Reply{
 				CommentId: commentId,
 				UId:       uId,
 				Target:    target,
+				TargetUid: targetUid,
 				ReplyTxt:  replyTxt,
 			}
 			err := tx.Model(&definition.Reply{}).Create(&reply).Error
 			if err != nil {
-				DBlog.Println("CreateReply err1:", err)
+				DBlog.Println("[CreateReply] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
 			return definition.DB_SUCCESS, reply.ReplyId
 		} else if scode == definition.DB_NOEXIST {
 			return definition.DB_NOEXIST_USER, 0
-		} else if scode2 == definition.DB_NOEXIST {
-			return definition.DB_NOEXIST_POST, 0
-		} else if scode3 == definition.DB_NOEXIST {
+		} else if scode2 == definition.DB_NOEXIST || scode3 == definition.DB_NOEXIST {
 			return definition.DB_NOEXIST_TARGET, 0
 		} else {
 			return definition.DB_ERROR, 0

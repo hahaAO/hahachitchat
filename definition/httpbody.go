@@ -203,6 +203,7 @@ type GetReplyByIdResponse struct {
 	UId          uint64    `json:"u_id"`
 	CommentId    uint64    `json:"comment_id"`
 	Target       uint64    `json:"target"`
+	TargetUid    uint64    `json:"target_uid"` //回应对象的用户id
 	ReplyTxt     string    `json:"reply_txt"`
 	ReplyTime    time.Time `json:"reply_time"`
 }

@@ -123,6 +123,7 @@ func GetReplyById(c *gin.Context) {
 			UId:          sReply.UId,
 			CommentId:    sReply.CommentId,
 			Target:       sReply.Target,
+			TargetUid:    sReply.TargetUid,
 			ReplyTxt:     sReply.ReplyTxt,
 			ReplyTime:    sReply.ReplyTime,
 		})
@@ -377,7 +378,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
+				"/", "", false, true) // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
@@ -522,11 +523,6 @@ func CreateReply(c *gin.Context) {
 		c.JSON(http.StatusOK, definition.CreateReplyResponse{
 			State:        definition.BadRequest,
 			StateMessage: "用户不存在,创建回复失败",
-		})
-	case definition.DB_NOEXIST_POST: // 无此帖子id
-		c.JSON(http.StatusOK, definition.CreateReplyResponse{
-			State:        definition.BadRequest,
-			StateMessage: "评论不存在,创建回复失败",
 		})
 	case definition.DB_NOEXIST_TARGET:
 		c.JSON(http.StatusOK, definition.CreateReplyResponse{

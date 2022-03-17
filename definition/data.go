@@ -55,7 +55,8 @@ type Reply struct {
 	ReplyId   uint64    `gorm:"column:reply_id; primaryKey" json:"reply_id"`          //回复id,唯一主键
 	CommentId uint64    `gorm:"column:comment_id; index; not null" json:"comment_id"` //所属评论id
 	UId       uint64    `gorm:"column:u_id; not null" json:"u_id"`                    //所属用户id
-	Target    uint64    `gorm:"column:target; not null; default:0" json:"target"`     //回应对象，0为层主
+	Target    uint64    `gorm:"column:target; not null; default:0" json:"target"`     //回应对象ID（评论或回复的id），0为评论
+	TargetUid uint64    `gorm:"column:target_uid; not null" json:"target_uid"`        //回应对象的用户id
 	ReplyTxt  string    `gorm:"column:reply_txt; not null" json:"reply_txt"`          //回复内容
 	ReplyTime time.Time `gorm:"column:reply_time; autoCreateTime" json:"reply_time"`  //回复时间
 }
