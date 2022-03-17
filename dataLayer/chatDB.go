@@ -3,12 +3,12 @@ package dataLayer
 
 import (
 	"code/Hahachitchat/definition"
-	"database/sql"
+	"code/Hahachitchat/utils"
 	"fmt"
+	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-
-	_ "github.com/lib/pq"
+	"gorm.io/gorm/clause"
 )
 
 const (
@@ -19,352 +19,557 @@ const (
 	dbname   = "hahadb"
 )
 
-var DB *sql.DB
-var err error
+var gormDB *gorm.DB
 
 //连接一个数据库，并测试连接
-func DB_open() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+func DB_conn() {
+	dsn := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
-	DB, err = sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	err = DB.Ping()
+	var err error
+	gormDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 
-	gormDB, err := gorm.Open(postgres.New(postgres.Config{
-		Conn: DB,
-	}), &gorm.Config{})
-	if err != nil {
-		panic(err)
-	}
-	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{})
+	// 同步数据库模式
+	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
+		&definition.Reply{}, &definition.Chat{}, &definition.Message{})
+	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
 }
 
-//关闭数据库连接
-func DB_close() {
-	DB.Close()
-	DBlog.Printf("Successfully off to postgres %s!\n", dbname)
+// 无连接时获取连接。有事务连接时用事务连接
+func getDB(db **gorm.DB) {
+	if *db == nil {
+		*db = gormDB
+	}
 }
 
-//根据uid返回user （未注册0 已注册1 其他情况3）（User）
-func SelectUserOnid(a int) (int, definition.User) {
-	var user definition.User
-	err := DB.QueryRow(`SELECT * FROM "user"
-	WHERE "u_id"=$1`, a).Scan(
-		&user.U_id,
-		&user.U_name,
-		&user.U_password,
-		&user.U_time,
-		&user.U_nickname,
-		&user.Img_id)
+// 启动事务
+func runTX(a func(tx *gorm.DB) (definition.DBcode, interface{})) (definition.DBcode, interface{}) {
+	tx := gormDB.Begin()
+	defer func() {
+		r := recover()
+		if r != nil {
+			DBlog.Fatalf("[runTX] r: ", r)
+			tx.Rollback()
+		}
+	}()
 
-	if err == sql.ErrNoRows {
-		return 0, user //未注册
-	} else if err != nil {
-		DBlog.Println("SelectUserOnid:", err)
-		return 3, user //其他问题
+	if err := tx.Error; err != nil {
+		return definition.DB_ERROR_TX, nil
 	}
-	return 1, user //已注册
+
+	code, content := a(tx)
+	if code != definition.DB_SUCCESS {
+		tx.Rollback()
+		return code, content
+	}
+	if err := tx.Commit().Error; err != nil {
+		return definition.DB_ERROR_TX, nil
+	}
+	return code, content
+}
+
+//根据uid返回user
+func SelectUserById(db *gorm.DB, a uint64) (definition.DBcode, *definition.User) {
+	getDB(&db)
+	var user definition.User
+	err := db.Model(&definition.User{}).
+		Where("u_id = ?", a).
+		First(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return definition.DB_NOEXIST, nil //未注册
+	} else if err != nil {
+		DBlog.Println("SelectUserById:", err)
+		return definition.DB_ERROR, nil //其他问题
+	}
+	return definition.DB_EXIST, &user //已注册
+}
+
+//根据replyid返回reply
+func SelectReplyById(db *gorm.DB, replyId uint64) (definition.DBcode, *definition.Reply) {
+	getDB(&db)
+	var reply definition.Reply
+	err := db.Model(&definition.Reply{}).
+		Where("reply_id = ?", replyId).
+		First(&reply).Error
+	if err == gorm.ErrRecordNotFound {
+		return definition.DB_NOEXIST, nil //没有该回复
+	} else if err != nil {
+		DBlog.Println("SelectReplyById:", err)
+		return definition.DB_ERROR, nil //其他问题
+	}
+	return definition.DB_EXIST, &reply
+}
+
+//根据commendid返回reply
+func SelectRepliesByCommentId(db *gorm.DB, commentId uint64) (definition.DBcode, []definition.Reply) {
+	getDB(&db)
+	var reply []definition.Reply
+	err := db.Model(&definition.Reply{}).
+		Where("comment_id = ?", commentId).
+		Find(&reply).Error
+	if err != nil {
+		DBlog.Println("SelectRepliesByCommentId:", err)
+		return definition.DB_ERROR, nil //其他问题
+	}
+	return definition.DB_SUCCESS, reply
 }
 
 //根据name获取user （未注册0 已注册1 其他情况3）（User）
-func SelectUserOnname(name string) (int, definition.User) {
+func SelectUserByname(db *gorm.DB, name string) (definition.DBcode, *definition.User) {
+	getDB(&db)
 	var user definition.User
-	err := DB.QueryRow(`SELECT * FROM "user" WHERE u_name = $1`, name).Scan(
-		&user.U_id,
-		&user.U_name,
-		&user.U_password,
-		&user.U_time,
-		&user.U_nickname,
-		&user.Img_id)
-	if err == sql.ErrNoRows {
-		return 0, user //未注册
+	err := db.Model(&definition.User{}).
+		Where("u_name = ?", name).
+		First(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return definition.DB_NOEXIST, nil //未注册
 	} else if err != nil {
-		DBlog.Println("SelectUserOnname err:", err)
-		return 3, user //其他问题
+		DBlog.Println("SelectUserOnname:", err)
+		return definition.DB_ERROR, nil //其他问题
 	}
-	return 1, user //已注册
+	return definition.DB_EXIST, &user //已注册
 }
 
-//根据post id获取post （无此id0 查到有此id1 其他情况3）（Post）
-func SelectPostOnid(post_id int) (int, definition.Post) {
+//根据post id获取post
+func SelectPostById(db *gorm.DB, post_id uint64) (definition.DBcode, *definition.Post) {
+	getDB(&db)
 	var post definition.Post
-	err := DB.QueryRow(`SELECT * FROM "post" WHERE post_id = $1`, post_id).Scan(
-		&post.Post_id,
-		&post.U_id,
-		&post.Post_name,
-		&post.Post_txt,
-		&post.Post_time,
-		&post.Post_txthtml,
-		&post.Img_id)
-	if err == sql.ErrNoRows {
-		return 0, post //无此id0
+	err := db.Model(&definition.Post{}).
+		Where("post_id = ?", post_id).
+		First(&post).Error
+	if err == gorm.ErrRecordNotFound {
+		return definition.DB_NOEXIST, nil //无此id0
 	} else if err != nil {
 		DBlog.Println("SelectPostOnid err:", err)
-		return 3, post //其他情况3
+		return definition.DB_ERROR, nil //其他情况3
 	}
-	return 1, post //查到有此id1
+	return definition.DB_EXIST, &post //查到有此id1
 }
 
-//加了读redis缓存的功能		根据comment_id获取comment (int型，0无此id，1则成功,2则失败)（comment）
-func SelectCommentOnid(comment_id int) (int, definition.Comment) {
-	sint, scomment := Redis_SelectCommentOnid(comment_id) //先读redis缓存
-	if sint == 1 {                                        //redis中有此comment
-		if scomment.Post_id == 0 { //Redis中为空值
-			return 0, scomment
+//加了读redis缓存的功能		根据comment_id获取comment
+func SelectCommentById(db *gorm.DB, comment_id uint64) (definition.DBcode, *definition.Comment) {
+	getDB(&db)
+	scode, scomment := Redis_SelectCommentByid(comment_id) // 先读redis缓存
+	if scode == definition.DB_EXIST {                      // redis中有此comment
+		if scomment.PostId == 0 { // Redis中为空值
+			return definition.DB_NOEXIST, nil
 		} else { //Redis中存在
-			return 1, scomment
+			return definition.DB_EXIST, &scomment
 		}
-	} else { //redis中无此id	或	redis出错	要到postgres中查
+	} else { // redis中无此id	或	redis出错	要到postgres中查
 		var comment definition.Comment
-		err := DB.QueryRow(`SELECT * FROM "comment" WHERE comment_id = $1`, comment_id).Scan(
-			&comment.Comment_id,
-			&comment.Post_id,
-			&comment.U_id,
-			&comment.Comment_txt,
-			&comment.Comment_time,
-			&comment.Img_id)
-		if err == sql.ErrNoRows { //无此id0
-			comment.Comment_id = comment_id
-			comment.Post_id = 0
-			Redis_CreateComment(comment) //把数据库的comment 空值 写入redis
-			return 0, comment
+		err := db.Model(&definition.Comment{}).
+			Where("comment_id = ?", comment_id).
+			First(&comment).Error
+		if err == gorm.ErrRecordNotFound { //无此id0
+			comment.CommentId = comment_id
+			comment.PostId = 0
+			go Redis_CreateComment(comment) //把数据库的comment 空值 写入redis
+			return definition.DB_NOEXIST, nil
 		} else if err != nil { //其他情况3
 			DBlog.Println("SelectCommentOnid err:", err)
-			return 3, comment
+			return definition.DB_ERROR, nil
 		}
-		//查到有此id1
-		Redis_CreateComment(comment) //把数据库的comment写入redis
-		return 1, comment
-
+		go Redis_CreateComment(comment) //把数据库的comment写入redis
+		return definition.DB_EXIST, &comment
 	}
 }
 
-//获取所有帖子的post (int，0则没有帖子，1则成功，2则有其他问题)（ []int）
-func AllSelectPost() (int, []definition.Post) {
+//获取所有帖子的post
+func AllSelectPost(db *gorm.DB) (definition.DBcode, []definition.Post) {
+	getDB(&db)
 	var posts []definition.Post
-	rows, err := DB.Query(`SELECT * FROM "post"`)
-	defer rows.Close()
-	if err == sql.ErrNoRows { //没有帖子
-		return 0, posts
-	} else if err != nil {
-		return 2, posts
-	}
-	for rows.Next() {
-		var post definition.Post
-		err = rows.Scan(
-			&post.Post_id,
-			&post.U_id,
-			&post.Post_name,
-			&post.Post_txt,
-			&post.Post_time,
-			&post.Post_txthtml,
-			&post.Img_id)
-		if err != nil {
-			DBlog.Println("AllSelectPost err1:", err)
-			return 2, posts
+	err := db.Model(&definition.Post{}).Find(&posts).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return definition.DB_NOEXIST, nil
 		}
-		posts = append(posts, post)
+		DBlog.Println("AllSelectPost err1:", err)
+		return definition.DB_ERROR, nil
 	}
 	if len(posts) == 0 { //没有帖子
-		return 0, posts
+		return definition.DB_NOEXIST, nil
 	}
-	return 1, posts
+	return definition.DB_EXIST, posts
 }
 
-//根据post_id获取所有comment_id(int型，0则没有评论，1则成功，2则有其他问题)（ []int）
-func AllCommentidOnpostid(post_id int) (int, []int) {
-	var commentids []int
-	rows, err := DB.Query(`SELECT "comment_id" FROM "comment" WHERE "post_id"=$1`, post_id)
-	defer rows.Close()
-	if err == sql.ErrNoRows { //没有评论
-		return 0, commentids
+//获取zone下所有帖子的post
+func AllPostByZone(db *gorm.DB, zone definition.ZoneType) (definition.DBcode, []definition.Post) {
+	getDB(&db)
+	var posts []definition.Post
+	err := db.Model(&definition.Post{}).Where("zone =?", zone).Find(&posts).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return definition.DB_NOEXIST, nil
+		}
+		DBlog.Println("AllSelectPost err1:", err)
+		return definition.DB_ERROR, nil
+	}
+	if len(posts) == 0 { //没有帖子
+		return definition.DB_NOEXIST, nil
+	}
+	return definition.DB_EXIST, posts
+}
+
+//根据post_id获取所有comment_id
+func AllCommentIdByPostId(db *gorm.DB, post_id uint64) (definition.DBcode, []uint64) {
+	getDB(&db)
+	var comments []definition.Comment
+	var commentids []uint64
+	err := db.Model(&definition.Comment{}).Where("post_id = ?", post_id).Find(&comments).Error
+	if err == gorm.ErrRecordNotFound { //没有评论
+		return definition.DB_NOEXIST, nil
 	} else if err != nil {
 		DBlog.Println("AllCommentidOnpostid err1:", err)
-		return 2, commentids
+		return definition.DB_ERROR, nil
 	}
-	for rows.Next() {
-		var commentid int
-		err = rows.Scan(&commentid)
-		if err != nil {
-			DBlog.Println("AllCommentidOnpostid err2:", err)
-			return 2, commentids
-		}
-		commentids = append(commentids, commentid)
+	for _, comment := range comments {
+		commentids = append(commentids, comment.CommentId)
 	}
 	if len(commentids) == 0 { //没有评论
-		return 0, commentids
+		return definition.DB_NOEXIST, nil
 	}
-	return 1, commentids
+	return definition.DB_EXIST, commentids
 }
 
-//根据name password Unickname插入user （注册失败0 注册成功1）（User）
-func CreateUser(Uname string, Upassword string, Unickname string) (int, definition.User) {
-	var user definition.User
-	_, err := DB.Exec(`INSERT INTO "user" ("u_name","u_password","u_nickname")
-    VALUES ($1,$2,$3)`, Uname, Upassword, Unickname)
-	if err != nil {
-		DBlog.Println("CreateUser err1:", err)
-		return 0, user //其他问题,注册失败
-	}
-	sint, suser := SelectUserOnname(Uname)
-	if sint == 1 {
-		return 1, suser //注册成功
-	}
-	return 0, user //其他问题,注册失败
-}
-
-//根据uid post_name post_txt post_txthtml插入post（0则失败，1则成功，2则无此人id，3则有其他问题） （post_id）
-func CreatePost(u_id int, post_name string, post_txt string, post_txthtml string) (int, int) {
-	var post_id int
-	sint, _ := SelectUserOnid(u_id)
-	if sint == 0 { //2则无此人id
-		return 2, post_id
-	} else if sint == 1 { //有此人id
-		err := DB.QueryRow(`INSERT INTO "post" ("u_id","post_name","post_txt","post_txthtml")
-        VALUES ($1,$2,$3,$4) RETURNING post_id`, u_id, post_name, post_txt, post_txthtml).Scan(&post_id)
-		if err != nil {
-			DBlog.Println("CreatePost err1:", err)
-			return 3, post_id //其他问题,插入失败
+//根据name password Unickname插入user
+func CreateUser(uNname string, uPassword string, uNickname string) (definition.DBcode, *definition.User) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		if code, _ := SelectUserByname(tx, uNname); code == definition.DB_EXIST {
+			return definition.DB_ERROR_UNAME_UNIQUE, nil
 		}
-		//插入成功
-		return 1, post_id //1则成功
-	} else { //其他问题,插入失败
-		return 3, post_id
-	}
+		if err := tx.Model(&definition.User{}).Where("u_nickname = ?", uNickname).First(&definition.User{}).
+			Error; err != gorm.ErrRecordNotFound {
+			return definition.DB_ERROR_NICKNAME_UNIQUE, nil
+		}
 
+		user := definition.User{
+			UName:     uNname,
+			UPassword: uPassword,
+			UNickname: uNickname,
+		}
+		err := tx.Model(&definition.User{}).Create(&user).Error
+		if err != nil {
+			DBlog.Println("CreateUser err1:", err)
+			return definition.DB_ERROR, nil //其他问题,注册失败
+		}
+		if code, user := SelectUserByname(tx, uNname); code == definition.DB_EXIST {
+			return definition.DB_SUCCESS, user //注册成功
+		}
+		return definition.DB_ERROR, nil //其他问题,注册失败
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.(*definition.User)
+	} else {
+		return code, nil
+	}
 }
 
-//根据post_id u_id comment_txt插入comment(int型，0则失败，1则成功，2则无此人id，3则无帖子id，4则有其他问题), （comment_id）
-func CreateComment(post_id int, u_id int, comment_txt string) (int, int) {
-	var comment_id int
-	sint, _ := SelectUserOnid(u_id) //查u_id
-	if sint == 0 {                  //则无此人id
-		return 2, comment_id
-	} else if sint == 1 { //有此人id
-		sint, _ := SelectPostOnid(post_id) //查post_id
-		if sint == 0 {                     //2则无帖子id
-			return 3, comment_id
-		} else if sint == 1 { //1有此帖子id
-			err := DB.QueryRow(`INSERT INTO "comment" ("post_id","u_id","comment_txt")
-            VALUES ($1,$2,$3) RETURNING comment_id`, post_id, u_id, comment_txt).Scan(&comment_id)
+//根据uid post_name post_txt post_txthtml插入post
+func CreatePost(u_id uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string) (definition.DBcode, uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		code, _ := SelectUserById(tx, u_id)
+		switch code {
+		case definition.DB_NOEXIST: // 无此人id
+			return definition.DB_NOEXIST, 0
+		case definition.DB_EXIST: // 有此人id
+			post := definition.Post{
+				UId:         u_id,
+				PostName:    post_name,
+				PostTxt:     post_txt,
+				Zone:        zone,
+				PostTxtHtml: post_txthtml,
+			}
+			err := tx.Model(&definition.Post{}).Create(&post).Error
+			if err != nil {
+				DBlog.Println("CreatePost err1:", err)
+				return definition.DB_ERROR, 0 //其他问题,插入失败
+			}
+			return definition.DB_SUCCESS, post.PostId //1则成功
+		case definition.DB_ERROR: // 其他问题,查询失败
+			return definition.DB_ERROR, 0
+		default:
+			return definition.DB_ERROR_UNEXPECTED, 0
+		}
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.(uint64)
+	} else {
+		return code, 0
+	}
+}
+
+//根据post_id u_id comment_txt插入comment
+func CreateComment(post_id uint64, u_id uint64, comment_txt string) (definition.DBcode, uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		scode, _ := SelectUserById(tx, u_id)                               //查u_id
+		scode2, _ := SelectPostById(tx, post_id)                           //查post_id
+		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST { // 帖子和用户存在
+			comment := definition.Comment{
+				PostId:     post_id,
+				UId:        u_id,
+				CommentTxt: comment_txt,
+			}
+			err := tx.Model(&definition.Comment{}).Create(&comment).Error
 			if err != nil {
 				DBlog.Println("CreateComment err1:", err)
-				return 0, comment_id //其他问题,插入失败
+				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			//插入成功
-			return 1, comment_id //成功
-		} else { //3其他问题,插入失败
-			return 0, comment_id
+			return definition.DB_SUCCESS, comment.CommentId
+		} else if scode == definition.DB_NOEXIST {
+			return definition.DB_NOEXIST_USER, 0
+		} else if scode2 == definition.DB_NOEXIST {
+			return definition.DB_NOEXIST_POST, 0
+		} else {
+			return definition.DB_ERROR, 0
 		}
-	} else { //3其他问题,插入失败
-		return 0, comment_id
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.(uint64)
+	} else {
+		return code, 0
 	}
 }
 
-//根据name password查询 （未注册0 已注册密码正确1 已注册密码错误2 其他情况3）  （User）
-func SelectUsernamepassword(name string, password string) (int, definition.User) {
-	var user definition.User
-	sint, user := SelectUserOnname(name)
-	if sint == 0 { //未注册0
-		return 0, user
-	} else if sint == 1 { //已注册
-		if user.U_password == password { //密码正确1
-			return 1, user
-		} else { //密码错误2
-			return 2, user
+// CreateReply 根据commentId uId replyTxt target插入reply
+func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64) (definition.DBcode, uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		scode, _ := SelectUserById(tx, uId)           //查u_id
+		scode2, _ := SelectCommentById(tx, commentId) //查comment
+		scode3, _ := SelectReplyById(tx, target)      //查target
+		if target == 0 {                              // 直接回复层主
+			scode3 = definition.DB_EXIST
 		}
-	} else { //其他问题3
-		return 3, user
+		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST && scode3 == definition.DB_EXIST { // 评论和用户和回复目标都存在
+			reply := definition.Reply{
+				CommentId: commentId,
+				UId:       uId,
+				Target:    target,
+				ReplyTxt:  replyTxt,
+			}
+			err := tx.Model(&definition.Reply{}).Create(&reply).Error
+			if err != nil {
+				DBlog.Println("CreateReply err1:", err)
+				return definition.DB_ERROR, 0 // 其他问题,插入失败
+			}
+			return definition.DB_SUCCESS, reply.ReplyId
+		} else if scode == definition.DB_NOEXIST {
+			return definition.DB_NOEXIST_USER, 0
+		} else if scode2 == definition.DB_NOEXIST {
+			return definition.DB_NOEXIST_POST, 0
+		} else if scode3 == definition.DB_NOEXIST {
+			return definition.DB_NOEXIST_TARGET, 0
+		} else {
+			return definition.DB_ERROR, 0
+		}
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.(uint64)
+	} else {
+		return code, 0
 	}
 }
 
-//根据post_id 删除帖子及帖子里的评论 (int型，1则成功，2则有其他问题)
-func DeletePostOnid(post_id int) int {
-	var Img_id string                                                                              //要删除的图片id
-	rows, err := DB.Query(`DELETE FROM "comment" WHERE "post_id" = $1 RETURNING img_id;`, post_id) //删除帖子里的评论，顺带读出图片id
-	if err != nil {                                                                                //有其他问题
-		DBlog.Println("DeletePostOnid err1:", err)
-		return 2
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err = rows.Scan(&Img_id) //读出图片id
+// 创建chat
+func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId string) (definition.DBcode, uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		sCode, _ := SelectUserById(tx, senderId)
+		switch sCode {
+		case definition.DB_ERROR:
+			return definition.DB_ERROR, 0
+		case definition.DB_NOEXIST:
+			return definition.DB_NOEXIST_USER, 0
+		}
+		sCode2, _ := SelectUserById(tx, AddresseeId)
+		switch sCode2 {
+		case definition.DB_ERROR:
+			return definition.DB_ERROR, 0
+		case definition.DB_NOEXIST:
+			return definition.DB_NOEXIST_ADDRESSEE, 0
+		}
+
+		chat := definition.Chat{
+			SenderId:    senderId,
+			AddresseeId: AddresseeId,
+			ChatTxt:     ChatTxt,
+			ImgId:       ImgId,
+		}
+		err := tx.Model(&definition.Chat{}).Create(&chat).Error
 		if err != nil {
-			DBlog.Println("DeletePostOnid err2:", err)
-			return 2
+			DBlog.Println("[CreateChat] err: ", err)
+			return definition.DB_ERROR, 0 // 其他问题,插入失败
+		} else {
+			return definition.DB_SUCCESS, chat.ChatId
 		}
-		DeleteImg_produce(Img_id) //把要删除的图片id发到消息队列
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.(uint64)
+	} else {
+		return code, 0
 	}
-	err = DB.QueryRow(`DELETE FROM "post" WHERE "post_id" = $1 RETURNING img_id;`, post_id).Scan(&Img_id) //删除帖子，顺带读出图片id
-	if err != nil {                                                                                       //有其他问题
-		DBlog.Println("DeletePostOnid err3:", err)
-		return 2
-	}
-	DeleteImg_produce(Img_id) //把要删除的图片id发到消息队列
-	DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
-	return 1
 }
 
-//redis缓存中的也删掉	根据comment_id 删除评论 (int型，1则成功，2则有其他问题)
-func DeleteCommentOnid(comment_id int) int {
-	var Img_id string //图片也要删除
-	err := DB.QueryRow(`DELETE FROM "comment" WHERE "comment_id" = $1 RETURNING img_id;`,
-		comment_id).Scan(&Img_id)
+// DeletePostOnid 根据post_id 删除帖子及帖子里的评论
+func DeletePostOnid(post_id uint64) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var comments []definition.Comment
+		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&comments).Error; err != nil { //有其他问题
+			DBlog.Println("DeletePostOnid err1:", err)
+			return definition.DB_ERROR, nil
+		}
+		for _, comment := range comments { //读出图片id
+			DeleteImg_produce(comment.ImgId) //把要删除的图片id发到消息队列
+		}
+		var post definition.Post
+		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&post).Error; err != nil { //有其他问题
+			DBlog.Println("DeletePostOnid err2:", err)
+			return definition.DB_ERROR, nil
+		}
+
+		DeleteImg_produce(post.ImgId) //把要删除的图片id发到消息队列
+		DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
+		return definition.DB_SUCCESS, nil
+	})
+	return code
+}
+
+//redis缓存中的也删掉	根据comment_id 删除评论
+func DeleteCommentById(db *gorm.DB, comment_id uint64) definition.DBcode {
+	getDB(&db)
+	var comment definition.Comment
+	err := db.Clauses(clause.Returning{}).Where("comment_id = ?", comment_id).Delete(&comment).Error
 	if err != nil { //有其他问题
-		DBlog.Println("DeleteCommentOnid err1:", err)
-		return 2
+		DBlog.Println("DeleteCommentById err1:", err)
+		return definition.DB_ERROR
 	} else { //删除成功
 		Redis_DeleteCommentOnid(comment_id) //redis缓存中的也删掉
-		DeleteImg_produce(Img_id)           //把要删除的图片id发到消息队列
-		return 1
+		DeleteImg_produce(comment.ImgId)    //把要删除的图片id发到消息队列
+		return definition.DB_SUCCESS
 	}
 }
 
-//根据用户u_id 获取属于该用户的所有帖子postids (int型，0则没有帖子，1则成功，2则有其他问题), []int）
-func SelectPostidByuid(u_id int) (int, []int) {
-	var postids []int
-	rows, err := DB.Query(`SELECT "post_id" FROM "post" WHERE "u_id"=$1`, u_id)
-	defer rows.Close()
-	if err == sql.ErrNoRows { //没有帖子
-		return 0, postids
+//根据reply_id 删除评论
+func DeleteReplyById(db *gorm.DB, reply_id uint64) definition.DBcode {
+	getDB(&db)
+	var reply definition.Reply
+	err := db.Clauses(clause.Returning{}).Where("reply_id = ?", reply_id).Delete(&reply).Error
+	if err != nil { //有其他问题
+		DBlog.Println("DeleteReplyById err1:", err)
+		return definition.DB_ERROR
+	} else { //删除成功
+		return definition.DB_SUCCESS
+	}
+}
+
+//根据用户u_id 获取属于该用户的所有帖子postids
+func SelectPostidByuid(db *gorm.DB, uId uint64) (definition.DBcode, []uint64) {
+	getDB(&db)
+	var postids []uint64
+	var posts []definition.Post
+	err := db.Model(&definition.Post{}).Where("u_id = ?", uId).Find(&posts).Error
+	if err == gorm.ErrRecordNotFound { //没有帖子
+		return definition.DB_NOEXIST, nil
 	} else if err != nil { //2则有其他问题
-		return 2, postids
+		return definition.DB_ERROR, nil
 	}
-	for rows.Next() {
-		var postid int
-		err = rows.Scan(&postid)
-		if err != nil {
-			DBlog.Println("SelectPostidByuid:", err)
-			return 2, postids //2则有其他问题
-		}
-		postids = append(postids, postid)
+	for _, post := range posts {
+		postids = append(postids, post.PostId)
 	}
+
 	if len(postids) == 0 { //没有帖子
-		return 0, postids
+		return definition.DB_NOEXIST, nil
 	}
 	//1则成功
-	return 1, postids
+	return definition.DB_EXIST, postids
 }
 
-//根据对象类型，对象id，图片id 设置对应对象的图片id:即头像or镇楼图or评论图	(int型 0则失败,1则成功)
-func UpdateObjectimgid(object string, object_id int, img_id string) int {
-	objecthead := object //sql填充字段的第二个，因为user表的字段head是"u"而不是"user",需要转换
-	if object == "user" {
-		objecthead = "u"
+//根据用户u_id 获取属于该用户的所有私聊chat
+func SelectChatByuid(db *gorm.DB, uId uint64) (definition.DBcode, []definition.Chat) {
+	getDB(&db)
+	var chats []definition.Chat
+	err := db.Model(&definition.Chat{}).Where("sender_id = ? OR addressee_id = ?", uId, uId).Find(&chats).Error
+	if err == gorm.ErrRecordNotFound { //没有私聊
+		return definition.DB_NOEXIST, nil
+	} else if err != nil { // 则有其他问题
+		return definition.DB_ERROR, nil
 	}
-	sql := fmt.Sprintf(`UPDATE "%s" SET img_id = $1 WHERE	"%s_id" = $2;`, object, objecthead)
-	_, err := DB.Exec(sql, img_id, object_id)
-	if err != nil { //object不正确会报错，但是object_id不存在则不会报错
-		DBlog.Println("UpdateObjectimgid err", err)
-		return 0
+
+	if len(chats) == 0 { //没有私聊
+		return definition.DB_NOEXIST, nil
 	}
-	return 1
+	// 则成功
+	return definition.DB_EXIST, chats
+}
+
+//根据对象类型，对象id，图片id 设置对应对象的图片id:即头像or镇楼图or评论图
+func UpdateObjectImgId(uId uint64, object string, objectId uint64, imgId string) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var err error
+		switch object {
+		case "user":
+			if uId != objectId {
+				return definition.DB_UNMATCH, nil
+			}
+			err = tx.Model(&definition.User{}).Where("u_id = ?", objectId).Update("img_id", imgId).Error
+		case "post":
+			var post definition.Post
+			if err = tx.Model(&definition.Post{}).Where("post_id = ?", objectId).Find(&post).Error; err != nil {
+				break
+			}
+
+			if uId != post.UId {
+				return definition.DB_UNMATCH, nil
+			}
+
+			err = tx.Model(&definition.Post{}).Where("post_id = ?", objectId).Update("img_id", imgId).Error
+		case "comment":
+			var comment definition.Comment
+			if err = tx.Model(&definition.Comment{}).Where("comment_id = ?", objectId).Find(&comment).Error; err != nil {
+				break
+			}
+
+			if uId != comment.UId {
+				return definition.DB_UNMATCH, nil
+			}
+
+			err = tx.Model(&definition.Comment{}).Where("comment_id = ?", objectId).Update("img_id", imgId).Error
+		default:
+			return definition.DB_ERROR_PARAM, nil // object不正确 报错
+		}
+		if err != nil {
+			DBlog.Println("UpdateObjectImgId err", err)
+			return definition.DB_ERROR, nil
+		}
+		return definition.DB_SUCCESS, nil
+	})
+	return code
+}
+
+// 根据用户 uid 更新 收藏帖子
+func UpdateSavedPostByUid(db *gorm.DB, SavedPost []uint64, uId uint64) definition.DBcode {
+	getDB(&db)
+	savedPostStr := utils.ArrToString(SavedPost)
+	err := db.Model(&definition.User{}).Where("u_id = ?", uId).Update("saved_post", savedPostStr).Error
+	if err != nil {
+		return definition.DB_ERROR
+	} else {
+		return definition.DB_SUCCESS
+	}
+}
+
+// 根据用户 uid 更新 关注的人
+func UpdateSubscribedByUid(db *gorm.DB, Subscribed []uint64, uId uint64) definition.DBcode {
+	getDB(&db)
+	SubscribedStr := utils.ArrToString(Subscribed)
+	err := db.Model(&definition.User{}).Where("u_id = ?", uId).Update("subscribed", SubscribedStr).Error
+	if err != nil {
+		return definition.DB_ERROR
+	} else {
+		return definition.DB_SUCCESS
+	}
 }

@@ -3,6 +3,7 @@ module code/Hahachitchat
 go 1.13
 
 require (
+	github.com/gin-gonic/gin v1.7.7
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/lib/pq v1.10.2
 	gorm.io/driver/postgres v1.3.1

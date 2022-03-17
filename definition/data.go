@@ -5,12 +5,18 @@ package definition
 import "time"
 
 type User struct {
-	U_id       int       `gorm:"primaryKey" column:"u_id"` //用户id,唯一
-	U_name     string    `column:"u_name"`                 //用户名,唯一
-	U_password string    `column:"u_password"`             //用户密码
-	U_time     time.Time `column:"u_time"`                 //用户注册时间
-	U_nickname string    `column:"u_nickname"`             //用户称昵
-	Img_id     string    `column:"img_id"`                 //图片唯一id用作用户头像
+	UId        uint64    `gorm:"column:u_id; primaryKey"`                  //用户id,唯一主键
+	UName      string    `gorm:"column:u_name; uniqueIndex; not null"`     //用户名,唯一索引
+	UPassword  string    `gorm:"column:u_password; not null"`              //用户密码,非空
+	UTime      time.Time `gorm:"column:u_time; autoCreateTime"`            //用户注册时间
+	UNickname  string    `gorm:"column:u_nickname; uniqueIndex; not null"` //用户称昵,唯一索引，非空
+	ImgId      string    `gorm:"column:img_id; default:defaultAvatar"`     //图片唯一id用作用户头像
+	SavedPost  string    `gorm:"column:saved_post"`                        //用户收藏帖子,数组格式为:"1 2 3"
+	Subscribed string    `gorm:"column:subscribed"`                        //用户关注的人,数组格式为:"1 2 3"
+
+	//PrivacySetting 00000000 0位允许 1为禁止 用位运算的&判断
+	//PrivacySetting 128 64 32 16 8关注的人 4收藏帖子 2回复记录 1发帖记录
+	PrivacySetting byte `gorm:"column:privacy_setting; default:0"` //用户隐私设置，为8位byte
 }
 
 func (User) TableName() string {
@@ -18,13 +24,14 @@ func (User) TableName() string {
 }
 
 type Post struct {
-	Post_id      int       `gorm:"primaryKey" column:"post_id"` //帖子id，唯一
-	U_id         int       `column:"u_id"`                      //用户id
-	Post_name    string    `column:"post_name"`                 //帖子主题
-	Post_txt     string    `column:"post_txt"`                  //帖子内容
-	Post_time    time.Time `column:"post_time"`                 //帖子发布时间
-	Post_txthtml string    `column:"post_txthtml"`              //帖子内容的html
-	Img_id       string    `column:"img_id"`                    //图片唯一id用作镇楼图
+	PostId      uint64    `gorm:"column:post_id; primaryKey" `                                           //帖子id,唯一主键
+	UId         uint64    `gorm:"column:u_id; not null"`                                                 //用户id,非空
+	Zone        ZoneType  `gorm:"column:zone; index; not null; default:1; check:max_checker,(zone < 4)"` //帖子分区
+	PostName    string    `gorm:"column:post_name; not null"`                                            //帖子主题
+	PostTxt     string    `gorm:"column:post_txt; not null"`                                             //帖子内容
+	PostTime    time.Time `gorm:"column:post_time; autoCreateTime"`                                      //帖子发布时间
+	PostTxtHtml string    `gorm:"column:post_txt_html"`                                                  //帖子内容的html
+	ImgId       string    `gorm:"column:img_id"`                                                         //图片唯一id用作镇楼图
 }
 
 func (Post) TableName() string {
@@ -32,22 +39,51 @@ func (Post) TableName() string {
 }
 
 type Comment struct {
-	Comment_id   int       `gorm:"primaryKey" column:"comment_id"` //评论id，唯一
-	Post_id      int       `column:"post_id"`                      //帖子id
-	U_id         int       `column:"u_id"`                         //用户id
-	Comment_txt  string    `column:"comment_txt"`                  //评论内容
-	Comment_time time.Time `column:"comment_time"`                 //评论时间
-	Img_id       string    `column:"img_id"`                       //图片唯一id用作评论图
+	CommentId   uint64    `gorm:"column:comment_id; primaryKey"`       //评论id,唯一主键
+	PostId      uint64    `gorm:"column:post_id; index; not null"`     //帖子id
+	UId         uint64    `gorm:"column:u_id; not null"`               //用户id
+	CommentTxt  string    `gorm:"column:comment_txt; not null"`        //评论内容
+	CommentTime time.Time `gorm:"column:comment_time; autoCreateTime"` //评论时间
+	ImgId       string    `gorm:"column:img_id"`                       //图片唯一id用作评论图
 }
 
 func (Comment) TableName() string {
 	return "comment"
 }
 
-type Session struct {
-	Id     string //用户id
-	Randid string //随机的唯一id
-	Expire int    //存活时间单位为秒
+type Reply struct {
+	ReplyId   uint64    `gorm:"column:reply_id; primaryKey" json:"reply_id"`          //回复id,唯一主键
+	CommentId uint64    `gorm:"column:comment_id; index; not null" json:"comment_id"` //所属评论id
+	UId       uint64    `gorm:"column:u_id; not null" json:"u_id"`                    //所属用户id
+	Target    uint64    `gorm:"column:target; not null; default:0" json:"target"`     //回应对象，0为层主
+	ReplyTxt  string    `gorm:"column:reply_txt; not null" json:"reply_txt"`          //回复内容
+	ReplyTime time.Time `gorm:"column:reply_time; autoCreateTime" json:"reply_time"`  //回复时间
 }
 
-var DeleteImg_ch chan string
+func (Reply) TableName() string {
+	return "reply"
+}
+
+type Chat struct {
+	ChatId      uint64    `gorm:"column:chat_id; primaryKey"`       //聊天记录id,唯一主键
+	SenderId    uint64    `gorm:"column:sender_id; index"`          //发送人id
+	AddresseeId uint64    `gorm:"column:addressee_id; index"`       //收信人id
+	ChatTxt     string    `gorm:"column:chat_txt"`                  //回复内容
+	ImgId       string    `gorm:"column:img_id"`                    //图片
+	ChatTime    time.Time `gorm:"column:chat_time; autoCreateTime"` //回复时间
+}
+
+func (Chat) TableName() string {
+	return "chat"
+}
+
+type Message struct {
+	UId           uint64 `gorm:"column:u_id; primaryKey"` //用户id,唯一主键
+	UnreadComment string `gorm:"column:unread_comment"`   //未读评论id,数组格式为:"1 2 3"
+	UnreadReply   string `gorm:"column:unread_reply"`     //未读回复id,数组格式为:"1 2 3"
+	UnreadChat    string `gorm:"column:unread_chat"`      //未读私聊id,数组格式为:"1 2 3"
+}
+
+func (Message) TableName() string {
+	return "message"
+}
