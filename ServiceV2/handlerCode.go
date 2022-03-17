@@ -768,6 +768,36 @@ func DeleteReplyById(c *gin.Context) {
 	}
 }
 
+func DeleteUnreadMessage(c *gin.Context) {
+	userId, exists := c.Get("u_id")
+	uIdStr, ok := userId.(string)
+	uId, err := strconv.ParseUint(uIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	var req definition.DeleteUnreadMessagedRequest
+	err = c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	scode := dataLayer.DeleteUnreadMessage(nil, uId, req.MessageType, req.MessageId)
+	switch scode {
+	case definition.DB_SUCCESS: // 回复存在
+		c.JSON(http.StatusOK, definition.DeleteUnreadMessageResponse{
+			State:        definition.Success,
+			StateMessage: "删除成功",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
 func UploadImg(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uIdStr, ok := userId.(string)

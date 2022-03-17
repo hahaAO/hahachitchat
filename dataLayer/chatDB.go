@@ -470,6 +470,20 @@ func CreateMessage(messageType definition.MessageType, messageId uint64) definit
 	return code
 }
 
+// 删除未读消息
+func DeleteUnreadMessage(db *gorm.DB, uId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
+	getDB(&db)
+	var message definition.Message
+	err := db.Clauses(clause.Returning{}).
+		Where("u_id = ? AND message_type = ? AND message_id = ?", uId, messageType, messageId).Delete(&message).Error
+	if err != nil { //有其他问题
+		DBlog.Println("[DeleteUnreadMessage] err: ", err)
+		return definition.DB_ERROR
+	} else { //删除成功
+		return definition.DB_SUCCESS
+	}
+}
+
 // DeletePostOnid 根据post_id 删除帖子及帖子里的评论
 func DeletePostOnid(post_id uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {

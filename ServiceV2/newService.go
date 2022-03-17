@@ -46,6 +46,7 @@ func StartService(port string) {
 	needSessionRoute.POST("/delete-post", DeletePostById)
 	needSessionRoute.POST("/delete-comment", DeleteCommentById)
 	needSessionRoute.POST("/delete-reply", DeleteReplyById)
+	needSessionRoute.POST("/delete-unread-message", DeleteUnreadMessage)
 	needSessionRoute.POST("/uploadimg", UploadImg)
 	needSessionRoute.POST("/save-post", SavePost)
 	needSessionRoute.POST("/cancel-save", CancelSavePost)

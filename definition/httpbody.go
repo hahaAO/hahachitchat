@@ -99,6 +99,15 @@ type DeleteReplyByIdResponse struct {
 	StateMessage string `json:"state_message"`
 }
 
+type DeleteUnreadMessagedRequest struct {
+	MessageType MessageType `json:"message_type" binding:"required"`
+	MessageId   uint64      `json:"message_id" binding:"required"`
+}
+type DeleteUnreadMessageResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
 type SavePostRequest struct {
 	PostId uint64 `json:"post_id" binding:"required"`
 }
