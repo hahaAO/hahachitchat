@@ -219,7 +219,6 @@ func GetCommentByIdV2(c *gin.Context) {
 			SetDBErrorResponse(c)
 			return
 		}
-		c.Header("Cache-Control", "max-age=100") // 缓存到本地100秒
 		c.JSON(http.StatusOK, definition.GetCommentByIdV2Response{
 			State:        definition.Success,
 			StateMessage: "查询评论成功",
@@ -374,7 +373,7 @@ func Login(c *gin.Context) {
 	scode, suser := dataLayer.SelectUserByname(nil, req.UName)
 	switch scode {
 	case definition.DB_EXIST: // 已注册
-		if req.UPassword == suser.UPassword { // 密码正确
+		if utils.Md5(req.UPassword) == suser.UPassword { // 密码正确
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,

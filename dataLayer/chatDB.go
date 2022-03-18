@@ -266,12 +266,12 @@ func CreateUser(uNname string, uPassword string, uNickname string) (definition.D
 
 		user := definition.User{
 			UName:     uNname,
-			UPassword: uPassword,
+			UPassword: utils.Md5(uPassword), // 密码md5加密后存储
 			UNickname: uNickname,
 		}
 		err := tx.Model(&definition.User{}).Create(&user).Error
 		if err != nil {
-			DBlog.Println("CreateUser err1:", err)
+			DBlog.Println("[CreateUser] err1:", err)
 			return definition.DB_ERROR, nil //其他问题,注册失败
 		}
 		if code, user := SelectUserByname(tx, uNname); code == definition.DB_EXIST {
