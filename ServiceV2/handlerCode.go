@@ -281,39 +281,28 @@ func GetUserAllPostId(c *gin.Context) {
 		return
 	}
 
-	scode, suser := dataLayer.SelectUserById(nil, uId)
+	scode, spostids := dataLayer.SelectPostidByuid(myUid, uId)
 	switch scode {
 	case definition.DB_EXIST:
-		if utils.PostIsPrivate(suser.PrivacySetting) && uId != myUid {
-			c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
-				State:        definition.NoPermission,
-				StateMessage: "该用户对发帖记录设置了仅自己可见",
-			})
-			return
-		}
-		// 可以查询
-		scode2, spostids := dataLayer.SelectPostidByuid(nil, uId)
-		switch scode2 {
-		case definition.DB_EXIST: // 成功
-			c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
-				State:        definition.Success,
-				StateMessage: "查询帖子评论ID成功",
-				PostIds:      spostids,
-			})
-		case definition.DB_NOEXIST: // 没有帖子
-			c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
-				State:        definition.Success,
-				StateMessage: "该用户没发过帖子",
-			})
-		case definition.DB_ERROR: // 其他问题
-			SetDBErrorResponse(c)
-		default:
-			SetServerErrorResponse(c)
-		}
-	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
+			State:        definition.Success,
+			StateMessage: "查询帖子评论ID成功",
+			PostIds:      spostids,
+		})
+	case definition.DB_NOT_THE_OWNER:
+		c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
+			State:        definition.NoPermission,
+			StateMessage: "该用户对发帖记录设置了仅自己可见",
+		})
+	case definition.DB_NOEXIST_USER:
 		c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
 			State:        definition.BadRequest,
 			StateMessage: "该用户不存在",
+		})
+	case definition.DB_NOEXIST_POST:
+		c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
+			State:        definition.Success,
+			StateMessage: "该用户没发过帖子",
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)

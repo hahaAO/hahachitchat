@@ -541,25 +541,46 @@ func DeleteReplyById(db *gorm.DB, reply_id uint64) definition.DBcode {
 }
 
 //根据用户u_id 获取属于该用户的所有帖子postids
-func SelectPostidByuid(db *gorm.DB, uId uint64) (definition.DBcode, []uint64) {
-	getDB(&db)
-	var postids []uint64
-	var posts []definition.Post
-	err := db.Model(&definition.Post{}).Where("u_id = ?", uId).Find(&posts).Error
-	if err == gorm.ErrRecordNotFound { //没有帖子
-		return definition.DB_NOEXIST, nil
-	} else if err != nil { //2则有其他问题
-		return definition.DB_ERROR, nil
-	}
-	for _, post := range posts {
-		postids = append(postids, post.PostId)
-	}
+func SelectPostidByuid(myUid uint64, uId uint64) (definition.DBcode, []uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		code, user := SelectUserById(nil, uId)
+		switch code {
+		case definition.DB_NOEXIST:
+			return definition.DB_NOEXIST_USER, nil
+		case definition.DB_ERROR:
+			return definition.DB_ERROR, nil
+		case definition.DB_EXIST:
+			if utils.PostIsPrivate(user.PrivacySetting) && uId != myUid {
+				return definition.DB_NOT_THE_OWNER, nil
+			}
+		default:
+			return definition.DB_ERROR, nil
+		}
+		// 可以查询
+		var postids []uint64
+		var posts []definition.Post
+		err := tx.Model(&definition.Post{}).Where("u_id = ?", uId).Find(&posts).Error
+		if err == gorm.ErrRecordNotFound { // 没有帖子
+			return definition.DB_NOEXIST_POST, nil
+		} else if err != nil { // 则有其他问题
+			return definition.DB_ERROR, nil
+		}
+		for _, post := range posts {
+			postids = append(postids, post.PostId)
+		}
 
-	if len(postids) == 0 { //没有帖子
-		return definition.DB_NOEXIST, nil
+		if len(postids) == 0 { //没有帖子
+			return definition.DB_NOEXIST_POST, nil
+		}
+		// 则成功
+		return definition.DB_EXIST, postids
+	})
+
+	if code == definition.DB_EXIST {
+		return code, content.([]uint64)
+	} else {
+		return code, nil
 	}
-	//1则成功
-	return definition.DB_EXIST, postids
 }
 
 //根据用户u_id 获取属于该用户的所有私聊chat

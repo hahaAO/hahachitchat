@@ -20,5 +20,7 @@ const (
 	DB_NOEXIST_TARGET    DBcode = "213" // 回复目标（评论或回复私聊对象）不存在
 	DB_NOEXIST_ADDRESSEE DBcode = "214" // 回复目标（私聊对象）不存在
 
-	DB_UNMATCH DBcode = "400" // id对不上,没有操作权限
+	DB_UNMATCH       DBcode = "400" // id对不上,没有操作权限
+	DB_NOT_THE_OWNER DBcode = "401" // 隐私信息，不是本人不允许查看
+
 )
