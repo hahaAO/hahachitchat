@@ -320,6 +320,41 @@ func CreatePost(u_id uint64, post_name string, post_txt string, zone definition.
 	}
 }
 
+//根据uid post_name post_txt post_txthtml imgId插入post
+func CreatePostV2(u_id uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string, imgId string) (definition.DBcode, uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		code, _ := SelectUserById(tx, u_id)
+		switch code {
+		case definition.DB_NOEXIST: // 无此人id
+			return definition.DB_NOEXIST, 0
+		case definition.DB_EXIST: // 有此人id
+			post := definition.Post{
+				UId:         u_id,
+				PostName:    post_name,
+				PostTxt:     post_txt,
+				Zone:        zone,
+				PostTxtHtml: post_txthtml,
+				ImgId:       imgId,
+			}
+			err := tx.Model(&definition.Post{}).Create(&post).Error
+			if err != nil {
+				DBlog.Println("CreatePost err1:", err)
+				return definition.DB_ERROR, 0 //其他问题,插入失败
+			}
+			return definition.DB_SUCCESS, post.PostId //1则成功
+		case definition.DB_ERROR: // 其他问题,查询失败
+			return definition.DB_ERROR, 0
+		default:
+			return definition.DB_ERROR_UNEXPECTED, 0
+		}
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.(uint64)
+	} else {
+		return code, 0
+	}
+}
+
 //根据post_id u_id comment_txt插入comment
 func CreateComment(post_id uint64, u_id uint64, comment_txt string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
@@ -330,6 +365,39 @@ func CreateComment(post_id uint64, u_id uint64, comment_txt string) (definition.
 				PostId:     post_id,
 				UId:        u_id,
 				CommentTxt: comment_txt,
+			}
+			err := tx.Model(&definition.Comment{}).Create(&comment).Error
+			if err != nil {
+				DBlog.Println("CreateComment err1:", err)
+				return definition.DB_ERROR, 0 // 其他问题,插入失败
+			}
+			return definition.DB_SUCCESS, comment.CommentId
+		} else if scode == definition.DB_NOEXIST {
+			return definition.DB_NOEXIST_USER, 0
+		} else if scode2 == definition.DB_NOEXIST {
+			return definition.DB_NOEXIST_POST, 0
+		} else {
+			return definition.DB_ERROR, 0
+		}
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.(uint64)
+	} else {
+		return code, 0
+	}
+}
+
+//根据post_id u_id comment_txt imageId插入comment
+func CreateCommentV2(post_id uint64, u_id uint64, comment_txt string, imgId string) (definition.DBcode, uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		scode, _ := SelectUserById(tx, u_id)                               //查u_id
+		scode2, _ := SelectPostById(tx, post_id)                           //查post_id
+		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST { // 帖子和用户存在
+			comment := definition.Comment{
+				PostId:     post_id,
+				UId:        u_id,
+				CommentTxt: comment_txt,
+				ImgId:      imgId,
 			}
 			err := tx.Model(&definition.Comment{}).Create(&comment).Error
 			if err != nil {

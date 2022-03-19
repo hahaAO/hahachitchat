@@ -5,7 +5,6 @@ import (
 	"code/Hahachitchat/definition"
 	"code/Hahachitchat/utils"
 	"github.com/gin-gonic/gin"
-	"mime/multipart"
 	"net/http"
 	"path"
 	"strconv"
@@ -553,6 +552,55 @@ func CreatePost(c *gin.Context) {
 	}
 }
 
+func CreatePostV2(c *gin.Context) {
+	userId, exists := c.Get("u_id")
+	uIdStr, ok := userId.(string)
+	myId, err := strconv.ParseUint(uIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	var req definition.CreatePostV2Request
+	if err := c.ShouldBind(&req); err != nil {
+		dataLayer.Serverlog.Println("[CreatePostV2] err: ", err)
+		SetParamErrorResponse(c)
+		return
+	}
+
+	imgId := ""                   // 默认不带图片
+	if req.ImgFileHeader != nil { // 带图片
+		imgId = utils.TimeRandId() //图片唯一id
+		filepath := path.Join(definition.ImgDocPath, imgId)
+		if err := c.SaveUploadedFile(req.ImgFileHeader, filepath); err != nil {
+			c.JSON(http.StatusOK, definition.CreateChatResponse{
+				State:        definition.ServerError,
+				StateMessage: "服务端出错,保存图片失败",
+			})
+			return
+		}
+	}
+
+	ccode, cpostId := dataLayer.CreatePostV2(myId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId)
+	switch ccode {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.CreatePostV2Response{
+			State:        definition.Success,
+			StateMessage: "创建帖子成功",
+			PostId:       cpostId,
+		})
+	case definition.DB_NOEXIST: // 用户不存在
+		c.JSON(http.StatusOK, definition.CreatePostV2Response{
+			State:        definition.BadRequest,
+			StateMessage: "用户不存在,无法创建帖子",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
 func CreateComment(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uIdStr, ok := userId.(string)
@@ -585,6 +633,61 @@ func CreateComment(c *gin.Context) {
 		})
 	case definition.DB_NOEXIST_POST: // 无此帖子id
 		c.JSON(http.StatusOK, definition.CreateCommentResponse{
+			State:        definition.BadRequest,
+			StateMessage: "帖子不存在,创建评论失败",
+		})
+	case definition.DB_ERROR: // 失败
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func CreateCommentV2(c *gin.Context) {
+	userId, exists := c.Get("u_id")
+	uIdStr, ok := userId.(string)
+	uId, err := strconv.ParseUint(uIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	var req definition.CreateCommentV2Request
+	err = c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	imgId := ""                   // 默认不带图片
+	if req.ImgFileHeader != nil { // 带图片
+		imgId = utils.TimeRandId() //图片唯一id
+		filepath := path.Join(definition.ImgDocPath, imgId)
+		if err := c.SaveUploadedFile(req.ImgFileHeader, filepath); err != nil {
+			c.JSON(http.StatusOK, definition.CreateChatResponse{
+				State:        definition.ServerError,
+				StateMessage: "服务端出错,保存图片失败",
+			})
+			return
+		}
+	}
+
+	ccode, ccomid := dataLayer.CreateCommentV2(req.PostId, uId, req.CommentTxt, imgId)
+	switch ccode {
+	case definition.DB_SUCCESS: // 成功
+		c.JSON(http.StatusOK, definition.CreateCommentV2Response{
+			State:        definition.Success,
+			StateMessage: "创建评论成功",
+			CommentId:    ccomid,
+		})
+		go dataLayer.CreateMessage(definition.MessageTypeComment, ccomid) // 消息提醒
+	case definition.DB_NOEXIST_USER: // 无此人id
+		c.JSON(http.StatusOK, definition.CreateCommentV2Response{
+			State:        definition.BadRequest,
+			StateMessage: "用户不存在,创建评论失败",
+		})
+	case definition.DB_NOEXIST_POST: // 无此帖子id
+		c.JSON(http.StatusOK, definition.CreateCommentV2Response{
 			State:        definition.BadRequest,
 			StateMessage: "帖子不存在,创建评论失败",
 		})
@@ -646,22 +749,18 @@ func CreateChat(c *gin.Context) {
 		return
 	}
 
-	// 表单里的参数
-	var imgFileHeader *multipart.FileHeader // 图片 image
-	var AddresseeIdStr string               // 收件人 addressee_id
-	var ChatTxt string                      // 聊天内容 chat_txt
-
-	imgFileHeader, err = c.FormFile("image")
-	if err != nil && err != http.ErrMissingFile {
+	var req definition.CreateChatRequest
+	if err := c.ShouldBind(&req); err != nil {
+		dataLayer.Serverlog.Println("[CreateChat] err: ", err)
 		SetParamErrorResponse(c)
 		return
 	}
 
-	imgId := ""               // 默认不带图片
-	if imgFileHeader != nil { // 带图片
+	imgId := ""                   // 默认不带图片
+	if req.ImgFileHeader != nil { // 带图片
 		imgId = utils.TimeRandId() //图片唯一id
 		filepath := path.Join(definition.ImgDocPath, imgId)
-		if err := c.SaveUploadedFile(imgFileHeader, filepath); err != nil {
+		if err := c.SaveUploadedFile(req.ImgFileHeader, filepath); err != nil {
 			c.JSON(http.StatusOK, definition.CreateChatResponse{
 				State:        definition.ServerError,
 				StateMessage: "服务端出错,保存图片失败",
@@ -670,26 +769,7 @@ func CreateChat(c *gin.Context) {
 		}
 	}
 
-	AddresseeIdStr, ok = c.GetPostForm("addressee_id")
-	addresseeId, err := strconv.ParseUint(AddresseeIdStr, 10, 64)
-	if !ok || err != nil {
-		c.JSON(http.StatusOK, definition.CreateChatResponse{
-			State:        definition.BadRequest,
-			StateMessage: "addressee_id解析出错",
-		})
-		return
-	}
-
-	ChatTxt, ok = c.GetPostForm("chat_txt")
-	if !ok {
-		c.JSON(http.StatusOK, definition.CreateChatResponse{
-			State:        definition.BadRequest,
-			StateMessage: "chat_txt解析出错",
-		})
-		return
-	}
-
-	cCode, cChatId := dataLayer.CreateChat(myId, addresseeId, ChatTxt, imgId)
+	cCode, cChatId := dataLayer.CreateChat(myId, req.AddresseeId, req.ChatTxt, imgId)
 	switch cCode {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.CreateChatResponse{
@@ -913,7 +993,7 @@ func UploadImg(c *gin.Context) {
 
 	imgId := utils.TimeRandId() //图片唯一id
 	filepath := path.Join(definition.ImgDocPath, imgId)
-	if err := c.SaveUploadedFile(req.Img, filepath); err != nil {
+	if err := c.SaveUploadedFile(req.ImgFileHeader, filepath); err != nil {
 		c.JSON(http.StatusOK, definition.UploadImgResponse{
 			State:        definition.ServerError,
 			StateMessage: "服务端出错,保存图片失败",

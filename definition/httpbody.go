@@ -32,9 +32,9 @@ type LoginResponse struct {
 }
 
 type UploadImgRequest struct {
-	Img      *multipart.FileHeader `form:"image" binding:"required"`
-	Object   string                `form:"object" binding:"required"`
-	ObjectId uint64                `form:"object_id" binding:"required"`
+	ImgFileHeader *multipart.FileHeader `form:"image" binding:"required"`
+	Object        string                `form:"object" binding:"required"`
+	ObjectId      uint64                `form:"object_id" binding:"required"`
 }
 type UploadImgResponse struct {
 	State        int    `json:"state"`
@@ -75,18 +75,35 @@ type CreateReplyResponse struct {
 	ReplyId      uint64 `json:"reply_id"`
 }
 
+type CreateChatRequest struct {
+	ImgFileHeader *multipart.FileHeader `form:"image"`                           // 图片 image
+	AddresseeId   uint64                `form:"addressee_id" binding:"required"` // 收件人 addressee_id
+	ChatTxt       string                `form:"image" binding:"required"`        // 聊天内容 chat_txt
+}
 type CreateChatResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 	ChatId       uint64 `json:"chat_id"`
 }
 
+type CreatePostV2Request struct {
+	ImgFileHeader *multipart.FileHeader `form:"image"`
+	PostName      string                `form:"post_name" binding:"required"`
+	PostTxt       string                `form:"post_txt" binding:"required"`
+	Zone          ZoneType              `form:"zone"`
+	PostTxtHtml   string                `form:"post_txt_html" binding:"required"` //帖子内容的html
+}
 type CreatePostV2Response struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 	PostId       uint64 `json:"post_id"`
 }
 
+type CreateCommentV2Request struct {
+	ImgFileHeader *multipart.FileHeader `form:"image"`
+	PostId        uint64                `form:"post_id" binding:"required"`
+	CommentTxt    string                `form:"comment_txt" binding:"required"`
+}
 type CreateCommentV2Response struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
