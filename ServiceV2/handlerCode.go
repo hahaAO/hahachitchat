@@ -222,6 +222,7 @@ func GetCommentByIdV2(c *gin.Context) {
 			State:        definition.Success,
 			StateMessage: "查询评论成功",
 			UId:          scomment.UId,
+			PostId:       scomment.PostId,
 			CommentTxt:   scomment.CommentTxt,
 			CommentTime:  scomment.CommentTime,
 			ImgId:        scomment.ImgId,
@@ -903,46 +904,24 @@ func UploadImg(c *gin.Context) {
 		return
 	}
 
-	// 表单里的参数
-	var imgFileHeader *multipart.FileHeader //图片 image
-	var object string                       // 对象名 object
-	var objectIdStr string                  // 对象id object_id
-
-	imgFileHeader, err = c.FormFile("image")
-	if err != nil {
+	var req definition.UploadImgRequest
+	if err := c.ShouldBind(&req); err != nil {
+		dataLayer.Serverlog.Println("[UploadImgV2] err: ", err)
 		SetParamErrorResponse(c)
-		return
-	}
-
-	object, ok = c.GetPostForm("object")
-	if !ok {
-		c.JSON(http.StatusOK, definition.UploadImgResponse{
-			State:        definition.BadRequest,
-			StateMessage: "object解析出错",
-		})
-		return
-	}
-
-	objectIdStr, ok = c.GetPostForm("object_id")
-	objectId, err := strconv.ParseUint(objectIdStr, 10, 64)
-	if !ok || err != nil {
-		c.JSON(http.StatusOK, definition.UploadImgResponse{
-			State:        definition.BadRequest,
-			StateMessage: "objectId解析出错",
-		})
 		return
 	}
 
 	imgId := utils.TimeRandId() //图片唯一id
 	filepath := path.Join(definition.ImgDocPath, imgId)
-	if err := c.SaveUploadedFile(imgFileHeader, filepath); err != nil {
+	if err := c.SaveUploadedFile(req.Img, filepath); err != nil {
 		c.JSON(http.StatusOK, definition.UploadImgResponse{
 			State:        definition.ServerError,
 			StateMessage: "服务端出错,保存图片失败",
 		})
 		return
 	}
-	sCode := dataLayer.UpdateObjectImgId(uId, object, objectId, imgId)
+
+	sCode := dataLayer.UpdateObjectImgId(uId, req.Object, req.ObjectId, imgId)
 	switch sCode {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.UploadImgResponse{
@@ -971,7 +950,6 @@ func UploadImg(c *gin.Context) {
 	}
 
 }
-
 func SavePost(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uIdStr, ok := userId.(string)

@@ -68,5 +68,8 @@ func StartService(port string) {
 	routeV2.GET("/zone/:zone", AllPostByZone)
 	routeV2.GET("/comment/:comment_id", GetCommentByIdV2)
 
+	//routeV2.POST("/create-post", CreatePostV2)
+	//routeV2.POST("/create-comment", CreateCommentV2)
+
 	r.Run(port)
 }

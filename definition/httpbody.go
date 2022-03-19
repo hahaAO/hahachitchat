@@ -1,6 +1,7 @@
 package definition
 
 import (
+	"mime/multipart"
 	"time"
 )
 
@@ -30,6 +31,11 @@ type LoginResponse struct {
 	UId          uint64 `json:"u_id"`
 }
 
+type UploadImgRequest struct {
+	Img      *multipart.FileHeader `form:"image" binding:"required"`
+	Object   string                `form:"object" binding:"required"`
+	ObjectId uint64                `form:"object_id" binding:"required"`
+}
 type UploadImgResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
@@ -73,6 +79,18 @@ type CreateChatResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 	ChatId       uint64 `json:"chat_id"`
+}
+
+type CreatePostV2Response struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+	PostId       uint64 `json:"post_id"`
+}
+
+type CreateCommentV2Response struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+	CommentId    uint64 `json:"comment_id"`
 }
 
 type DeletePostByIdRequest struct {
@@ -183,6 +201,7 @@ type GetCommentByIdV2Response struct {
 	State        int       `json:"state"`
 	StateMessage string    `json:"state_message"`
 	UId          uint64    `json:"u_id"`
+	PostId       uint64    `json:"post_id"`
 	CommentTxt   string    `json:"comment_txt"`
 	CommentTime  time.Time `json:"comment_time"`
 	ImgId        string    `json:"img_id"`
