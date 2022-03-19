@@ -173,6 +173,7 @@ type GetCommentByIdResponse struct {
 	State        int       `json:"state"`
 	StateMessage string    `json:"state_message"`
 	UId          uint64    `json:"u_id"`
+	PostId       uint64    `json:"post_id"`
 	CommentTxt   string    `json:"comment_txt"`
 	CommentTime  time.Time `json:"comment_time"`
 	ImgId        string    `json:"img_id"`

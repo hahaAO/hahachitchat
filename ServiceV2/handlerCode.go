@@ -185,6 +185,7 @@ func GetCommentById(c *gin.Context) {
 			State:        definition.Success,
 			StateMessage: "查询评论成功",
 			UId:          scomment.UId,
+			PostId:       scomment.PostId,
 			CommentTxt:   scomment.CommentTxt,
 			CommentTime:  scomment.CommentTime,
 			ImgId:        scomment.ImgId,
@@ -481,7 +482,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
+				"/", "", false, true) // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
