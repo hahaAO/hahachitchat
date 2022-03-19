@@ -250,3 +250,23 @@ type GetUserStateResponse struct {
 	MyUserId            uint64 `json:"my_user_id"`
 	UnreadMessageNumber int    `json:"unread_message_number"`
 }
+
+type GetPrivacySettingResponse struct {
+	State               int    `json:"state"`
+	StateMessage        string `json:"state_message"`
+	PostIsPrivate       bool   `json:"post_is_private"`
+	CommentIsPrivate    bool   `json:"comment_is_private"`
+	SavedPostIsPrivate  bool   `json:"saved_post_is_private"`
+	SubscribedIsPrivate bool   `json:"subscribed_is_private"`
+}
+
+type PostPrivacySettingRequest struct {
+	PostIsPrivate       *bool `json:"post_is_private"`
+	CommentIsPrivate    *bool `json:"comment_is_private"`
+	SavedPostIsPrivate  *bool `json:"saved_post_is_private"`
+	SubscribedIsPrivate *bool `json:"subscribed_is_private"`
+}
+type PostPrivacySettingResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}

@@ -56,6 +56,8 @@ func StartService(port string) {
 	needSessionRoute.POST("/cancel-save", CancelSavePost)
 	needSessionRoute.POST("/subscribe", Subscribe)
 	needSessionRoute.POST("/cancel-subscribe", CancelSubscribe)
+	needSessionRoute.GET("/PrivacySetting", GetPrivacySetting)
+	needSessionRoute.POST("/PrivacySetting", PostPrivacySetting)
 
 	needSessionRoute.POST("/create-chat", CreateChat)
 

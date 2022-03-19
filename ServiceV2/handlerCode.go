@@ -11,8 +11,6 @@ import (
 	"strconv"
 )
 
-// GET
-
 func DefaultTest(c *gin.Context) {
 	c.String(http.StatusOK, "nihao nihao!")
 }
@@ -356,8 +354,6 @@ func GetImg(c *gin.Context) {
 	c.File(imgF)
 }
 
-// POST
-
 func Register(c *gin.Context) {
 	var req definition.RegisterRequest
 	err := c.ShouldBindJSON(&req)
@@ -406,7 +402,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true) // 把cookie写入响应头 设置cookie
+				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
@@ -439,10 +435,6 @@ func Login(c *gin.Context) {
 		SetServerErrorResponse(c)
 	}
 }
-
-// 以下的是有登录态才能正常响应的
-
-// POST
 
 func CreatePost(c *gin.Context) {
 	userId, exists := c.Get("u_id")
@@ -1141,7 +1133,74 @@ func CancelSubscribe(c *gin.Context) {
 	}
 }
 
-// GET
+func GetPrivacySetting(c *gin.Context) {
+	userId, exists := c.Get("u_id")
+	uIdStr, ok := userId.(string)
+	uId, err := strconv.ParseUint(uIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	scode, suser := dataLayer.SelectUserById(nil, uId)
+	switch scode {
+	case definition.DB_EXIST:
+		c.JSON(http.StatusOK, definition.GetPrivacySettingResponse{
+			State:               definition.Success,
+			StateMessage:        "查询隐私设置成功",
+			PostIsPrivate:       utils.PostIsPrivate(suser.PrivacySetting),
+			CommentIsPrivate:    utils.CommentIsPrivate(suser.PrivacySetting),
+			SavedPostIsPrivate:  utils.SavedPostIsPrivate(suser.PrivacySetting),
+			SubscribedIsPrivate: utils.SubscribedIsPrivate(suser.PrivacySetting),
+		})
+
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.GetPrivacySettingResponse{
+			State:        definition.BadRequest,
+			StateMessage: "该用户不存在",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func PostPrivacySetting(c *gin.Context) {
+	userId, exists := c.Get("u_id")
+	uIdStr, ok := userId.(string)
+	uId, err := strconv.ParseUint(uIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	var req definition.PostPrivacySettingRequest
+	err = c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	scode := dataLayer.UpdatePrivacySettingByUid(uId, req.PostIsPrivate, req.CommentIsPrivate, req.SavedPostIsPrivate, req.SubscribedIsPrivate)
+	switch scode {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.PostPrivacySettingResponse{
+			State:        definition.Success,
+			StateMessage: "更新隐私设置成功",
+		})
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.PostPrivacySettingResponse{
+			State:        definition.BadRequest,
+			StateMessage: "该用户不存在",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+
+}
 
 func GetUserSavedPost(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
@@ -1325,5 +1384,3 @@ func GetUserState(c *gin.Context) {
 		SetServerErrorResponse(c)
 	}
 }
-
-// 以上的是有登录态才能正常响应的

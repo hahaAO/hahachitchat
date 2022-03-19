@@ -647,3 +647,24 @@ func UpdateSubscribedByUid(db *gorm.DB, Subscribed []uint64, uId uint64) definit
 		return definition.DB_SUCCESS
 	}
 }
+
+// 根据用户 uid 更新 隐私设置
+func UpdatePrivacySettingByUid(uId uint64, PostIsPrivate *bool, CommentIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		code, user := SelectUserById(tx, uId)
+		if code != definition.DB_EXIST {
+			return code, nil
+		}
+
+		user.PrivacySetting = utils.GetNewPrivacySetting(user.PrivacySetting, PostIsPrivate, CommentIsPrivate, SavedPostIsPrivate, SubscribedIsPrivate)
+
+		err := tx.Model(&definition.User{}).Save(&user).Error
+		if err != nil {
+			DBlog.Println("[UpdatePrivacySettingByUid] err: ", err)
+			return definition.DB_ERROR, nil
+		} else {
+			return definition.DB_SUCCESS, nil
+		}
+	})
+	return code
+}

@@ -113,6 +113,42 @@ func StringToArr(str string) ([]uint64, error) {
 	return arr, nil
 }
 
+func GetNewPrivacySetting(PrivacySetting byte, PostIsPrivate *bool, CommentIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) byte {
+	if PostIsPrivate != nil {
+		if *PostIsPrivate {
+			PrivacySetting = PrivacySetting | 1
+		} else {
+			PrivacySetting = PrivacySetting & (255 - 1)
+		}
+	}
+
+	if CommentIsPrivate != nil {
+		if *CommentIsPrivate {
+			PrivacySetting = PrivacySetting | 2
+		} else {
+			PrivacySetting = PrivacySetting & (255 - 2)
+		}
+	}
+
+	if SavedPostIsPrivate != nil {
+		if *SavedPostIsPrivate {
+			PrivacySetting = PrivacySetting | 4
+		} else {
+			PrivacySetting = PrivacySetting & (255 - 4)
+		}
+	}
+
+	if SubscribedIsPrivate != nil {
+		if *SubscribedIsPrivate {
+			PrivacySetting = PrivacySetting | 8
+		} else {
+			PrivacySetting = PrivacySetting & (255 - 8)
+		}
+	}
+
+	return PrivacySetting
+}
+
 //PostIsPrivate 隐私设置判断 发帖记录1
 func PostIsPrivate(PrivacySetting byte) bool {
 	if PrivacySetting&1 > 0 {
