@@ -17,8 +17,10 @@ const (
 	DB_NOEXIST           DBcode = "210" // 要查询的数据不存在
 	DB_NOEXIST_USER      DBcode = "211" // 用户不存在
 	DB_NOEXIST_POST      DBcode = "212" // 帖子不存在
-	DB_NOEXIST_TARGET    DBcode = "213" // 回复目标（评论或回复私聊对象）不存在
-	DB_NOEXIST_ADDRESSEE DBcode = "214" // 回复目标（私聊对象）不存在
+	DB_NOEXIST_COMMENT   DBcode = "213" // 评论不存在
+	DB_NOEXIST_REPLY     DBcode = "214" // 回复不存在
+	DB_NOEXIST_TARGET    DBcode = "215" // 回复目标（评论或回复对象）不存在
+	DB_NOEXIST_ADDRESSEE DBcode = "216" // 回复目标（私聊对象）不存在
 
 	DB_UNMATCH       DBcode = "400" // id对不上,没有操作权限
 	DB_NOT_THE_OWNER DBcode = "401" // 隐私信息，不是本人不允许查看

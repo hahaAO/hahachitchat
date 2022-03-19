@@ -541,7 +541,7 @@ func DeleteReplyById(db *gorm.DB, reply_id uint64) definition.DBcode {
 }
 
 //根据用户u_id 获取属于该用户的所有帖子postids
-func SelectPostidByuid(myUid uint64, uId uint64) (definition.DBcode, []uint64) {
+func SelectAllPostIdByUid(myUid uint64, uId uint64) (definition.DBcode, []uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		code, user := SelectUserById(nil, uId)
 		switch code {
@@ -574,6 +574,91 @@ func SelectPostidByuid(myUid uint64, uId uint64) (definition.DBcode, []uint64) {
 		}
 		// 则成功
 		return definition.DB_EXIST, postids
+	})
+
+	if code == definition.DB_EXIST {
+		return code, content.([]uint64)
+	} else {
+		return code, nil
+	}
+}
+
+//根据用户u_id 获取属于该用户的所有评论 CommentId
+func SelectAllCommentIdByUid(myUid uint64, uId uint64) (definition.DBcode, []uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		code, user := SelectUserById(nil, uId)
+		switch code {
+		case definition.DB_NOEXIST:
+			return definition.DB_NOEXIST_USER, nil
+		case definition.DB_ERROR:
+			return definition.DB_ERROR, nil
+		case definition.DB_EXIST:
+			if utils.CommentAndReplyIsPrivate(user.PrivacySetting) && uId != myUid {
+				return definition.DB_NOT_THE_OWNER, nil
+			}
+		default:
+			return definition.DB_ERROR, nil
+		}
+		// 可以查询
+		var commentIds []uint64
+		var comments []definition.Post
+		err := tx.Model(&definition.Comment{}).Where("u_id = ?", uId).Find(&comments).Error
+		if err == gorm.ErrRecordNotFound { // 没有帖子
+			return definition.DB_NOEXIST_COMMENT, nil
+		} else if err != nil { // 则有其他问题
+			return definition.DB_ERROR, nil
+		}
+		for _, comments := range comments {
+			commentIds = append(commentIds, comments.PostId)
+		}
+
+		if len(commentIds) == 0 { //没有帖子
+			return definition.DB_NOEXIST_COMMENT, nil
+		}
+		// 则成功
+		return definition.DB_EXIST, commentIds
+	})
+
+	if code == definition.DB_EXIST {
+		return code, content.([]uint64)
+	} else {
+		return code, nil
+	}
+}
+
+func SelectAllReplyIdByUid(myUid uint64, uId uint64) (definition.DBcode, []uint64) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		code, user := SelectUserById(nil, uId)
+		switch code {
+		case definition.DB_NOEXIST:
+			return definition.DB_NOEXIST_USER, nil
+		case definition.DB_ERROR:
+			return definition.DB_ERROR, nil
+		case definition.DB_EXIST:
+			if utils.CommentAndReplyIsPrivate(user.PrivacySetting) && uId != myUid {
+				return definition.DB_NOT_THE_OWNER, nil
+			}
+		default:
+			return definition.DB_ERROR, nil
+		}
+		// 可以查询
+		var replyIds []uint64
+		var replies []definition.Reply
+		err := tx.Model(&definition.Reply{}).Where("u_id = ?", uId).Find(&replies).Error
+		if err == gorm.ErrRecordNotFound { // 没有回复
+			return definition.DB_NOEXIST_REPLY, nil
+		} else if err != nil { // 则有其他问题
+			return definition.DB_ERROR, nil
+		}
+		for _, reply := range replies {
+			replyIds = append(replyIds, reply.ReplyId)
+		}
+
+		if len(replyIds) == 0 { // 没有回复
+			return definition.DB_NOEXIST_REPLY, nil
+		}
+		// 则成功
+		return definition.DB_EXIST, replyIds
 	})
 
 	if code == definition.DB_EXIST {
@@ -670,14 +755,14 @@ func UpdateSubscribedByUid(db *gorm.DB, Subscribed []uint64, uId uint64) definit
 }
 
 // 根据用户 uid 更新 隐私设置
-func UpdatePrivacySettingByUid(uId uint64, PostIsPrivate *bool, CommentIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) definition.DBcode {
+func UpdatePrivacySettingByUid(uId uint64, PostIsPrivate *bool, CommentAndReplyIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		code, user := SelectUserById(tx, uId)
 		if code != definition.DB_EXIST {
 			return code, nil
 		}
 
-		user.PrivacySetting = utils.GetNewPrivacySetting(user.PrivacySetting, PostIsPrivate, CommentIsPrivate, SavedPostIsPrivate, SubscribedIsPrivate)
+		user.PrivacySetting = utils.GetNewPrivacySetting(user.PrivacySetting, PostIsPrivate, CommentAndReplyIsPrivate, SavedPostIsPrivate, SubscribedIsPrivate)
 
 		err := tx.Model(&definition.User{}).Save(&user).Error
 		if err != nil {

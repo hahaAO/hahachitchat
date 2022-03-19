@@ -281,7 +281,7 @@ func GetUserAllPostId(c *gin.Context) {
 		return
 	}
 
-	scode, spostids := dataLayer.SelectPostidByuid(myUid, uId)
+	scode, spostids := dataLayer.SelectAllPostIdByUid(myUid, uId)
 	switch scode {
 	case definition.DB_EXIST:
 		c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
@@ -303,6 +303,96 @@ func GetUserAllPostId(c *gin.Context) {
 		c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
 			State:        definition.Success,
 			StateMessage: "该用户没发过帖子",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func GetUserAllCommentId(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUserIdStr, ok := myUserId.(string)
+	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		myUid = 0 // 没有登录态
+	}
+
+	userIdStr := c.Param("u_id")
+	uId, err := strconv.ParseUint(userIdStr, 10, 64)
+	if err != nil { //参数不能转为int
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code, commentIds := dataLayer.SelectAllCommentIdByUid(myUid, uId)
+	switch code {
+	case definition.DB_EXIST:
+		c.JSON(http.StatusOK, definition.GetUserAllCommentIdResponse{
+			State:        definition.Success,
+			StateMessage: "查询用户评论记录成功",
+			CommentIds:   commentIds,
+		})
+	case definition.DB_NOT_THE_OWNER:
+		c.JSON(http.StatusOK, definition.GetUserAllCommentIdResponse{
+			State:        definition.NoPermission,
+			StateMessage: "该用户对评论记录设置了仅自己可见",
+		})
+	case definition.DB_NOEXIST_USER:
+		c.JSON(http.StatusOK, definition.GetUserAllCommentIdResponse{
+			State:        definition.BadRequest,
+			StateMessage: "该用户不存在",
+		})
+	case definition.DB_NOEXIST_COMMENT:
+		c.JSON(http.StatusOK, definition.GetUserAllCommentIdResponse{
+			State:        definition.Success,
+			StateMessage: "该用户没发过评论",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func GetUserAllReplyId(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUserIdStr, ok := myUserId.(string)
+	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		myUid = 0 // 没有登录态
+	}
+
+	userIdStr := c.Param("u_id")
+	uId, err := strconv.ParseUint(userIdStr, 10, 64)
+	if err != nil { //参数不能转为int
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code, replyIds := dataLayer.SelectAllReplyIdByUid(myUid, uId)
+	switch code {
+	case definition.DB_EXIST:
+		c.JSON(http.StatusOK, definition.GetUserAllReplyIdResponse{
+			State:        definition.Success,
+			StateMessage: "查询用户回复记录成功",
+			ReplyIds:     replyIds,
+		})
+	case definition.DB_NOT_THE_OWNER:
+		c.JSON(http.StatusOK, definition.GetUserAllReplyIdResponse{
+			State:        definition.NoPermission,
+			StateMessage: "该用户对回复记录设置了仅自己可见",
+		})
+	case definition.DB_NOEXIST_USER:
+		c.JSON(http.StatusOK, definition.GetUserAllReplyIdResponse{
+			State:        definition.BadRequest,
+			StateMessage: "该用户不存在",
+		})
+	case definition.DB_NOEXIST_REPLY:
+		c.JSON(http.StatusOK, definition.GetUserAllReplyIdResponse{
+			State:        definition.Success,
+			StateMessage: "该用户没发过回复",
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)
@@ -1135,12 +1225,12 @@ func GetPrivacySetting(c *gin.Context) {
 	switch scode {
 	case definition.DB_EXIST:
 		c.JSON(http.StatusOK, definition.GetPrivacySettingResponse{
-			State:               definition.Success,
-			StateMessage:        "查询隐私设置成功",
-			PostIsPrivate:       utils.PostIsPrivate(suser.PrivacySetting),
-			CommentIsPrivate:    utils.CommentIsPrivate(suser.PrivacySetting),
-			SavedPostIsPrivate:  utils.SavedPostIsPrivate(suser.PrivacySetting),
-			SubscribedIsPrivate: utils.SubscribedIsPrivate(suser.PrivacySetting),
+			State:                    definition.Success,
+			StateMessage:             "查询隐私设置成功",
+			PostIsPrivate:            utils.PostIsPrivate(suser.PrivacySetting),
+			CommentAndReplyIsPrivate: utils.CommentAndReplyIsPrivate(suser.PrivacySetting),
+			SavedPostIsPrivate:       utils.SavedPostIsPrivate(suser.PrivacySetting),
+			SubscribedIsPrivate:      utils.SubscribedIsPrivate(suser.PrivacySetting),
 		})
 
 	case definition.DB_NOEXIST:
@@ -1171,7 +1261,7 @@ func PostPrivacySetting(c *gin.Context) {
 		return
 	}
 
-	scode := dataLayer.UpdatePrivacySettingByUid(uId, req.PostIsPrivate, req.CommentIsPrivate, req.SavedPostIsPrivate, req.SubscribedIsPrivate)
+	scode := dataLayer.UpdatePrivacySettingByUid(uId, req.PostIsPrivate, req.CommentAndReplyIsPrivate, req.SavedPostIsPrivate, req.SubscribedIsPrivate)
 	switch scode {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.PostPrivacySettingResponse{

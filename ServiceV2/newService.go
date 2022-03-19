@@ -37,6 +37,8 @@ func StartService(port string) {
 	profileRoute.GET("/user-saved/:u_id", GetUserSavedPost)
 	profileRoute.GET("/subscribed-user/:u_id", GetUserSubscribedUser)
 	profileRoute.GET("/allpostid-by-uid/:u_id", GetUserAllPostId)
+	profileRoute.GET("/allcommentid-by-uid/:u_id", GetUserAllCommentId)
+	profileRoute.GET("/allreplyid-by-uid/:u_id", GetUserAllReplyId)
 
 	// 需要登录态的操作
 	needSessionRoute := r.Group("", AuthMiddleWare())

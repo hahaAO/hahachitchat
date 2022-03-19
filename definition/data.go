@@ -15,7 +15,7 @@ type User struct {
 	Subscribed string    `gorm:"column:subscribed"`                        //用户关注的人,数组格式为:"1 2 3"
 
 	//PrivacySetting 00000000 0位允许 1为禁止 用位运算的&判断
-	//PrivacySetting 128 64 32 16 8关注的人 4收藏帖子 2回复记录 1发帖记录
+	//PrivacySetting 128 64 32 16 8关注的人 4收藏帖子 2评论和回复记录 1发帖记录
 	PrivacySetting byte `gorm:"column:privacy_setting; default:0"` //用户隐私设置，为8位byte
 }
 

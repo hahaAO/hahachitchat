@@ -220,6 +220,18 @@ type GetUserAllPostIdResponse struct {
 	PostIds      []uint64 `json:"post_ids"`
 }
 
+type GetUserAllCommentIdResponse struct {
+	State        int      `json:"state"`
+	StateMessage string   `json:"state_message"`
+	CommentIds   []uint64 `json:"comment_ids"`
+}
+
+type GetUserAllReplyIdResponse struct {
+	State        int      `json:"state"`
+	StateMessage string   `json:"state_message"`
+	ReplyIds     []uint64 `json:"reply_ids"`
+}
+
 type GetUserSavedPostResponse struct {
 	State        int      `json:"state"`
 	StateMessage string   `json:"state_message"`
@@ -252,19 +264,19 @@ type GetUserStateResponse struct {
 }
 
 type GetPrivacySettingResponse struct {
-	State               int    `json:"state"`
-	StateMessage        string `json:"state_message"`
-	PostIsPrivate       bool   `json:"post_is_private"`
-	CommentIsPrivate    bool   `json:"comment_is_private"`
-	SavedPostIsPrivate  bool   `json:"saved_post_is_private"`
-	SubscribedIsPrivate bool   `json:"subscribed_is_private"`
+	State                    int    `json:"state"`
+	StateMessage             string `json:"state_message"`
+	PostIsPrivate            bool   `json:"post_is_private"`
+	CommentAndReplyIsPrivate bool   `json:"comment_and_reply_is_private"`
+	SavedPostIsPrivate       bool   `json:"saved_post_is_private"`
+	SubscribedIsPrivate      bool   `json:"subscribed_is_private"`
 }
 
 type PostPrivacySettingRequest struct {
-	PostIsPrivate       *bool `json:"post_is_private"`
-	CommentIsPrivate    *bool `json:"comment_is_private"`
-	SavedPostIsPrivate  *bool `json:"saved_post_is_private"`
-	SubscribedIsPrivate *bool `json:"subscribed_is_private"`
+	PostIsPrivate            *bool `json:"post_is_private"`
+	CommentAndReplyIsPrivate *bool `json:"comment_and_reply_is_private"`
+	SavedPostIsPrivate       *bool `json:"saved_post_is_private"`
+	SubscribedIsPrivate      *bool `json:"subscribed_is_private"`
 }
 type PostPrivacySettingResponse struct {
 	State        int    `json:"state"`
