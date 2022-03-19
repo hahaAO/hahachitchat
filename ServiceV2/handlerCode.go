@@ -268,25 +268,54 @@ func AllCommentIdByPostId(c *gin.Context) {
 	}
 }
 
-func AllPostIdByUserId(c *gin.Context) {
+func GetUserAllPostId(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUserIdStr, ok := myUserId.(string)
+	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
+	if !exists || !ok || err != nil {
+		myUid = 0 // 没有登录态
+	}
+
 	userIdStr := c.Param("u_id")
 	uId, err := strconv.ParseUint(userIdStr, 10, 64)
 	if err != nil { //参数不能转为int
 		SetParamErrorResponse(c)
 		return
 	}
-	scode, spostids := dataLayer.SelectPostidByuid(nil, uId)
+
+	scode, suser := dataLayer.SelectUserById(nil, uId)
 	switch scode {
-	case definition.DB_EXIST: // 成功
-		c.JSON(http.StatusOK, definition.AllPostIdByUserIdResponse{
-			State:        definition.Success,
-			StateMessage: "查询帖子评论ID成功",
-			PostIds:      spostids,
-		})
-	case definition.DB_NOEXIST: // 没有帖子
-		c.JSON(http.StatusOK, definition.AllPostIdByUserIdResponse{
-			State:        definition.Success,
-			StateMessage: "该用户没发过帖子",
+	case definition.DB_EXIST:
+		if utils.PostIsPrivate(suser.PrivacySetting) && uId != myUid {
+			c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
+				State:        definition.NoPermission,
+				StateMessage: "该用户对发帖记录设置了仅自己可见",
+			})
+			return
+		}
+		// 可以查询
+		scode2, spostids := dataLayer.SelectPostidByuid(nil, uId)
+		switch scode2 {
+		case definition.DB_EXIST: // 成功
+			c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
+				State:        definition.Success,
+				StateMessage: "查询帖子评论ID成功",
+				PostIds:      spostids,
+			})
+		case definition.DB_NOEXIST: // 没有帖子
+			c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
+				State:        definition.Success,
+				StateMessage: "该用户没发过帖子",
+			})
+		case definition.DB_ERROR: // 其他问题
+			SetDBErrorResponse(c)
+		default:
+			SetServerErrorResponse(c)
+		}
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.GetUserAllPostIdResponse{
+			State:        definition.BadRequest,
+			StateMessage: "该用户不存在",
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)
@@ -1080,7 +1109,7 @@ func CancelSubscribe(c *gin.Context) {
 		for i, subscribedUserId := range subscribed {
 			if subscribedUserId == req.UserId {
 				subscribed = append(subscribed[0:i], subscribed[i+1:]...)
-				ucode := dataLayer.UpdateSavedPostByUid(nil, subscribed, uId)
+				ucode := dataLayer.UpdateSubscribedByUid(nil, subscribed, uId)
 				if ucode == definition.DB_SUCCESS {
 					c.JSON(http.StatusOK, definition.CancelSubscribeResponse{
 						State:        definition.Success,
@@ -1119,8 +1148,7 @@ func GetUserSavedPost(c *gin.Context) {
 	myUserIdStr, ok := myUserId.(string)
 	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
 	if !exists || !ok || err != nil {
-		SetGetUidErrorResponse(c)
-		return
+		myUid = 0 // 没有登录态
 	}
 
 	userIdStr := c.Param("u_id")
@@ -1133,9 +1161,9 @@ func GetUserSavedPost(c *gin.Context) {
 	scode, suser := dataLayer.SelectUserById(nil, uId)
 	switch scode {
 	case definition.DB_EXIST:
-		if utils.SavedPostIsPrivate(suser.PrivacySetting) && uId == myUid {
+		if utils.SavedPostIsPrivate(suser.PrivacySetting) && uId != myUid {
 			c.JSON(http.StatusOK, definition.GetUserSavedPostResponse{
-				State:        definition.Success,
+				State:        definition.NoPermission,
 				StateMessage: "该用户对收藏夹设置了仅自己可见",
 			})
 			return
@@ -1171,8 +1199,7 @@ func GetUserSubscribedUser(c *gin.Context) {
 	myUserIdStr, ok := myUserId.(string)
 	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
 	if !exists || !ok || err != nil {
-		SetGetUidErrorResponse(c)
-		return
+		myUid = 0 // 没有登录态
 	}
 
 	userIdStr := c.Param("u_id")
@@ -1185,9 +1212,9 @@ func GetUserSubscribedUser(c *gin.Context) {
 	scode, suser := dataLayer.SelectUserById(nil, uId)
 	switch scode {
 	case definition.DB_EXIST:
-		if utils.SubscribedIsPrivate(suser.PrivacySetting) && uId == myUid {
+		if utils.SubscribedIsPrivate(suser.PrivacySetting) && uId != myUid {
 			c.JSON(http.StatusOK, definition.GetUserSubscribedUserResponse{
-				State:        definition.Success,
+				State:        definition.NoPermission,
 				StateMessage: "该用户对关注的人设置了仅自己可见",
 			})
 			return

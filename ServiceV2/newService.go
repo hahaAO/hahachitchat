@@ -22,7 +22,6 @@ func StartService(port string) {
 	r.GET("/", DefaultTest)
 	r.GET("/allpostid", AllPostId)
 	r.GET("/allcommentid/:post_id", AllCommentIdByPostId)
-	r.GET("/allpostid-by-uid/:u_id", AllPostIdByUserId)
 	r.GET("/user/:u_id", GetUserById)
 	r.GET("/post/:post_id", GetPostById)
 	r.GET("/comment/:comment_id", GetCommentById)
@@ -33,10 +32,15 @@ func StartService(port string) {
 	r.POST("/register", Register)
 	r.POST("/login", Login)
 
-	needSessionRoute := r.Group("", AuthMiddleWare())
+	//可能需要登录态的操作 个人资料(根据用户隐私设置判断是否展示)
+	profileRoute := r.Group("/profile", SetSessionMiddleWare())
+	profileRoute.GET("/user-saved/:u_id", GetUserSavedPost)
+	profileRoute.GET("/subscribed-user/:u_id", GetUserSubscribedUser)
+	profileRoute.GET("/allpostid-by-uid/:u_id", GetUserAllPostId)
+
 	// 需要登录态的操作
-	needSessionRoute.GET("/subscribed-user/:u_id", GetUserSubscribedUser)
-	needSessionRoute.GET("/user-saved/:u_id", GetUserSavedPost)
+	needSessionRoute := r.Group("", AuthMiddleWare())
+
 	needSessionRoute.GET("/allchat/", GetAllChat)
 	needSessionRoute.GET("/user_state", GetUserState)
 

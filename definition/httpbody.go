@@ -214,7 +214,7 @@ type AllPostHotResponse struct {
 	HotDesc      []Post_idandhot `json:"hot_desc"`
 }
 
-type AllPostIdByUserIdResponse struct {
+type GetUserAllPostIdResponse struct {
 	State        int      `json:"state"`
 	StateMessage string   `json:"state_message"`
 	PostIds      []uint64 `json:"post_ids"`
