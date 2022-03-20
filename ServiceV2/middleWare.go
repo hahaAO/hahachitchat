@@ -42,7 +42,7 @@ func AuthMiddleWare() gin.HandlerFunc { // 检查用户登录态
 			return
 		}
 		// 有登录态
-		c.Set("u_id", uId) // 写入 u_id 后续可以获取
+		c.Set("u_id", *uId) // 写入 u_id 后续可以获取
 		c.Next()
 	}
 }
