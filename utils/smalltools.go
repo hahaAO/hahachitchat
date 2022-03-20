@@ -34,7 +34,7 @@ func CreateSession(id uint64) *definition.Session {
 	return &definition.Session{
 		Id:     strconv.FormatUint(id, 10), //真实id
 		Randid: TimeRandId(),               //随机生成
-		Expire: int(3600 * 48),             //默认两天,
+		Expire: 3600 * 48,                  //默认两天,
 	}
 }
 

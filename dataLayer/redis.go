@@ -36,7 +36,7 @@ func Redis_open() {
 	//测试连接
 	redis_conn := redisClient.Get()
 	defer redis_conn.Close()
-	// redis_conn.Do("FLUSHALL") //初始化redis
+	//redis_conn.Do("FLUSHALL") //初始化redis
 	ee, err := redis.String(redis_conn.Do("PING", "nihao"))
 	if err != nil {
 		Redislog.Println("Redis_open error:", err)
@@ -106,7 +106,7 @@ func Redis_CreateComment(comment definition.Comment) definition.DBcode {
 		Redislog.Println("Redis_CreateComment err:", err)
 		return definition.DB_ERROR
 	}
-	_, err = redis.String(
+	_, err = redis.Int64(
 		redis_conn.Do("EXPIRE", key, 18000),
 	)
 	if err != nil { //其他情况
