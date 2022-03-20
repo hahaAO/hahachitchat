@@ -870,7 +870,7 @@ func DeleteCommentById(c *gin.Context) {
 	switch scode {
 	case definition.DB_EXIST: // 评论存在
 		if scomment.UId == uId { // 是拥有者才有权限删除
-			dcode := dataLayer.DeleteCommentById(nil, req.CommentId)
+			dcode := dataLayer.DeleteCommentById(req.CommentId)
 			if dcode == definition.DB_SUCCESS {
 				c.JSON(http.StatusOK, definition.DeleteCommentByIdResponse{
 					State:        definition.Success,

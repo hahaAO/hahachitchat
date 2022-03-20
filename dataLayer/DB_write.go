@@ -381,19 +381,17 @@ func DeletePostOnId(post_id uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var comments []definition.Comment
 		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&comments).Error; err != nil { //有其他问题
-			for _, comment := range comments {
-				go Redis_DeleteCommentOnid(comment.CommentId) //redis缓存中的也删掉
-				var reply []definition.Reply
-				if err := tx.Where("comment_id = ?", comment.CommentId).Delete(&reply).Error; err != nil { // 回复也删掉
-					DBlog.Fatalf("[DeletePostOnId] Delete(reply) err:", err)
-					return definition.DB_ERROR, nil
-				}
-			}
 			DBlog.Println("DeletePostOnId err1:", err)
 			return definition.DB_ERROR, nil
 		}
 		for _, comment := range comments { //读出图片id
-			DeleteImg_produce(comment.ImgId) //把要删除的图片id发到消息队列
+			var reply []definition.Reply
+			if err := tx.Where("comment_id = ?", comment.CommentId).Delete(&reply).Error; err != nil { // 回复也删掉
+				DBlog.Fatalf("[DeletePostOnId] Delete(reply) err:", err)
+				return definition.DB_ERROR, nil
+			}
+			go Redis_DeleteCommentOnid(comment.CommentId) //redis缓存中的也删掉
+			DeleteImg_produce(comment.ImgId)              //把要删除的图片id发到消息队列
 		}
 		var post definition.Post
 		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&post).Error; err != nil { //有其他问题
@@ -409,7 +407,7 @@ func DeletePostOnId(post_id uint64) definition.DBcode {
 }
 
 //redis缓存中的也删掉	根据comment_id 删除评论
-func DeleteCommentById(db *gorm.DB, comment_id uint64) definition.DBcode {
+func DeleteCommentById(comment_id uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var reply []definition.Reply
 		if err := tx.Where("comment_id = ?", comment_id).Delete(&reply).Error; err != nil { // 回复也删掉
@@ -418,7 +416,7 @@ func DeleteCommentById(db *gorm.DB, comment_id uint64) definition.DBcode {
 		}
 
 		var comment definition.Comment
-		err := db.Clauses(clause.Returning{}).Where("comment_id = ?", comment_id).Delete(&comment).Error
+		err := tx.Clauses(clause.Returning{}).Where("comment_id = ?", comment_id).Delete(&comment).Error
 		if err != nil { //有其他问题
 			DBlog.Println("[DeleteCommentById] err:", err)
 			return definition.DB_ERROR, nil
