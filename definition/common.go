@@ -20,7 +20,10 @@ const ( // 消息类型
 	MessageTypeAt      MessageType = 4 //@
 )
 
-var DeleteImg_ch chan string
+var DeleteImgChan chan string
+var DeleteCommentChan chan uint64
+var DeleteReplyChan chan uint64
+var DeleteMessageChan chan Message
 
 type Session struct {
 	Id     string //用户id

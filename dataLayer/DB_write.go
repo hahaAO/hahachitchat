@@ -391,7 +391,7 @@ func DeletePostOnId(post_id uint64) definition.DBcode {
 				return definition.DB_ERROR, nil
 			}
 			go Redis_DeleteCommentOnid(comment.CommentId) //redis缓存中的也删掉
-			DeleteImg_produce(comment.ImgId)              //把要删除的图片id发到消息队列
+			DeleteImgProduce(comment.ImgId)               //把要删除的图片id发到消息队列
 		}
 		var post definition.Post
 		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&post).Error; err != nil { //有其他问题
@@ -399,7 +399,7 @@ func DeletePostOnId(post_id uint64) definition.DBcode {
 			return definition.DB_ERROR, nil
 		}
 
-		DeleteImg_produce(post.ImgId) //把要删除的图片id发到消息队列
+		DeleteImgProduce(post.ImgId) //把要删除的图片id发到消息队列
 		DBlog.Printf("DeletePostOnId:	post_id %d 删除成功\n", post_id)
 		return definition.DB_SUCCESS, nil
 	})
@@ -422,7 +422,7 @@ func DeleteCommentById(comment_id uint64) definition.DBcode {
 			return definition.DB_ERROR, nil
 		} else { //删除成功
 			go Redis_DeleteCommentOnid(comment_id) //redis缓存中的也删掉
-			DeleteImg_produce(comment.ImgId)       //把要删除的图片id发到消息队列
+			DeleteImgProduce(comment.ImgId)        //把要删除的图片id发到消息队列
 			return definition.DB_SUCCESS, nil
 		}
 	})

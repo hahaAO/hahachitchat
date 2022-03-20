@@ -511,7 +511,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
+				"/", "", false, true) // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
@@ -1035,22 +1035,22 @@ func UploadImg(c *gin.Context) {
 			ImgId:        imgId,
 		})
 	case definition.DB_ERROR_PARAM:
-		dataLayer.DeleteImg_produce(imgId)
+		dataLayer.DeleteImgProduce(imgId)
 		c.JSON(http.StatusOK, definition.UploadImgResponse{
 			State:        definition.BadRequest,
 			StateMessage: "object不正确",
 		})
 	case definition.DB_UNMATCH:
-		dataLayer.DeleteImg_produce(imgId)
+		dataLayer.DeleteImgProduce(imgId)
 		c.JSON(http.StatusOK, definition.UploadImgResponse{
 			State:        definition.BadRequest,
 			StateMessage: "无权更新不属于你的头像/评论/帖子的图片",
 		})
 	case definition.DB_ERROR: // 其他问题
-		dataLayer.DeleteImg_produce(imgId)
+		dataLayer.DeleteImgProduce(imgId)
 		SetDBErrorResponse(c)
 	default:
-		dataLayer.DeleteImg_produce(imgId)
+		dataLayer.DeleteImgProduce(imgId)
 		SetServerErrorResponse(c)
 	}
 

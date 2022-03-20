@@ -7,14 +7,25 @@ import (
 	"os"
 )
 
-func imgServiceInit() {
-	os.Mkdir(definition.ImgDocPath, os.ModePerm)    //创建图片文件夹
-	definition.DeleteImg_ch = make(chan string, 10) //初始化创建待删除图片消息队列
-	go dataLayer.DeleteImg_consum()                 //启动一个协程去订阅id删除图片
+func ServiceInit() {
+	os.Mkdir(definition.ImgDocPath, os.ModePerm) //创建图片文件夹
+
+	definition.DeleteImgChan = make(chan string, 10) //初始化创建待删除图片消息队列
+	go dataLayer.DeleteImgConsumer()                 //启动一个协程去订阅id删除图片
+
+	definition.DeleteCommentChan = make(chan uint64, 10) //初始化创建待删除评论消息队列
+	go dataLayer.DeleteCommentConsumer()                 //启动一个协程去订阅id删除评论
+
+	definition.DeleteReplyChan = make(chan uint64, 10) //初始化创建待删除回复消息队列
+	go dataLayer.DeleteReplyConsumer()                 //启动一个协程去订阅id删除回复
+
+	definition.DeleteMessageChan = make(chan definition.Message, 10) //初始化创建待删除消息通知消息队列
+	go dataLayer.DeleteMessageConsumer()                             //启动一个协程去订阅id删除通知消息
+
 }
 
 func StartService(port string) {
-	imgServiceInit()
+	ServiceInit()
 
 	r := gin.Default()
 	r.Use(HearsetMiddleWare())
