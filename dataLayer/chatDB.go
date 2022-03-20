@@ -669,7 +669,7 @@ func SelectAllCommentIdByUid(myUid uint64, uId uint64) (definition.DBcode, []uin
 		}
 		// 可以查询
 		var commentIds []uint64
-		var comments []definition.Post
+		var comments []definition.Comment
 		err := tx.Model(&definition.Comment{}).Where("u_id = ?", uId).Find(&comments).Error
 		if err == gorm.ErrRecordNotFound { // 没有帖子
 			return definition.DB_NOEXIST_COMMENT, nil
@@ -677,7 +677,7 @@ func SelectAllCommentIdByUid(myUid uint64, uId uint64) (definition.DBcode, []uin
 			return definition.DB_ERROR, nil
 		}
 		for _, comments := range comments {
-			commentIds = append(commentIds, comments.PostId)
+			commentIds = append(commentIds, comments.CommentId)
 		}
 
 		if len(commentIds) == 0 { //没有帖子
