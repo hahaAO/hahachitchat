@@ -103,6 +103,33 @@ func GetUserById(c *gin.Context) {
 	}
 }
 
+func GetUidByUname(c *gin.Context) {
+	uName := c.Param("u_name")
+	if uName == "" {
+		SetParamErrorResponse(c)
+		return
+	}
+	scode, suser := dataLayer.SelectUserByname(nil, uName)
+	switch scode {
+	case definition.DB_EXIST: // 已注册
+		c.JSON(http.StatusOK, definition.GetUidByUnameResponse{
+			State:        definition.Success,
+			StateMessage: "查询用户成功",
+			UId:          suser.UId,
+		})
+		return
+	case definition.DB_NOEXIST: // 未注册
+		c.JSON(http.StatusOK, definition.GetUidByUnameResponse{
+			State:        definition.BadRequest,
+			StateMessage: "没有该用户名",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
 func GetReplyById(c *gin.Context) {
 	replyIdStr := c.Param("reply_id")
 	replyId, err := strconv.ParseUint(replyIdStr, 10, 64)
@@ -484,7 +511,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true) // 把cookie写入响应头 设置cookie
+				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{

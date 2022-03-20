@@ -28,6 +28,7 @@ func StartService(port string) {
 	r.GET("/reply/:reply_id", GetReplyById)
 	r.GET("/allposthot", AllPostHot)
 	r.GET("/getimg/:img_id", GetImg)
+	r.GET("/id-by-name/:u_name", GetUidByUname)
 
 	r.POST("/register", Register)
 	r.POST("/login", Login)

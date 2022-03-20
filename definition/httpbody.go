@@ -317,6 +317,12 @@ type GetPrivacySettingResponse struct {
 	SubscribedIsPrivate      bool   `json:"subscribed_is_private"`
 }
 
+type GetUidByUnameResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+	UId          uint64 `json:"u_id"`
+}
+
 type PostPrivacySettingRequest struct {
 	PostIsPrivate            *bool `json:"post_is_private"`
 	CommentAndReplyIsPrivate *bool `json:"comment_and_reply_is_private"`
