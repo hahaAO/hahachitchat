@@ -691,7 +691,8 @@ func CreateCommentV2(c *gin.Context) {
 	}
 
 	var req definition.CreateCommentV2Request
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
+		dataLayer.Serverlog.Println("[CreateCommentV2] err: ", err)
 		SetParamErrorResponse(c)
 		return
 	}
@@ -709,7 +710,8 @@ func CreateCommentV2(c *gin.Context) {
 		}
 	}
 
-	ccode, ccomid := dataLayer.CreateCommentV2(req.PostId, uId, req.CommentTxt, imgId, req.SomeoneBeAt)
+	someoneBeAt := make(map[uint64]string)
+	ccode, ccomid := dataLayer.CreateCommentV2(req.PostId, uId, req.CommentTxt, imgId, someoneBeAt)
 	switch ccode {
 	case definition.DB_SUCCESS: // 成功
 		c.JSON(http.StatusOK, definition.CreateCommentV2Response{
@@ -744,7 +746,7 @@ func CreateReply(c *gin.Context) {
 	}
 
 	var req definition.CreateReplyRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}

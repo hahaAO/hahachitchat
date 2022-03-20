@@ -2,39 +2,17 @@ package dataLayer
 
 import (
 	"code/Hahachitchat/definition"
-	"os"
+	"code/Hahachitchat/utils"
+	"fmt"
 )
 
-//把要删除的图片id放进通道
+// 删除图片的生产者和消费者
 func DeleteImgProduce(id string) {
 	if id == "" { //空则不用发送 发送空的东西到消息队列会引发错误
 		return
 	}
 	definition.DeleteImgChan <- id
 }
-
-//把要删除的评论id放进通道
-func DeleteCommentProduce(id uint64) {
-	if id == 0 {
-		return
-	}
-	definition.DeleteCommentChan <- id
-}
-
-//把要删除的回复id放进通道
-func DeleteReplyProduce(id uint64) {
-	if id == 0 {
-		return
-	}
-	definition.DeleteReplyChan <- id
-}
-
-//把要删除的消息id放进通道
-func DeleteMessageProduce(message definition.Message) {
-	definition.DeleteMessageChan <- message
-}
-
-//获取要删除的图片id并删除
 func DeleteImgConsumer() {
 	for id := range definition.DeleteImgChan {
 		if err := DeleteImg(id); err != nil {
@@ -43,36 +21,69 @@ func DeleteImgConsumer() {
 	}
 }
 
-func DeleteCommentConsumer() {
-	for id := range definition.DeleteCommentChan {
-		if code := DeleteCommentById(id); code != definition.DB_SUCCESS {
-			Mqlog.Fatalln("[DeleteCommentConsum] Remove fail id: ", id)
-		}
+// 删除消息的生产者和消费者
+func DeleteMessageProduce(uid uint64, messageType definition.MessageType, messageId uint64) {
+	definition.DeleteMessageChan <- definition.Message{
+		UId:         uid,
+		MessageType: messageType,
+		MessageId:   messageId,
 	}
 }
-
-func DeleteReplyConsumer() {
-	for id := range definition.DeleteReplyChan {
-		if code := DeleteReplyById(nil, id); code != definition.DB_SUCCESS {
-			Mqlog.Fatalln("[DeleteReplyConsumer] Remove fail id: ", id)
-		}
-	}
-}
-
 func DeleteMessageConsumer() {
 	for message := range definition.DeleteMessageChan {
 		if code := DeleteUnreadMessage(nil, message.UId, message.MessageType, message.MessageId); code != definition.DB_SUCCESS {
-			Mqlog.Fatalln("[DeleteMessageConsumer] Remove fail id: ", message)
+			Mqlog.Fatalln("[DeleteMessageConsumer] Remove fail message: ", message)
 		}
 	}
 }
 
-func DeleteImg(id string) error {
-	err := os.Remove("./imgdoc/" + id) //转化为路径并删除
+// 删除At的生产者和消费者
+func DeleteAtProduce(someoneBeAtStr string, placePrefix string, place_id uint64) { // placePrefix(前缀)有三种 post、comment、reply
+	someoneBeAt, err := utils.StringToMap(someoneBeAtStr)
 	if err != nil {
-		Mqlog.Println("deleteImg_consumer Remove err:", err) //没有删除成功有两种情况：操作出错，图片不存在
-		return nil                                           //默认为图片不存在,不用再返回消息队列
+		Mqlog.Fatalln("[DeleteAtProduce] StringToMap err: ", err)
 	}
-	Mqlog.Println("delete OK Img:", id) //删除成功
-	return nil
+	for uId, _ := range someoneBeAt {
+		definition.DeleteAtChan <- definition.At{
+			UId:   uId,
+			Place: fmt.Sprintf("%s_%d", placePrefix, place_id),
+		}
+	}
+}
+func DeleteAtConsumer() {
+	for at := range definition.DeleteAtChan {
+		if code := DeleteAt(nil, at.UId, at.Place); code != definition.DB_SUCCESS {
+			Mqlog.Fatalln("[DeleteAtConsumer] Remove fail at: ", at)
+		}
+	}
+}
+
+// 删除回复的生产者和消费者
+func DeleteRepliesProduce(commentId uint64) {
+	if commentId == 0 {
+		return
+	}
+	definition.DeleteRepliesChan <- commentId
+}
+func DeleteRepliesConsumer() {
+	for commentId := range definition.DeleteRepliesChan {
+		if code := DeleteRepliesByCommentId(nil, commentId); code != definition.DB_SUCCESS {
+			Mqlog.Fatalln("[DeleteRepliesByCommentId] Remove fail commentId:", commentId)
+		}
+	}
+}
+
+// 删除评论的生产者和消费者
+func DeleteCommentsProduce(postId uint64) {
+	if postId == 0 {
+		return
+	}
+	definition.DeleteComentsChan <- postId
+}
+func DeleteCommentsConsumer() {
+	for postId := range definition.DeleteComentsChan {
+		if code := DeleteCommentsByPostId(postId); code != definition.DB_SUCCESS {
+			Mqlog.Fatalln("[DeleteCommentsByPostId] Remove fail postId:", postId)
+		}
+	}
 }

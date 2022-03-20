@@ -20,10 +20,12 @@ const ( // 消息类型
 	MessageTypeAt      MessageType = 4 //@
 )
 
+// 延迟删除消息队列
 var DeleteImgChan chan string
-var DeleteCommentChan chan uint64
-var DeleteReplyChan chan uint64
 var DeleteMessageChan chan Message
+var DeleteAtChan chan At          // 只传uid和place
+var DeleteRepliesChan chan uint64 // 注意：传commentId而不是replyId
+var DeleteComentsChan chan uint64 // 注意：传postId而不是commentId
 
 type Session struct {
 	Id     string //用户id

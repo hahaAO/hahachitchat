@@ -42,6 +42,7 @@ func (Post) TableName() string {
 type Comment struct {
 	CommentId   uint64    `gorm:"column:comment_id; primaryKey"`       //评论id,唯一主键
 	PostId      uint64    `gorm:"column:post_id; index; not null"`     //帖子id
+	PostUid     uint64    `gorm:"column:post_u_id; not null"`          //帖子主人id
 	UId         uint64    `gorm:"column:u_id; not null"`               //用户id
 	CommentTxt  string    `gorm:"column:comment_txt; not null"`        //评论内容
 	CommentTime time.Time `gorm:"column:comment_time; autoCreateTime"` //评论时间

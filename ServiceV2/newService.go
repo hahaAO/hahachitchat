@@ -13,15 +13,17 @@ func ServiceInit() {
 	definition.DeleteImgChan = make(chan string, 10) //初始化创建待删除图片消息队列
 	go dataLayer.DeleteImgConsumer()                 //启动一个协程去订阅id删除图片
 
-	definition.DeleteCommentChan = make(chan uint64, 10) //初始化创建待删除评论消息队列
-	go dataLayer.DeleteCommentConsumer()                 //启动一个协程去订阅id删除评论
-
-	definition.DeleteReplyChan = make(chan uint64, 10) //初始化创建待删除回复消息队列
-	go dataLayer.DeleteReplyConsumer()                 //启动一个协程去订阅id删除回复
-
 	definition.DeleteMessageChan = make(chan definition.Message, 10) //初始化创建待删除消息通知消息队列
 	go dataLayer.DeleteMessageConsumer()                             //启动一个协程去订阅id删除通知消息
 
+	definition.DeleteAtChan = make(chan definition.At, 10) //初始化创建待删除at消息队列
+	go dataLayer.DeleteAtConsumer()                        //启动一个协程去订阅id删除at
+
+	definition.DeleteRepliesChan = make(chan uint64, 10) //初始化创建待删除回复通知消息队列
+	go dataLayer.DeleteRepliesConsumer()                 //启动一个协程去订阅id删除回复
+
+	definition.DeleteComentsChan = make(chan uint64, 10) //初始化创建待删除评论通知消息队列
+	go dataLayer.DeleteCommentsConsumer()                //启动一个协程去订阅id删除评论
 }
 
 func StartService(port string) {

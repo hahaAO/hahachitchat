@@ -65,10 +65,10 @@ type CreateCommentResponse struct {
 }
 
 type CreateReplyRequest struct {
-	CommentId   uint64            `json:"comment_id" binding:"required"`
-	ReplyTxt    string            `json:"reply_txt" binding:"required"`
-	Target      *uint64           `json:"target" binding:"required"` // 用指针目的:binding不为空，但可以传零值
-	SomeoneBeAt map[uint64]string `gorm:"column:someone_be_at"`      //被@的人
+	CommentId   uint64            `form:"comment_id" binding:"required"`
+	ReplyTxt    string            `form:"reply_txt" binding:"required"`
+	Target      *uint64           `form:"target" binding:"required"` // 用指针目的:binding不为空，但可以传零值
+	SomeoneBeAt map[uint64]string `form:"someone_be_at"`             //被@的人
 }
 type CreateReplyResponse struct {
 	State        int    `json:"state"`
@@ -93,7 +93,7 @@ type CreatePostV2Request struct {
 	PostTxt       string                `form:"post_txt" binding:"required"`
 	Zone          ZoneType              `form:"zone"`
 	PostTxtHtml   string                `form:"post_txt_html" binding:"required"` //帖子内容的html
-	SomeoneBeAt   map[uint64]string     `gorm:"column:someone_be_at"`             //被@的人
+	SomeoneBeAt   map[uint64]string     `form:"someone_be_at"`                    //被@的人
 }
 type CreatePostV2Response struct {
 	State        int    `json:"state"`
@@ -105,7 +105,7 @@ type CreateCommentV2Request struct {
 	ImgFileHeader *multipart.FileHeader `form:"image"`
 	PostId        uint64                `form:"post_id" binding:"required"`
 	CommentTxt    string                `form:"comment_txt" binding:"required"`
-	SomeoneBeAt   map[uint64]string     `gorm:"column:someone_be_at"` //被@的人
+	SomeoneBeAt   map[uint64]string     `form:"someone_be_at"` //被@的人
 }
 type CreateCommentV2Response struct {
 	State        int    `json:"state"`
@@ -199,7 +199,7 @@ type GetPostByIdResponse struct {
 	PostTime     time.Time `json:"post_time"`
 	PostTxtHtml  string    `json:"post_txt_html"`
 	ImgId        string    `json:"img_id"`
-	SomeoneBeAt  string    `gorm:"column:someone_be_at"` //被@的人
+	SomeoneBeAt  string    `json:"someone_be_at"` //被@的人
 }
 
 type AllCommentIdByPostIdResponse struct {
@@ -216,7 +216,7 @@ type GetCommentByIdResponse struct {
 	CommentTxt   string    `json:"comment_txt"`
 	CommentTime  time.Time `json:"comment_time"`
 	ImgId        string    `json:"img_id"`
-	SomeoneBeAt  string    `gorm:"column:someone_be_at"` //被@的人
+	SomeoneBeAt  string    `json:"someone_be_at"` //被@的人
 }
 
 type GetCommentByIdV2Response struct {
@@ -227,7 +227,7 @@ type GetCommentByIdV2Response struct {
 	CommentTxt   string    `json:"comment_txt"`
 	CommentTime  time.Time `json:"comment_time"`
 	ImgId        string    `json:"img_id"`
-	SomeoneBeAt  string    `gorm:"column:someone_be_at"` //被@的人
+	SomeoneBeAt  string    `json:"someone_be_at"` //被@的人
 	Replies      []Reply   `json:"replies"`
 }
 
@@ -250,7 +250,7 @@ type GetReplyByIdResponse struct {
 	TargetUid    uint64    `json:"target_uid"` //回应对象的用户id
 	ReplyTxt     string    `json:"reply_txt"`
 	ReplyTime    time.Time `json:"reply_time"`
-	SomeoneBeAt  string    `gorm:"column:someone_be_at"` //被@的人
+	SomeoneBeAt  string    `json:"someone_be_at"` //被@的人
 }
 
 type AllPostHotResponse struct {

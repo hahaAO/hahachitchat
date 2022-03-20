@@ -131,14 +131,15 @@ func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition
 }
 
 //根据post_id u_id comment_txt插入comment
-func CreateComment(post_id uint64, u_id uint64, comment_txt string) (definition.DBcode, uint64) {
+func CreateComment(post_id uint64, myId uint64, comment_txt string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		scode, _ := SelectUserById(tx, u_id)                               //查u_id
-		scode2, _ := SelectPostById(tx, post_id)                           //查post_id
+		scode, _ := SelectUserById(tx, myId)                               //查u_id
+		scode2, spost := SelectPostById(tx, post_id)                       //查post_id
 		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST { // 帖子和用户存在
 			comment := definition.Comment{
 				PostId:     post_id,
-				UId:        u_id,
+				PostUid:    spost.UId,
+				UId:        myId,
 				CommentTxt: comment_txt,
 			}
 			err := tx.Model(&definition.Comment{}).Create(&comment).Error
@@ -325,7 +326,7 @@ func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId strin
 // 增加未读消息
 func CreateMessage(messageType definition.MessageType, messageId uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		var userId uint64
+		var userId uint64 // 要提醒的人
 		switch messageType {
 		case definition.MessageTypeComment:
 			var comment definition.Comment
@@ -333,14 +334,14 @@ func CreateMessage(messageType definition.MessageType, messageId uint64) definit
 				Error; err != nil {
 				return definition.DB_ERROR, nil
 			}
-			userId = comment.UId
+			userId = comment.PostUid
 		case definition.MessageTypeReply:
 			var reply definition.Reply
 			if err := tx.Model(&definition.Reply{}).Where("reply_id = ?", messageId).First(&reply).
 				Error; err != nil {
 				return definition.DB_ERROR, nil
 			}
-			userId = reply.UId
+			userId = reply.TargetUid
 		case definition.MessageTypeChat:
 			var chat definition.Chat
 			if err := tx.Model(&definition.Chat{}).Where("chat_id = ?", messageId).First(&chat).
@@ -376,28 +377,33 @@ func DeleteUnreadMessage(db *gorm.DB, uId uint64, messageType definition.Message
 	}
 }
 
-// DeletePostOnId 根据post_id 删除帖子及帖子里的评论
+// 删除 @ 通过通道删除message
+func DeleteAt(db *gorm.DB, uId uint64, place string) definition.DBcode {
+	getDB(&db)
+	var at definition.At
+	err := db.Clauses(clause.Returning{}).
+		Where("u_id = ? AND place = ? ", uId, place).Delete(&at).Error
+	if err != nil { //有其他问题
+		DBlog.Println("[DeleteAt] err: ", err)
+		return definition.DB_ERROR
+	} else { //删除成功
+		// at人造成的消息要删除
+		DeleteMessageProduce(at.UId, definition.MessageTypeAt, at.Id)
+
+		return definition.DB_SUCCESS
+	}
+}
+
+// DeletePostOnId 根据post_id 通过通道删除 at、comment、图片
 func DeletePostOnId(post_id uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		var comments []definition.Comment
-		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&comments).Error; err != nil { //有其他问题
-			DBlog.Println("DeletePostOnId err1:", err)
-			return definition.DB_ERROR, nil
-		}
-		for _, comment := range comments { //读出图片id
-			var reply []definition.Reply
-			if err := tx.Where("comment_id = ?", comment.CommentId).Delete(&reply).Error; err != nil { // 回复也删掉
-				DBlog.Fatalf("[DeletePostOnId] Delete(reply) err:", err)
-				return definition.DB_ERROR, nil
-			}
-			go Redis_DeleteCommentOnid(comment.CommentId) //redis缓存中的也删掉
-			DeleteImgProduce(comment.ImgId)               //把要删除的图片id发到消息队列
-		}
 		var post definition.Post
 		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&post).Error; err != nil { //有其他问题
 			DBlog.Println("DeletePostOnId err2:", err)
 			return definition.DB_ERROR, nil
 		}
+		DeleteAtProduce(post.SomeoneBeAt, "post", post_id) // 主题中at删除
+		DeleteCommentsProduce(post_id)                     // 帖子下的评论删除
 
 		DeleteImgProduce(post.ImgId) //把要删除的图片id发到消息队列
 		DBlog.Printf("DeletePostOnId:	post_id %d 删除成功\n", post_id)
@@ -406,38 +412,77 @@ func DeletePostOnId(post_id uint64) definition.DBcode {
 	return code
 }
 
-//redis缓存中的也删掉	根据comment_id 删除评论
+// 根据 comment_id 删除redis和DB评论	  通过通道删除 message、at、reply、图片
 func DeleteCommentById(comment_id uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		var reply []definition.Reply
-		if err := tx.Where("comment_id = ?", comment_id).Delete(&reply).Error; err != nil { // 回复也删掉
-			DBlog.Fatalf("[DeleteCommentById] Delete(reply) err:", err)
-			return definition.DB_ERROR, nil
-		}
-
 		var comment definition.Comment
 		err := tx.Clauses(clause.Returning{}).Where("comment_id = ?", comment_id).Delete(&comment).Error
 		if err != nil { //有其他问题
 			DBlog.Println("[DeleteCommentById] err:", err)
 			return definition.DB_ERROR, nil
 		} else { //删除成功
+			DeleteMessageProduce(comment.PostUid, definition.MessageTypeComment, comment.CommentId) // 本身对楼主造成的消息也要删除
+			DeleteAtProduce(comment.SomeoneBeAt, "comment", comment_id)                             // at 也删除
+			DeleteRepliesProduce(comment_id)                                                        // 删除评论下的reply
+			DeleteImgProduce(comment.ImgId)                                                         //把要删除的图片id发到消息队列
+
 			go Redis_DeleteCommentOnid(comment_id) //redis缓存中的也删掉
-			DeleteImgProduce(comment.ImgId)        //把要删除的图片id发到消息队列
 			return definition.DB_SUCCESS, nil
 		}
 	})
 	return code
 }
 
-//根据reply_id 删除评论
-func DeleteReplyById(db *gorm.DB, reply_id uint64) definition.DBcode {
+// 根据 postId 批量删除redis和DB评论  通过通道删除 message、at、reply、图片
+func DeleteCommentsByPostId(postId uint64) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var comments []definition.Comment
+		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", postId).Delete(&comments).Error; err != nil { //有其他问题
+			DBlog.Println("[DeleteCommentsByPostId] err:", err)
+			return definition.DB_ERROR, nil
+		}
+		for _, comment := range comments {
+			DeleteMessageProduce(comment.PostUid, definition.MessageTypeComment, comment.CommentId) // 本身对楼主造成的消息也要删除
+			DeleteAtProduce(comment.SomeoneBeAt, "comment", comment.CommentId)                      // at 也删除
+			DeleteRepliesProduce(comment.CommentId)                                                 // 删除评论下的reply
+			DeleteImgProduce(comment.ImgId)                                                         //把要删除的图片id发到消息队列
+
+			go Redis_DeleteCommentOnid(comment.CommentId) //redis缓存中的也删掉
+		}
+		return definition.DB_SUCCESS, nil
+	})
+	return code
+}
+
+//根据reply_id 删除回复 通过通道删除 message、at
+func DeleteReplyById(db *gorm.DB, replyId uint64) definition.DBcode {
 	getDB(&db)
 	var reply definition.Reply
-	err := db.Clauses(clause.Returning{}).Where("reply_id = ?", reply_id).Delete(&reply).Error
+	err := db.Clauses(clause.Returning{}).Where("reply_id = ?", replyId).Delete(&reply).Error
 	if err != nil { //有其他问题
 		DBlog.Println("[DeleteReplyById] err1:", err)
 		return definition.DB_ERROR
 	} else { //删除成功
+		DeleteMessageProduce(reply.TargetUid, definition.MessageTypeReply, reply.ReplyId) // 本身对层主造成的消息也要删除
+		DeleteAtProduce(reply.SomeoneBeAt, "reply", replyId)                              // at 也删除
+
+		return definition.DB_SUCCESS
+	}
+}
+
+//根据 comment_id 批量删除回复 并通过通道删除 message、at
+func DeleteRepliesByCommentId(db *gorm.DB, commentId uint64) definition.DBcode {
+	getDB(&db)
+	var replies []definition.Reply
+	err := db.Clauses(clause.Returning{}).Where("comment_id = ?", commentId).Delete(&replies).Error
+	if err != nil { //有其他问题
+		DBlog.Println("[DeleteRepliesByCommentId] err1:", err)
+		return definition.DB_ERROR
+	} else { //删除成功
+		for _, reply := range replies {
+			DeleteMessageProduce(reply.TargetUid, definition.MessageTypeReply, reply.ReplyId) // 本身对层主造成的消息也要删除
+			DeleteAtProduce(reply.SomeoneBeAt, "reply", reply.ReplyId)                        // at 也删除
+		}
 		return definition.DB_SUCCESS
 	}
 }
