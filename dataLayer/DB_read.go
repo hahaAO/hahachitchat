@@ -33,7 +33,7 @@ func DB_conn() {
 
 	// 同步数据库模式
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
-		&definition.Reply{}, &definition.Chat{}, &definition.Message{})
+		&definition.Reply{}, &definition.Chat{}, &definition.Message{}, &definition.At{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)

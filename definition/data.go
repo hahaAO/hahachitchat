@@ -32,7 +32,7 @@ type Post struct {
 	PostTime    time.Time `gorm:"column:post_time; autoCreateTime"`                                      //帖子发布时间
 	PostTxtHtml string    `gorm:"column:post_txt_html"`                                                  //帖子内容的html
 	ImgId       string    `gorm:"column:img_id"`                                                         //图片唯一id用作镇楼图
-	SomeoneBeAt string    `gorm:"column:someone_be_at"`                                                  //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
+	SomeoneBeAt string    `gorm:"column:someone_be_at;  default:'{}'"`                                   //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
 }
 
 func (Post) TableName() string {
@@ -46,7 +46,7 @@ type Comment struct {
 	CommentTxt  string    `gorm:"column:comment_txt; not null"`        //评论内容
 	CommentTime time.Time `gorm:"column:comment_time; autoCreateTime"` //评论时间
 	ImgId       string    `gorm:"column:img_id"`                       //图片唯一id用作评论图
-	SomeoneBeAt string    `gorm:"column:someone_be_at"`                //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
+	SomeoneBeAt string    `gorm:"column:someone_be_at;  default:'{}'"` //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
 }
 
 func (Comment) TableName() string {
@@ -62,7 +62,7 @@ type Reply struct {
 	TargetUid   uint64    `gorm:"column:target_uid; not null" json:"target_uid"`        //回应对象的用户id
 	ReplyTxt    string    `gorm:"column:reply_txt; not null" json:"reply_txt"`          //回复内容
 	ReplyTime   time.Time `gorm:"column:reply_time; autoCreateTime" json:"reply_time"`  //回复时间
-	SomeoneBeAt string    `gorm:"column:someone_be_at"`                                 //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
+	SomeoneBeAt string    `gorm:"column:someone_be_at;  default:'{}'"`                  //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
 }
 
 func (Reply) TableName() string {
