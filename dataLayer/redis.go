@@ -64,6 +64,7 @@ func Redis_SelectCommentByid(comment_id uint64) (definition.DBcode, definition.C
 		"comment_txt",
 		"comment_time",
 		"img_id",
+		"someone_be_at",
 	))
 	if err == redis.ErrNil || len(args) == 0 {
 		return definition.DB_NOEXIST, comment
@@ -83,6 +84,7 @@ func Redis_SelectCommentByid(comment_id uint64) (definition.DBcode, definition.C
 	commentunix, _ := strconv.ParseInt(string(args[4].([]byte)), 10, 64)
 	comment.CommentTime = time.Unix(0, commentunix) //精确到纳秒的时间戳
 	comment.ImgId = string(args[5].([]byte))
+	comment.SomeoneBeAt = string(args[6].([]byte))
 	return definition.DB_EXIST, comment //查到有此id 成功
 }
 
@@ -100,6 +102,7 @@ func Redis_CreateComment(comment definition.Comment) definition.DBcode {
 			"comment_txt", comment.CommentTxt,
 			"comment_time", comment.CommentTime.Unix(),
 			"img_id", comment.ImgId,
+			"someone_be_at", comment.SomeoneBeAt,
 		),
 	)
 	if err != nil { //其他情况
@@ -137,7 +140,7 @@ func Redis_CreateSession(session definition.Session) definition.DBcode {
 		redis_conn.Do(
 			"SET",
 			fmt.Sprintf("session::%s", session.Randid), //随机的id作为键
-			session.Id,                                 //真实的id作为值
+			session.Id, //真实的id作为值
 			"EX",
 			session.Expire, //过期时间
 		))

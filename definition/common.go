@@ -17,6 +17,8 @@ const ( // 消息类型
 	MessageTypeComment MessageType = 1 //评论
 	MessageTypeReply   MessageType = 2 //回复
 	MessageTypeChat    MessageType = 3 //私聊
+	MessageTypeAt      MessageType = 3 //@
+
 )
 
 var DeleteImg_ch chan string

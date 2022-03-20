@@ -118,11 +118,13 @@ func GetReplyById(c *gin.Context) {
 			StateMessage: "查询回复成功",
 			ReplyId:      sReply.ReplyId,
 			UId:          sReply.UId,
+			PostId:       sReply.PostId,
 			CommentId:    sReply.CommentId,
 			Target:       sReply.Target,
 			TargetUid:    sReply.TargetUid,
 			ReplyTxt:     sReply.ReplyTxt,
 			ReplyTime:    sReply.ReplyTime,
+			SomeoneBeAt:  sReply.SomeoneBeAt,
 		})
 	case definition.DB_NOEXIST:
 		c.JSON(http.StatusOK, definition.GetReplyByIdResponse{
@@ -155,6 +157,7 @@ func GetPostById(c *gin.Context) {
 			PostTime:     spost.PostTime,
 			PostTxtHtml:  spost.PostTxtHtml,
 			ImgId:        spost.ImgId,
+			SomeoneBeAt:  spost.SomeoneBeAt,
 		})
 	case definition.DB_NOEXIST:
 		c.JSON(http.StatusOK, definition.GetPostByIdResponse{
@@ -188,6 +191,7 @@ func GetCommentById(c *gin.Context) {
 			CommentTxt:   scomment.CommentTxt,
 			CommentTime:  scomment.CommentTime,
 			ImgId:        scomment.ImgId,
+			SomeoneBeAt:  scomment.SomeoneBeAt,
 		})
 	case definition.DB_NOEXIST:
 		c.JSON(http.StatusOK, definition.GetCommentByIdResponse{
@@ -225,6 +229,7 @@ func GetCommentByIdV2(c *gin.Context) {
 			CommentTxt:   scomment.CommentTxt,
 			CommentTime:  scomment.CommentTime,
 			ImgId:        scomment.ImgId,
+			SomeoneBeAt:  scomment.SomeoneBeAt,
 			Replies:      sReplies,
 		})
 	case definition.DB_NOEXIST:
@@ -581,7 +586,7 @@ func CreatePostV2(c *gin.Context) {
 		}
 	}
 
-	ccode, cpostId := dataLayer.CreatePostV2(myId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId)
+	ccode, cpostId := dataLayer.CreatePostV2(myId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt)
 	switch ccode {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.CreatePostV2Response{
@@ -672,7 +677,7 @@ func CreateCommentV2(c *gin.Context) {
 		}
 	}
 
-	ccode, ccomid := dataLayer.CreateCommentV2(req.PostId, uId, req.CommentTxt, imgId)
+	ccode, ccomid := dataLayer.CreateCommentV2(req.PostId, uId, req.CommentTxt, imgId, req.SomeoneBeAt)
 	switch ccode {
 	case definition.DB_SUCCESS: // 成功
 		c.JSON(http.StatusOK, definition.CreateCommentV2Response{
@@ -714,7 +719,7 @@ func CreateReply(c *gin.Context) {
 		return
 	}
 
-	ccode, cReplyId := dataLayer.CreateReply(req.CommentId, uId, req.ReplyTxt, *req.Target)
+	ccode, cReplyId := dataLayer.CreateReply(req.CommentId, uId, req.ReplyTxt, *req.Target, req.SomeoneBeAt)
 	switch ccode {
 	case definition.DB_SUCCESS: // 成功
 		c.JSON(http.StatusOK, definition.CreateReplyResponse{

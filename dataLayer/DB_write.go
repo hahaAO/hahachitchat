@@ -3,6 +3,7 @@ package dataLayer
 import (
 	"code/Hahachitchat/definition"
 	"code/Hahachitchat/utils"
+	"fmt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -75,25 +76,45 @@ func CreatePost(u_id uint64, post_name string, post_txt string, zone definition.
 }
 
 //根据uid post_name post_txt post_txthtml imgId插入post
-func CreatePostV2(u_id uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string, imgId string) (definition.DBcode, uint64) {
+func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string, imgId string, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		code, _ := SelectUserById(tx, u_id)
+		code, _ := SelectUserById(tx, uId)
 		switch code {
 		case definition.DB_NOEXIST: // 无此人id
 			return definition.DB_NOEXIST, 0
 		case definition.DB_EXIST: // 有此人id
+			someoneBeAtStr := utils.MapToString(someoneBeAt)
 			post := definition.Post{
-				UId:         u_id,
+				UId:         uId,
 				PostName:    post_name,
 				PostTxt:     post_txt,
 				Zone:        zone,
 				PostTxtHtml: post_txthtml,
 				ImgId:       imgId,
+				SomeoneBeAt: someoneBeAtStr,
 			}
 			err := tx.Model(&definition.Post{}).Create(&post).Error
 			if err != nil {
 				DBlog.Println("CreatePost err1:", err)
 				return definition.DB_ERROR, 0 //其他问题,插入失败
+			}
+			for u, _ := range someoneBeAt {
+				at := definition.At{
+					UId:   u,
+					Place: fmt.Sprintf("%s%d", "post_", post.PostId),
+				}
+				if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil {
+					DBlog.Fatalln("[CreatePostV2] err: ", err)
+					return definition.DB_ERROR, nil
+				}
+				unreadMessage := definition.Message{
+					UId:         u,
+					MessageType: definition.MessageTypeAt,
+					MessageId:   at.Id,
+				}
+				if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
+					return definition.DB_ERROR, nil
+				}
 			}
 			return definition.DB_SUCCESS, post.PostId //1则成功
 		case definition.DB_ERROR: // 其他问题,查询失败
@@ -143,21 +164,41 @@ func CreateComment(post_id uint64, u_id uint64, comment_txt string) (definition.
 }
 
 //根据post_id u_id comment_txt imageId插入comment
-func CreateCommentV2(post_id uint64, u_id uint64, comment_txt string, imgId string) (definition.DBcode, uint64) {
+func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		scode, _ := SelectUserById(tx, u_id)                               //查u_id
-		scode2, _ := SelectPostById(tx, post_id)                           //查post_id
+		scode, _ := SelectUserById(tx, uId)                                //查u_id
+		scode2, _ := SelectPostById(tx, postId)                            //查post_id
 		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST { // 帖子和用户存在
+			someoneBeAtStr := utils.MapToString(someoneBeAt)
 			comment := definition.Comment{
-				PostId:     post_id,
-				UId:        u_id,
-				CommentTxt: comment_txt,
-				ImgId:      imgId,
+				PostId:      postId,
+				UId:         uId,
+				CommentTxt:  comment_txt,
+				ImgId:       imgId,
+				SomeoneBeAt: someoneBeAtStr,
 			}
 			err := tx.Model(&definition.Comment{}).Create(&comment).Error
 			if err != nil {
-				DBlog.Println("CreateComment err1:", err)
+				DBlog.Println("[CreateCommentV2] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
+			}
+			for u, _ := range someoneBeAt {
+				at := definition.At{
+					UId:   u,
+					Place: fmt.Sprintf("%s%d", "comment_", comment.CommentId),
+				}
+				if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil {
+					DBlog.Fatalln("[CreateCommentV2] err: ", err)
+					return definition.DB_ERROR, nil
+				}
+				unreadMessage := definition.Message{
+					UId:         u,
+					MessageType: definition.MessageTypeAt,
+					MessageId:   at.Id,
+				}
+				if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
+					return definition.DB_ERROR, nil
+				}
 			}
 			return definition.DB_SUCCESS, comment.CommentId
 		} else if scode == definition.DB_NOEXIST {
@@ -177,7 +218,7 @@ func CreateCommentV2(post_id uint64, u_id uint64, comment_txt string, imgId stri
 }
 
 // CreateReply 根据commentId uId replyTxt target插入reply
-func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64) (definition.DBcode, uint64) {
+func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		scode, _ := SelectUserById(tx, uId)                 //查u_id
 		scode2, comment := SelectCommentById(tx, commentId) //查comment
@@ -191,17 +232,38 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64) (
 			targetUid = targetReply.UId
 		}
 		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST && scode3 == definition.DB_EXIST { // 评论和用户和回复目标都存在
+			someoneBeAtStr := utils.MapToString(someoneBeAt)
 			reply := definition.Reply{
-				CommentId: commentId,
-				UId:       uId,
-				Target:    target,
-				TargetUid: targetUid,
-				ReplyTxt:  replyTxt,
+				CommentId:   commentId,
+				PostId:      comment.PostId,
+				UId:         uId,
+				Target:      target,
+				TargetUid:   targetUid,
+				ReplyTxt:    replyTxt,
+				SomeoneBeAt: someoneBeAtStr,
 			}
 			err := tx.Model(&definition.Reply{}).Create(&reply).Error
 			if err != nil {
 				DBlog.Println("[CreateReply] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
+			}
+			for u, _ := range someoneBeAt {
+				at := definition.At{
+					UId:   u,
+					Place: fmt.Sprintf("%s%d", "reply_", reply.ReplyId),
+				}
+				if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil {
+					DBlog.Fatalln("[CreateReply] err: ", err)
+					return definition.DB_ERROR, nil
+				}
+				unreadMessage := definition.Message{
+					UId:         u,
+					MessageType: definition.MessageTypeAt,
+					MessageId:   at.Id,
+				}
+				if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
+					return definition.DB_ERROR, nil
+				}
 			}
 			return definition.DB_SUCCESS, reply.ReplyId
 		} else if scode == definition.DB_NOEXIST {

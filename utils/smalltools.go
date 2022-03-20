@@ -6,6 +6,7 @@ import (
 	"code/Hahachitchat/definition"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -111,6 +112,28 @@ func StringToArr(str string) ([]uint64, error) {
 		arr = append(arr, n)
 	}
 	return arr, nil
+}
+
+// 数据库的map[uint64]string以string存储 格式为 {"0":"xixi","1":"haha"}  空则为{}
+func MapToString(i map[uint64]string) string {
+	if i == nil || len(i) == 0 {
+		return "{}"
+	}
+	b, _ := json.Marshal(i)
+	return string(b)
+}
+
+// 把数据库里以string存储的map[uint64]string转换取出 格式为 {"0":"xixi","1":"haha"}  空则为{}
+func StringToMap(str string) (map[uint64]string, error) {
+	if str == "" {
+		return nil, nil
+	}
+
+	var res map[uint64]string
+	if err := json.Unmarshal([]byte(str), &res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func GetNewPrivacySetting(PrivacySetting byte, PostIsPrivate *bool, CommentAndReplyIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) byte {
