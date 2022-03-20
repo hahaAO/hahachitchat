@@ -819,7 +819,7 @@ func DeletePostById(c *gin.Context) {
 	switch scode {
 	case definition.DB_EXIST: // 帖子存在
 		if spost.UId == uId { // 是拥有者才有权限删除
-			dcode := dataLayer.DeletePostOnid(req.PostId)
+			dcode := dataLayer.DeletePostOnId(req.PostId)
 			if dcode == definition.DB_SUCCESS {
 				c.JSON(http.StatusOK, definition.DeletePostByIdResponse{
 					State:        definition.Success,

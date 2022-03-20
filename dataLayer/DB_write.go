@@ -222,13 +222,15 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		scode, _ := SelectUserById(tx, uId)                 //查u_id
 		scode2, comment := SelectCommentById(tx, commentId) //查comment
-		scode3, targetReply := SelectReplyById(tx, target)  //查targetReply
-
+		var scode3 definition.DBcode                        //查targetReply
 		var targetUid uint64
+
 		if target == 0 { // 直接回复层主
 			scode3 = definition.DB_EXIST
 			targetUid = comment.UId
 		} else {
+			var targetReply *definition.Reply
+			scode3, targetReply = SelectReplyById(tx, target)
 			targetUid = targetReply.UId
 		}
 		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST && scode3 == definition.DB_EXIST { // 评论和用户和回复目标都存在
@@ -374,15 +376,20 @@ func DeleteUnreadMessage(db *gorm.DB, uId uint64, messageType definition.Message
 	}
 }
 
-// DeletePostOnid 根据post_id 删除帖子及帖子里的评论
-func DeletePostOnid(post_id uint64) definition.DBcode {
+// DeletePostOnId 根据post_id 删除帖子及帖子里的评论
+func DeletePostOnId(post_id uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var comments []definition.Comment
 		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&comments).Error; err != nil { //有其他问题
 			for _, comment := range comments {
 				go Redis_DeleteCommentOnid(comment.CommentId) //redis缓存中的也删掉
+				var reply []definition.Reply
+				if err := tx.Where("comment_id = ?", comment.CommentId).Delete(&reply).Error; err != nil { // 回复也删掉
+					DBlog.Fatalf("[DeletePostOnId] Delete(reply) err:", err)
+					return definition.DB_ERROR, nil
+				}
 			}
-			DBlog.Println("DeletePostOnid err1:", err)
+			DBlog.Println("DeletePostOnId err1:", err)
 			return definition.DB_ERROR, nil
 		}
 		for _, comment := range comments { //读出图片id
@@ -390,12 +397,12 @@ func DeletePostOnid(post_id uint64) definition.DBcode {
 		}
 		var post definition.Post
 		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&post).Error; err != nil { //有其他问题
-			DBlog.Println("DeletePostOnid err2:", err)
+			DBlog.Println("DeletePostOnId err2:", err)
 			return definition.DB_ERROR, nil
 		}
 
 		DeleteImg_produce(post.ImgId) //把要删除的图片id发到消息队列
-		DBlog.Printf("DeletePostOnid:	post_id %d 删除成功\n", post_id)
+		DBlog.Printf("DeletePostOnId:	post_id %d 删除成功\n", post_id)
 		return definition.DB_SUCCESS, nil
 	})
 	return code
@@ -403,17 +410,25 @@ func DeletePostOnid(post_id uint64) definition.DBcode {
 
 //redis缓存中的也删掉	根据comment_id 删除评论
 func DeleteCommentById(db *gorm.DB, comment_id uint64) definition.DBcode {
-	getDB(&db)
-	var comment definition.Comment
-	err := db.Clauses(clause.Returning{}).Where("comment_id = ?", comment_id).Delete(&comment).Error
-	if err != nil { //有其他问题
-		DBlog.Println("DeleteCommentById err1:", err)
-		return definition.DB_ERROR
-	} else { //删除成功
-		go Redis_DeleteCommentOnid(comment_id) //redis缓存中的也删掉
-		DeleteImg_produce(comment.ImgId)       //把要删除的图片id发到消息队列
-		return definition.DB_SUCCESS
-	}
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var reply []definition.Reply
+		if err := tx.Where("comment_id = ?", comment_id).Delete(&reply).Error; err != nil { // 回复也删掉
+			DBlog.Fatalf("[DeleteCommentById] Delete(reply) err:", err)
+			return definition.DB_ERROR, nil
+		}
+
+		var comment definition.Comment
+		err := db.Clauses(clause.Returning{}).Where("comment_id = ?", comment_id).Delete(&comment).Error
+		if err != nil { //有其他问题
+			DBlog.Println("[DeleteCommentById] err:", err)
+			return definition.DB_ERROR, nil
+		} else { //删除成功
+			go Redis_DeleteCommentOnid(comment_id) //redis缓存中的也删掉
+			DeleteImg_produce(comment.ImgId)       //把要删除的图片id发到消息队列
+			return definition.DB_SUCCESS, nil
+		}
+	})
+	return code
 }
 
 //根据reply_id 删除评论
@@ -422,7 +437,7 @@ func DeleteReplyById(db *gorm.DB, reply_id uint64) definition.DBcode {
 	var reply definition.Reply
 	err := db.Clauses(clause.Returning{}).Where("reply_id = ?", reply_id).Delete(&reply).Error
 	if err != nil { //有其他问题
-		DBlog.Println("DeleteReplyById err1:", err)
+		DBlog.Println("[DeleteReplyById] err1:", err)
 		return definition.DB_ERROR
 	} else { //删除成功
 		return definition.DB_SUCCESS
