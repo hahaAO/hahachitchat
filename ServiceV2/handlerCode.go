@@ -274,9 +274,8 @@ func AllCommentIdByPostId(c *gin.Context) {
 
 func GetUserAllPostId(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
-	myUserIdStr, ok := myUserId.(string)
-	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
 		myUid = 0 // 没有登录态
 	}
 
@@ -319,9 +318,8 @@ func GetUserAllPostId(c *gin.Context) {
 
 func GetUserAllCommentId(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
-	myUserIdStr, ok := myUserId.(string)
-	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
 		myUid = 0 // 没有登录态
 	}
 
@@ -364,9 +362,8 @@ func GetUserAllCommentId(c *gin.Context) {
 
 func GetUserAllReplyId(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
-	myUserIdStr, ok := myUserId.(string)
-	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
 		myUid = 0 // 没有登录态
 	}
 
@@ -521,18 +518,31 @@ func Login(c *gin.Context) {
 	}
 }
 
+func SignOut(c *gin.Context) {
+	session := utils.GetSession(c.Request)
+	code := dataLayer.Redis_DeleteSession(*session)
+	if code != definition.DB_SUCCESS {
+		c.JSON(http.StatusOK, definition.CommonResponse{
+			State:        definition.ServerError,
+			StateMessage: "服务器出错",
+		})
+	}
+
+	c.SetCookie("randid", *session, 0, // 过期时间设置为 0
+		"/", "", false, true) // 把cookie写入响应头 设置cookie
+	return
+}
+
 func CreatePost(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.CreatePostRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -559,9 +569,8 @@ func CreatePost(c *gin.Context) {
 
 func CreatePostV2(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	myId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
@@ -586,7 +595,7 @@ func CreatePostV2(c *gin.Context) {
 		}
 	}
 
-	ccode, cpostId := dataLayer.CreatePostV2(myId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt)
+	ccode, cpostId := dataLayer.CreatePostV2(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt)
 	switch ccode {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.CreatePostV2Response{
@@ -608,16 +617,14 @@ func CreatePostV2(c *gin.Context) {
 
 func CreateComment(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.CreateCommentRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -650,16 +657,14 @@ func CreateComment(c *gin.Context) {
 
 func CreateCommentV2(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.CreateCommentV2Request
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -705,16 +710,14 @@ func CreateCommentV2(c *gin.Context) {
 
 func CreateReply(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.CreateReplyRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -747,9 +750,8 @@ func CreateReply(c *gin.Context) {
 
 func CreateChat(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	myId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
@@ -774,7 +776,7 @@ func CreateChat(c *gin.Context) {
 		}
 	}
 
-	cCode, cChatId := dataLayer.CreateChat(myId, req.AddresseeId, req.ChatTxt, imgId)
+	cCode, cChatId := dataLayer.CreateChat(uId, req.AddresseeId, req.ChatTxt, imgId)
 	switch cCode {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.CreateChatResponse{
@@ -802,16 +804,14 @@ func CreateChat(c *gin.Context) {
 
 func DeletePostById(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.DeletePostByIdRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -852,16 +852,14 @@ func DeletePostById(c *gin.Context) {
 
 func DeleteCommentById(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.DeleteCommentByIdRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -902,16 +900,14 @@ func DeleteCommentById(c *gin.Context) {
 
 func DeleteReplyById(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.DeleteReplyByIdRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -952,16 +948,14 @@ func DeleteReplyById(c *gin.Context) {
 
 func DeleteUnreadMessage(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.DeleteUnreadMessagedRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -982,9 +976,8 @@ func DeleteUnreadMessage(c *gin.Context) {
 
 func UploadImg(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
@@ -1037,16 +1030,14 @@ func UploadImg(c *gin.Context) {
 }
 func SavePost(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.SavePostRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -1097,16 +1088,14 @@ func SavePost(c *gin.Context) {
 
 func CancelSavePost(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.CancelSavePostRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -1157,16 +1146,14 @@ func CancelSavePost(c *gin.Context) {
 
 func Subscribe(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.SubscribeRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -1217,16 +1204,14 @@ func Subscribe(c *gin.Context) {
 
 func CancelSubscribe(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.CancelSubscribeRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -1278,9 +1263,8 @@ func CancelSubscribe(c *gin.Context) {
 
 func GetPrivacySetting(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
@@ -1311,16 +1295,14 @@ func GetPrivacySetting(c *gin.Context) {
 
 func PostPrivacySetting(c *gin.Context) {
 	userId, exists := c.Get("u_id")
-	uIdStr, ok := userId.(string)
-	uId, err := strconv.ParseUint(uIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
 
 	var req definition.PostPrivacySettingRequest
-	err = c.ShouldBindJSON(&req)
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -1347,9 +1329,8 @@ func PostPrivacySetting(c *gin.Context) {
 
 func GetUserSavedPost(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
-	myUserIdStr, ok := myUserId.(string)
-	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
 		myUid = 0 // 没有登录态
 	}
 
@@ -1398,9 +1379,8 @@ func GetUserSavedPost(c *gin.Context) {
 
 func GetUserSubscribedUser(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
-	myUserIdStr, ok := myUserId.(string)
-	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
 		myUid = 0 // 没有登录态
 	}
 
@@ -1449,9 +1429,8 @@ func GetUserSubscribedUser(c *gin.Context) {
 
 func GetAllChat(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
-	myUserIdStr, ok := myUserId.(string)
-	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}
@@ -1498,9 +1477,8 @@ func GetAllChat(c *gin.Context) {
 
 func GetUserState(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
-	myUserIdStr, ok := myUserId.(string)
-	myUid, err := strconv.ParseUint(myUserIdStr, 10, 64)
-	if !exists || !ok || err != nil {
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
 		SetGetUidErrorResponse(c)
 		return
 	}

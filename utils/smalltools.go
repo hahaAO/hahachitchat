@@ -39,28 +39,17 @@ func CreateSession(id uint64) *definition.Session {
 	}
 }
 
-//把初始化后的session转换为cookie
-func ParseToCookie(session *definition.Session) http.Cookie {
-	return http.Cookie{
-		Name:     "randid",
-		Value:    session.Randid,
-		HttpOnly: true,
-		MaxAge:   session.Expire,
-		Secure:   false,
+func GetSession(r *http.Request) *string { // 获取 session 的 randId
+	var res string
+	for _, cookienow := range r.Cookies() { //遍历所有cookie
+		if cookienow.Name == "randid" { //找到的cookie("name"为"randid")
+			res = cookienow.Value
+		}
 	}
-}
-
-//把cookie转换为session（需要验证）
-func ParseToSession(cookie http.Cookie) *definition.Session {
-	return &definition.Session{
-		//id未知 验证成功再设置
-		Randid: cookie.Value,
-		//过期时间无所谓
-	}
+	return &res
 }
 
 func GetFileContentType(out *os.File) (string, error) { // 获取文件类型，用来判断是否是图片
-
 	// 只需要前 512 个字节就可以了
 	buffer := make([]byte, 512)
 

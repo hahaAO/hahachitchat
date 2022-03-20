@@ -98,7 +98,7 @@ func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition
 				DBlog.Println("CreatePost err1:", err)
 				return definition.DB_ERROR, 0 //其他问题,插入失败
 			}
-			for u, _ := range someoneBeAt {
+			for u := range someoneBeAt {
 				at := definition.At{
 					UId:   u,
 					Place: fmt.Sprintf("%s%d", "post_", post.PostId),
@@ -182,7 +182,7 @@ func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string
 				DBlog.Println("[CreateCommentV2] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			for u, _ := range someoneBeAt {
+			for u := range someoneBeAt {
 				at := definition.At{
 					UId:   u,
 					Place: fmt.Sprintf("%s%d", "comment_", comment.CommentId),
@@ -249,7 +249,7 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 				DBlog.Println("[CreateReply] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			for u, _ := range someoneBeAt {
+			for u := range someoneBeAt {
 				at := definition.At{
 					UId:   u,
 					Place: fmt.Sprintf("%s%d", "reply_", reply.ReplyId),

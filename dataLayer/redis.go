@@ -6,9 +6,7 @@ package dataLayer
 
 import (
 	"code/Hahachitchat/definition"
-	"code/Hahachitchat/utils"
 	"fmt"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -152,39 +150,33 @@ func Redis_CreateSession(session definition.Session) definition.DBcode {
 }
 
 //根据客户 session 的 ranid 查 id
-func Redis_SelectSessionidByRandid(Randid string) (definition.DBcode, string) {
+func Redis_SelectSessionidByRandid(randId string) (definition.DBcode, *uint64) {
 	redis_conn := redisClient.Get()
 	defer redis_conn.Close()
-	id, err := redis.String( // 把真的session拿出来对比
+	id, err := redis.Uint64( // 把真的session拿出来对比
 		redis_conn.Do(
 			"GET",
-			fmt.Sprintf("session::%s", Randid), //随机的id作为键
+			fmt.Sprintf("session::%s", randId), //随机的id作为键
 		))
 	if err == redis.ErrNil { // 没有这个随机id
-		return definition.DB_NOEXIST, ""
+		return definition.DB_NOEXIST, nil
 	} else if err != nil { // 其他情况
 		Redislog.Println("Redis_SelectSession err:", err)
-		return definition.DB_ERROR, ""
+		return definition.DB_ERROR, nil
 	}
 	//查询成功
-	return definition.DB_SUCCESS, id
+	return definition.DB_SUCCESS, &id
 }
 
-//从cookie中提取session 正确返回 (对应session) 错误返回 (nil)
-func GetSession(r *http.Request) *definition.Session {
-	var session *definition.Session
-	for _, cookienow := range r.Cookies() { //遍历所有cookie
-		if cookienow.Name == "randid" { //找到的cookie("name"为"randid")
-			session = utils.ParseToSession(*cookienow)                 //初始化对应session 设置session的randid
-			scode, id := Redis_SelectSessionidByRandid(session.Randid) //验证session
-			if scode == definition.DB_SUCCESS {                        //验证成功
-				session.Id = id // 设置session的id
-				return session
-			} else { //验证失败
-				return nil
-			}
-		}
+//删除 session
+func Redis_DeleteSession(randId string) definition.DBcode {
+	redis_conn := redisClient.Get()
+	defer redis_conn.Close()
+	_, err := redis_conn.Do(
+		"DEL", fmt.Sprintf("session::%d", randId))
+	if err != nil { //其他情况 失败
+		Redislog.Println("[Redis_DeleteSession]:", err)
+		return definition.DB_ERROR
 	}
-	//没有该cookie("name"为"randid")
-	return nil
+	return definition.DB_SUCCESS //删除成功
 }

@@ -46,6 +46,7 @@ func StartService(port string) {
 	needSessionRoute.GET("/allchat/", GetAllChat)
 	needSessionRoute.GET("/user_state", GetUserState)
 
+	needSessionRoute.POST("/sign-out", SignOut)
 	needSessionRoute.POST("/create-post", CreatePost)
 	needSessionRoute.POST("/create-comment", CreateComment)
 	needSessionRoute.POST("/create-reply", CreateReply)

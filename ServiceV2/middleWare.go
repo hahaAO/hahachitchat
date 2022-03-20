@@ -2,6 +2,8 @@ package ServiceV2
 
 import (
 	"code/Hahachitchat/dataLayer"
+	"code/Hahachitchat/definition"
+	"code/Hahachitchat/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -27,27 +29,38 @@ func HearsetMiddleWare() gin.HandlerFunc { // 响应头设置，解决跨域问�
 
 func AuthMiddleWare() gin.HandlerFunc { // 检查用户登录态
 	return func(c *gin.Context) {
-		session := dataLayer.GetSession(c.Request)
-		if session == nil { //验证失败
+		session := utils.GetSession(c.Request)
+		if session == nil { // cookie 中没有 session
+			SetUnauthorizedResponse(c)
+			c.Abort()
+			return
+		}
+		code, uId := dataLayer.Redis_SelectSessionidByRandid(*session)
+		if code != definition.DB_SUCCESS { // session 错误
 			SetUnauthorizedResponse(c)
 			c.Abort()
 			return
 		}
 		// 有登录态
-		c.Set("u_id", session.Id) // 写入 u_id 后续可以获取
+		c.Set("u_id", uId) // 写入 u_id 后续可以获取
 		c.Next()
 	}
 }
 
 func SetSessionMiddleWare() gin.HandlerFunc { // 用户有登录态则写入，无也放行
 	return func(c *gin.Context) {
-		session := dataLayer.GetSession(c.Request)
-		if session == nil { // 无登录态
+		session := utils.GetSession(c.Request)
+		if session == nil { // cookie 中没有 session
+			c.Next()
+			return
+		}
+		code, uId := dataLayer.Redis_SelectSessionidByRandid(*session)
+		if code != definition.DB_SUCCESS { // session 错误
 			c.Next()
 			return
 		}
 		// 有登录态
-		c.Set("u_id", session.Id) // 写入 u_id 后续可以获取
+		c.Set("u_id", uId) // 写入 u_id 后续可以获取
 		c.Next()
 	}
 }
