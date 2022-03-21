@@ -90,7 +90,7 @@ type UnreadMessage struct {
 }
 
 func (UnreadMessage) TableName() string {
-	return "unreadMessage"
+	return "unread_message"
 }
 
 type At struct {

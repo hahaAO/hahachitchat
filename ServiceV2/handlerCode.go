@@ -104,7 +104,7 @@ func GetUserById(c *gin.Context) {
 }
 
 func GetUidByUserNickname(c *gin.Context) {
-	uName := c.Param("u_name")
+	uName := c.Param("u_nickname")
 	if uName == "" {
 		SetParamErrorResponse(c)
 		return
