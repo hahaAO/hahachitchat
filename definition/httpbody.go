@@ -65,10 +65,10 @@ type CreateCommentResponse struct {
 }
 
 type CreateReplyRequest struct {
-	CommentId   uint64            `form:"comment_id" binding:"required"`
-	ReplyTxt    string            `form:"reply_txt" binding:"required"`
-	Target      *uint64           `form:"target" binding:"required"` // 用指针目的:binding不为空，但可以传零值
-	SomeoneBeAt map[uint64]string `form:"someone_be_at"`             //被@的人
+	CommentId   uint64            `json:"comment_id" binding:"required"`
+	ReplyTxt    string            `json:"reply_txt" binding:"required"`
+	Target      *uint64           `json:"target" binding:"required"` // 用指针目的:binding不为空，但可以传零值
+	SomeoneBeAt map[uint64]string `json:"someone_be_at"`             //被@的人
 }
 type CreateReplyResponse struct {
 	State        int    `json:"state"`

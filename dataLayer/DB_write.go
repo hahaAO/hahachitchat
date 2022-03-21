@@ -75,7 +75,7 @@ func CreatePost(u_id uint64, post_name string, post_txt string, zone definition.
 	}
 }
 
-//根据uid post_name post_txt post_txthtml imgId插入post
+// 插入post 同时创建 at
 func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string, imgId string, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		code, _ := SelectUserById(tx, uId)
@@ -98,25 +98,8 @@ func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition
 				DBlog.Println("CreatePost err1:", err)
 				return definition.DB_ERROR, 0 //其他问题,插入失败
 			}
-			for u := range someoneBeAt {
-				at := definition.At{
-					UId:   u,
-					Place: fmt.Sprintf("%s%d", "post_", post.PostId),
-				}
-				if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil {
-					DBlog.Fatalln("[CreatePostV2] err: ", err)
-					return definition.DB_ERROR, nil
-				}
-				unreadMessage := definition.Message{
-					UId:         u,
-					MessageType: definition.MessageTypeAt,
-					MessageId:   at.Id,
-				}
-				if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
-					return definition.DB_ERROR, nil
-				}
-			}
-			return definition.DB_SUCCESS, post.PostId //1则成功
+			code := CreateAt(someoneBeAt, "post", post.PostId) // 插入成功则 at 相关人
+			return code, post.PostId                           //1则成功
 		case definition.DB_ERROR: // 其他问题,查询失败
 			return definition.DB_ERROR, 0
 		default:
@@ -147,7 +130,8 @@ func CreateComment(post_id uint64, myId uint64, comment_txt string) (definition.
 				DBlog.Println("CreateComment err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			return definition.DB_SUCCESS, comment.CommentId
+			code := CreateMessage(tx, comment.PostUid, definition.MessageTypeComment, comment.CommentId) // 插入成功后提醒楼主
+			return code, comment.CommentId
 		} else if scode == definition.DB_NOEXIST {
 			return definition.DB_NOEXIST_USER, 0
 		} else if scode2 == definition.DB_NOEXIST {
@@ -157,14 +141,14 @@ func CreateComment(post_id uint64, myId uint64, comment_txt string) (definition.
 		}
 	})
 	if code == definition.DB_SUCCESS {
-		go Redis_DeleteCommentOnid(content.(uint64)) // 把之前可能存在的空值删掉
+		go Redis_DeleteCommentOnid(content.(uint64)) // 把redis可能存在的空值删掉
 		return code, content.(uint64)
 	} else {
 		return code, 0
 	}
 }
 
-//根据post_id u_id comment_txt imageId插入comment
+// 插入comment 同时创建 message 和 at
 func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		scode, _ := SelectUserById(tx, uId)                                //查u_id
@@ -183,25 +167,11 @@ func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string
 				DBlog.Println("[CreateCommentV2] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			for u := range someoneBeAt {
-				at := definition.At{
-					UId:   u,
-					Place: fmt.Sprintf("%s%d", "comment_", comment.CommentId),
-				}
-				if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil {
-					DBlog.Fatalln("[CreateCommentV2] err: ", err)
-					return definition.DB_ERROR, nil
-				}
-				unreadMessage := definition.Message{
-					UId:         u,
-					MessageType: definition.MessageTypeAt,
-					MessageId:   at.Id,
-				}
-				if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
-					return definition.DB_ERROR, nil
-				}
+			if code := CreateAt(someoneBeAt, "comment", comment.CommentId); code != definition.DB_SUCCESS { // 插入成功则 at 相关人
+				return code, nil
 			}
-			return definition.DB_SUCCESS, comment.CommentId
+			code := CreateMessage(tx, comment.PostUid, definition.MessageTypeComment, comment.CommentId) // 消息提醒楼主
+			return code, comment.CommentId
 		} else if scode == definition.DB_NOEXIST {
 			return definition.DB_NOEXIST_USER, 0
 		} else if scode2 == definition.DB_NOEXIST {
@@ -211,14 +181,14 @@ func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string
 		}
 	})
 	if code == definition.DB_SUCCESS {
-		go Redis_DeleteCommentOnid(content.(uint64)) // 把之前可能存在的空值删掉
+		go Redis_DeleteCommentOnid(content.(uint64)) // 把redis可能存在的空值删掉
 		return code, content.(uint64)
 	} else {
 		return code, 0
 	}
 }
 
-// CreateReply 根据commentId uId replyTxt target插入reply
+// CreateReply 插入reply 同时创建 message 和 at
 func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		scode, _ := SelectUserById(tx, uId)                 //查u_id
@@ -250,25 +220,11 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 				DBlog.Println("[CreateReply] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			for u := range someoneBeAt {
-				at := definition.At{
-					UId:   u,
-					Place: fmt.Sprintf("%s%d", "reply_", reply.ReplyId),
-				}
-				if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil {
-					DBlog.Fatalln("[CreateReply] err: ", err)
-					return definition.DB_ERROR, nil
-				}
-				unreadMessage := definition.Message{
-					UId:         u,
-					MessageType: definition.MessageTypeAt,
-					MessageId:   at.Id,
-				}
-				if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
-					return definition.DB_ERROR, nil
-				}
+			if code := CreateAt(someoneBeAt, "reply", reply.ReplyId); code != definition.DB_SUCCESS { // 插入成功则 at 相关人
+				return code, nil
 			}
-			return definition.DB_SUCCESS, reply.ReplyId
+			code := CreateMessage(tx, reply.TargetUid, definition.MessageTypeReply, reply.ReplyId) // 消息提醒回复目标
+			return code, reply.ReplyId
 		} else if scode == definition.DB_NOEXIST {
 			return definition.DB_NOEXIST_USER, 0
 		} else if scode2 == definition.DB_NOEXIST || scode3 == definition.DB_NOEXIST {
@@ -313,7 +269,8 @@ func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId strin
 			DBlog.Println("[CreateChat] err: ", err)
 			return definition.DB_ERROR, 0 // 其他问题,插入失败
 		} else {
-			return definition.DB_SUCCESS, chat.ChatId
+			code := CreateMessage(tx, chat.AddresseeId, definition.MessageTypeChat, chat.ChatId) // 消息提醒私聊对象
+			return code, chat.ChatId
 		}
 	})
 	if code == definition.DB_SUCCESS {
@@ -323,44 +280,39 @@ func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId strin
 	}
 }
 
-// 增加未读消息
-func CreateMessage(messageType definition.MessageType, messageId uint64) definition.DBcode {
+// 增加at 同时增加未读消息
+func CreateAt(someoneBeAt map[uint64]string, placePrefix string, place_id uint64) definition.DBcode { // placePrefix(前缀)有三种 post、comment、reply
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		var userId uint64 // 要提醒的人
-		switch messageType {
-		case definition.MessageTypeComment:
-			var comment definition.Comment
-			if err := tx.Model(&definition.Comment{}).Where("comment_id = ?", messageId).First(&comment).
-				Error; err != nil {
+		for uId, _ := range someoneBeAt {
+			at := definition.At{
+				UId:   uId,
+				Place: fmt.Sprintf("%s_%d", placePrefix, place_id),
+			}
+
+			if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil { // 增加at
 				return definition.DB_ERROR, nil
 			}
-			userId = comment.PostUid
-		case definition.MessageTypeReply:
-			var reply definition.Reply
-			if err := tx.Model(&definition.Reply{}).Where("reply_id = ?", messageId).First(&reply).
-				Error; err != nil {
-				return definition.DB_ERROR, nil
+			if code := CreateMessage(tx, uId, definition.MessageTypeAt, at.Id); code != definition.DB_SUCCESS { // 同时增加未读消息
+				return code, nil
 			}
-			userId = reply.TargetUid
-		case definition.MessageTypeChat:
-			var chat definition.Chat
-			if err := tx.Model(&definition.Chat{}).Where("chat_id = ?", messageId).First(&chat).
-				Error; err != nil {
-				return definition.DB_ERROR, nil
-			}
-			userId = chat.AddresseeId
-		}
-		unreadMessage := definition.Message{
-			UId:         userId,
-			MessageType: messageType,
-			MessageId:   messageId,
-		}
-		if err := tx.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
-			return definition.DB_ERROR, nil
 		}
 		return definition.DB_SUCCESS, nil
 	})
 	return code
+}
+
+// 增加未读消息
+func CreateMessage(db *gorm.DB, userId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
+	getDB(&db)
+	unreadMessage := definition.Message{
+		UId:         userId,
+		MessageType: messageType,
+		MessageId:   messageId,
+	}
+	if err := db.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
 }
 
 // 删除未读消息

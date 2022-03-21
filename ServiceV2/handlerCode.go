@@ -511,7 +511,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true) // 把cookie写入响应头 设置cookie
+				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
@@ -555,7 +555,7 @@ func SignOut(c *gin.Context) {
 		})
 	}
 
-	c.SetCookie("randid", *session, 0, // 过期时间设置为 0
+	c.SetCookie("randid", *session, -1, // 设置为马上过期
 		"/", "", false, true) // 把cookie写入响应头 设置cookie
 	return
 }
@@ -664,7 +664,6 @@ func CreateComment(c *gin.Context) {
 			StateMessage: "创建评论成功",
 			CommentId:    ccomid,
 		})
-		go dataLayer.CreateMessage(definition.MessageTypeComment, ccomid) // 消息提醒
 	case definition.DB_NOEXIST_USER: // 无此人id
 		c.JSON(http.StatusOK, definition.CreateCommentResponse{
 			State:        definition.BadRequest,
@@ -719,7 +718,6 @@ func CreateCommentV2(c *gin.Context) {
 			StateMessage: "创建评论成功",
 			CommentId:    ccomid,
 		})
-		go dataLayer.CreateMessage(definition.MessageTypeComment, ccomid) // 消息提醒
 	case definition.DB_NOEXIST_USER: // 无此人id
 		c.JSON(http.StatusOK, definition.CreateCommentV2Response{
 			State:        definition.BadRequest,
@@ -746,7 +744,7 @@ func CreateReply(c *gin.Context) {
 	}
 
 	var req definition.CreateReplyRequest
-	if err := c.ShouldBind(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -759,7 +757,6 @@ func CreateReply(c *gin.Context) {
 			StateMessage: "创建回复成功",
 			ReplyId:      cReplyId,
 		})
-		go dataLayer.CreateMessage(definition.MessageTypeReply, cReplyId) // 消息提醒
 	case definition.DB_NOEXIST_USER: // 无此人id
 		c.JSON(http.StatusOK, definition.CreateReplyResponse{
 			State:        definition.BadRequest,
@@ -813,7 +810,6 @@ func CreateChat(c *gin.Context) {
 			StateMessage: "发送私聊成功",
 			ChatId:       cChatId,
 		})
-		go dataLayer.CreateMessage(definition.MessageTypeChat, cChatId) // 消息提醒
 	case definition.DB_NOEXIST_USER:
 		c.JSON(http.StatusOK, definition.CreateChatResponse{
 			State:        definition.BadRequest,
