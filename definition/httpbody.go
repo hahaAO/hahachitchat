@@ -42,27 +42,27 @@ type UploadImgResponse struct {
 	ImgId        string `json:"img_id"`
 }
 
-type CreatePostRequest struct {
-	PostName    string   `json:"post_name" binding:"required"`
-	PostTxt     string   `json:"post_txt" binding:"required"`
-	Zone        ZoneType `json:"zone"`
-	PostTxtHtml string   `json:"post_txt_html" binding:"required"` //帖子内容的html
-}
-type CreatePostResponse struct {
-	State        int    `json:"state"`
-	StateMessage string `json:"state_message"`
-	PostId       uint64 `json:"post_id"`
-}
+//type CreatePostRequest struct {
+//	PostName    string   `json:"post_name" binding:"required"`
+//	PostTxt     string   `json:"post_txt" binding:"required"`
+//	Zone        ZoneType `json:"zone"`
+//	PostTxtHtml string   `json:"post_txt_html" binding:"required"` //帖子内容的html
+//}
+//type CreatePostResponse struct {
+//	State        int    `json:"state"`
+//	StateMessage string `json:"state_message"`
+//	PostId       uint64 `json:"post_id"`
+//}
 
-type CreateCommentRequest struct {
-	PostId     uint64 `json:"post_id" binding:"required"`
-	CommentTxt string `json:"comment_txt" binding:"required"`
-}
-type CreateCommentResponse struct {
-	State        int    `json:"state"`
-	StateMessage string `json:"state_message"`
-	CommentId    uint64 `json:"comment_id"`
-}
+//type CreateCommentRequest struct {
+//	PostId     uint64 `json:"post_id" binding:"required"`
+//	CommentTxt string `json:"comment_txt" binding:"required"`
+//}
+//type CreateCommentResponse struct {
+//	State        int    `json:"state"`
+//	StateMessage string `json:"state_message"`
+//	CommentId    uint64 `json:"comment_id"`
+//}
 
 type CreateReplyRequest struct {
 	CommentId   uint64            `json:"comment_id" binding:"required"`
@@ -294,6 +294,7 @@ type ChatInfo struct {
 	ChatTxt   string    `json:"chat_txt"`
 	ImgId     string    `json:"img_id"`
 	ChatTime  time.Time `json:"chat_time"`
+	IsUnread  bool      `json:"is_unread"`
 }
 type GetAllChatResponse struct {
 	State        int                   `json:"state"`

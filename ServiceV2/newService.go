@@ -60,8 +60,8 @@ func StartService(port string) {
 	needSessionRoute.GET("/user_state", GetUserState)
 
 	needSessionRoute.POST("/sign-out", SignOut)
-	needSessionRoute.POST("/create-post", CreatePost)
-	needSessionRoute.POST("/create-comment", CreateComment)
+	//needSessionRoute.POST("/create-post", CreatePost)
+	//needSessionRoute.POST("/create-comment", CreateComment)
 	needSessionRoute.POST("/create-reply", CreateReply)
 	needSessionRoute.POST("/delete-post", DeletePostById)
 	needSessionRoute.POST("/delete-comment", DeleteCommentById)

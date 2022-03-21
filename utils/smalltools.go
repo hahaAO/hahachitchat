@@ -184,12 +184,47 @@ func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMes
 			Place:    at.Place,
 			IsUnread: false,
 		}
-		if _, exist := unreadMessageMap[at.UId]; exist { //是未读的回复
+		if _, exist := unreadMessageMap[at.Id]; exist { //是未读的@
 			atMessage.IsUnread = true
 		}
 		res = append(res, atMessage)
 	}
 	return res
+}
+
+func PackageChatInfos(myUId uint64, chats []definition.Chat, unreadMessages []definition.UnreadMessage) map[uint64][]definition.ChatInfo {
+	chatInfos := make(map[uint64][]definition.ChatInfo)
+	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	for _, message := range unreadMessages {
+		unreadMessageMap[message.MessageId] = struct{}{}
+	}
+	for _, chat := range chats {
+		var uId uint64     // 聊天对象的id
+		var amISender bool // 我是否是发送人
+		isUnread := false  // 是否已读
+
+		if _, exist := unreadMessageMap[chat.ChatId]; exist { //是未读的私聊
+			isUnread = true
+		}
+
+		if chat.SenderId == myUId {
+			uId = chat.AddresseeId
+			amISender = true
+		} else {
+			uId = chat.SenderId
+			amISender = false
+		}
+		// 拼装聊天记录
+		chatInfos[uId] = append(chatInfos[uId], definition.ChatInfo{
+			AmISender: amISender,
+			ChatTxt:   chat.ChatTxt,
+			ImgId:     chat.ImgId,
+			ChatTime:  chat.ChatTime,
+			IsUnread:  isUnread,
+		})
+	}
+
+	return chatInfos
 }
 
 func GetNewPrivacySetting(PrivacySetting byte, PostIsPrivate *bool, CommentAndReplyIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) byte {

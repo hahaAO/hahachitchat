@@ -561,39 +561,39 @@ func SignOut(c *gin.Context) {
 	return
 }
 
-func CreatePost(c *gin.Context) {
-	userId, exists := c.Get("u_id")
-	uId, ok := userId.(uint64)
-	if !exists || !ok {
-		SetGetUidErrorResponse(c)
-		return
-	}
-
-	var req definition.CreatePostRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		SetParamErrorResponse(c)
-		return
-	}
-
-	ccode, cpostId := dataLayer.CreatePost(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml)
-	switch ccode {
-	case definition.DB_SUCCESS:
-		c.JSON(http.StatusOK, definition.CreatePostResponse{
-			State:        definition.Success,
-			StateMessage: "创建帖子成功",
-			PostId:       cpostId,
-		})
-	case definition.DB_NOEXIST: // 用户不存在
-		c.JSON(http.StatusOK, definition.CreatePostResponse{
-			State:        definition.BadRequest,
-			StateMessage: "用户不存在,无法创建帖子",
-		})
-	case definition.DB_ERROR: // 其他问题
-		SetDBErrorResponse(c)
-	default:
-		SetServerErrorResponse(c)
-	}
-}
+//func CreatePost(c *gin.Context) {
+//	userId, exists := c.Get("u_id")
+//	uId, ok := userId.(uint64)
+//	if !exists || !ok {
+//		SetGetUidErrorResponse(c)
+//		return
+//	}
+//
+//	var req definition.CreatePostRequest
+//	if err := c.ShouldBindJSON(&req); err != nil {
+//		SetParamErrorResponse(c)
+//		return
+//	}
+//
+//	ccode, cpostId := dataLayer.CreatePost(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml)
+//	switch ccode {
+//	case definition.DB_SUCCESS:
+//		c.JSON(http.StatusOK, definition.CreatePostResponse{
+//			State:        definition.Success,
+//			StateMessage: "创建帖子成功",
+//			PostId:       cpostId,
+//		})
+//	case definition.DB_NOEXIST: // 用户不存在
+//		c.JSON(http.StatusOK, definition.CreatePostResponse{
+//			State:        definition.BadRequest,
+//			StateMessage: "用户不存在,无法创建帖子",
+//		})
+//	case definition.DB_ERROR: // 其他问题
+//		SetDBErrorResponse(c)
+//	default:
+//		SetServerErrorResponse(c)
+//	}
+//}
 
 func CreatePostV2(c *gin.Context) {
 	userId, exists := c.Get("u_id")
@@ -643,44 +643,44 @@ func CreatePostV2(c *gin.Context) {
 	}
 }
 
-func CreateComment(c *gin.Context) {
-	userId, exists := c.Get("u_id")
-	uId, ok := userId.(uint64)
-	if !exists || !ok {
-		SetGetUidErrorResponse(c)
-		return
-	}
-
-	var req definition.CreateCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		SetParamErrorResponse(c)
-		return
-	}
-
-	ccode, ccomid := dataLayer.CreateComment(req.PostId, uId, req.CommentTxt)
-	switch ccode {
-	case definition.DB_SUCCESS: // 成功
-		c.JSON(http.StatusOK, definition.CreateCommentResponse{
-			State:        definition.Success,
-			StateMessage: "创建评论成功",
-			CommentId:    ccomid,
-		})
-	case definition.DB_NOEXIST_USER: // 无此人id
-		c.JSON(http.StatusOK, definition.CreateCommentResponse{
-			State:        definition.BadRequest,
-			StateMessage: "用户不存在,创建评论失败",
-		})
-	case definition.DB_NOEXIST_POST: // 无此帖子id
-		c.JSON(http.StatusOK, definition.CreateCommentResponse{
-			State:        definition.BadRequest,
-			StateMessage: "帖子不存在,创建评论失败",
-		})
-	case definition.DB_ERROR: // 失败
-		SetDBErrorResponse(c)
-	default:
-		SetServerErrorResponse(c)
-	}
-}
+//func CreateComment(c *gin.Context) {
+//	userId, exists := c.Get("u_id")
+//	uId, ok := userId.(uint64)
+//	if !exists || !ok {
+//		SetGetUidErrorResponse(c)
+//		return
+//	}
+//
+//	var req definition.CreateCommentRequest
+//	if err := c.ShouldBindJSON(&req); err != nil {
+//		SetParamErrorResponse(c)
+//		return
+//	}
+//
+//	ccode, ccomid := dataLayer.CreateComment(req.PostId, uId, req.CommentTxt)
+//	switch ccode {
+//	case definition.DB_SUCCESS: // 成功
+//		c.JSON(http.StatusOK, definition.CreateCommentResponse{
+//			State:        definition.Success,
+//			StateMessage: "创建评论成功",
+//			CommentId:    ccomid,
+//		})
+//	case definition.DB_NOEXIST_USER: // 无此人id
+//		c.JSON(http.StatusOK, definition.CreateCommentResponse{
+//			State:        definition.BadRequest,
+//			StateMessage: "用户不存在,创建评论失败",
+//		})
+//	case definition.DB_NOEXIST_POST: // 无此帖子id
+//		c.JSON(http.StatusOK, definition.CreateCommentResponse{
+//			State:        definition.BadRequest,
+//			StateMessage: "帖子不存在,创建评论失败",
+//		})
+//	case definition.DB_ERROR: // 失败
+//		SetDBErrorResponse(c)
+//	default:
+//		SetServerErrorResponse(c)
+//	}
+//}
 
 func CreateCommentV2(c *gin.Context) {
 	userId, exists := c.Get("u_id")
@@ -1461,28 +1461,9 @@ func GetAllChat(c *gin.Context) {
 		return
 	}
 
-	code, chats := dataLayer.SelectChatByuid(nil, myUid)
+	code, chatInfos := dataLayer.GetAllChatInfosByUid(myUid)
 	switch code {
 	case definition.DB_EXIST:
-		chatInfos := make(map[uint64][]definition.ChatInfo)
-		for _, chat := range chats {
-			var Uid uint64 // 聊天对象的id
-			var amISender bool
-			if chat.SenderId == myUid {
-				Uid = chat.AddresseeId
-				amISender = true
-			} else {
-				Uid = chat.SenderId
-				amISender = false
-			}
-			// 拼装聊天记录
-			chatInfos[Uid] = append(chatInfos[Uid], definition.ChatInfo{
-				AmISender: amISender,
-				ChatTxt:   chat.ChatTxt,
-				ImgId:     chat.ImgId,
-				ChatTime:  chat.ChatTime,
-			})
-		}
 		c.JSON(http.StatusOK, definition.GetAllChatResponse{
 			State:        definition.Success,
 			StateMessage: "查询聊天记录成功",

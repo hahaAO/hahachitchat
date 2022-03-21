@@ -394,24 +394,6 @@ func SelectAllReplyIdByUid(myUid uint64, uId uint64) (definition.DBcode, []uint6
 	}
 }
 
-//根据用户u_id 获取属于该用户的所有私聊chat
-func SelectChatByuid(db *gorm.DB, uId uint64) (definition.DBcode, []definition.Chat) {
-	getDB(&db)
-	var chats []definition.Chat
-	err := db.Model(&definition.Chat{}).Where("sender_id = ? OR addressee_id = ?", uId, uId).Find(&chats).Error
-	if err == gorm.ErrRecordNotFound { //没有私聊
-		return definition.DB_NOEXIST, nil
-	} else if err != nil { // 则有其他问题
-		return definition.DB_ERROR, nil
-	}
-
-	if len(chats) == 0 { //没有私聊
-		return definition.DB_NOEXIST, nil
-	}
-	// 则成功
-	return definition.DB_EXIST, chats
-}
-
 // 获取用户（楼主）所有的评论消息 标记未读和已读
 func GetAllCommentMessage(postUId uint64) (definition.DBcode, []definition.CommentMessage) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
@@ -479,6 +461,37 @@ func GetAllAtMessage(uId uint64) (definition.DBcode, []definition.AtMessage) {
 	})
 	if code == definition.DB_SUCCESS {
 		return code, content.([]definition.AtMessage)
+	} else {
+		return code, nil
+	}
+}
+
+//根据用户u_id 获取属于该用户的所有私聊chat 标记未读和已读
+func GetAllChatInfosByUid(uId uint64) (definition.DBcode, map[uint64][]definition.ChatInfo) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var chats []definition.Chat
+		err := tx.Model(&definition.Chat{}).Where("sender_id = ? OR addressee_id = ?", uId, uId).Find(&chats).Error
+		if err == gorm.ErrRecordNotFound { //没有私聊
+			return definition.DB_NOEXIST, nil
+		} else if err != nil { // 则有其他问题
+			return definition.DB_ERROR, nil
+		}
+		if len(chats) == 0 { //没有私聊
+			return definition.DB_NOEXIST, nil
+		}
+
+		// 查未读的私聊
+		var unreadMessage []definition.UnreadMessage
+		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", uId, definition.MessageTypeChat).
+			Find(&unreadMessage).Error; err != nil {
+			DBlog.Println("[SelectChatByuid] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+
+		return definition.DB_EXIST, utils.PackageChatInfos(uId, chats, unreadMessage)
+	})
+	if code == definition.DB_EXIST {
+		return code, content.(map[uint64][]definition.ChatInfo)
 	} else {
 		return code, nil
 	}

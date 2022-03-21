@@ -85,7 +85,7 @@ func (Chat) TableName() string {
 
 type UnreadMessage struct {
 	UId         uint64      `gorm:"column:u_id; index"`         // 用户id
-	MessageType MessageType `gorm:"column:message_type; index"` // 消息类型
+	MessageType MessageType `gorm:"column:message_type; index"` // 消息类型 4种 comment reply at chat
 	MessageId   uint64      `gorm:"column:message_id"`          // 消息id
 }
 
