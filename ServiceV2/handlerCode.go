@@ -103,25 +103,26 @@ func GetUserById(c *gin.Context) {
 	}
 }
 
-func GetUidByUname(c *gin.Context) {
+func GetUidByUserNickname(c *gin.Context) {
 	uName := c.Param("u_name")
 	if uName == "" {
 		SetParamErrorResponse(c)
 		return
 	}
-	scode, suser := dataLayer.SelectUserByname(nil, uName)
-	switch scode {
+	code, user := dataLayer.SelectUserByNickname(nil, uName)
+	switch code {
 	case definition.DB_EXIST: // 已注册
 		c.JSON(http.StatusOK, definition.GetUidByUnameResponse{
 			State:        definition.Success,
 			StateMessage: "查询用户成功",
-			UId:          suser.UId,
+			UId:          user.UId,
 		})
 		return
 	case definition.DB_NOEXIST: // 未注册
 		c.JSON(http.StatusOK, definition.GetUidByUnameResponse{
 			State:        definition.BadRequest,
-			StateMessage: "没有该用户名",
+			StateMessage: "该用户不存在",
+			UId:          0, // 不存在则传0
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)
@@ -511,7 +512,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
+				"/", "", false, true) // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
@@ -1497,7 +1498,6 @@ func GetAllChat(c *gin.Context) {
 	default:
 		SetServerErrorResponse(c)
 	}
-
 }
 
 func GetUserState(c *gin.Context) {
@@ -1508,21 +1508,84 @@ func GetUserState(c *gin.Context) {
 		return
 	}
 
-	code, messages := dataLayer.SelectMessageByUid(nil, myUid)
+	code, unreadMessagesNumber := dataLayer.CountUnreadMessageByUid(nil, myUid)
 	switch code {
-	case definition.DB_EXIST:
+	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.GetUserStateResponse{
 			State:               definition.Success,
 			StateMessage:        "查询用户状态成功",
 			MyUserId:            myUid,
-			UnreadMessageNumber: len(messages),
+			UnreadMessageNumber: unreadMessagesNumber,
 		})
-	case definition.DB_NOEXIST:
-		c.JSON(http.StatusOK, definition.GetUserStateResponse{
-			State:               definition.Success,
-			StateMessage:        "查询用户状态成功",
-			MyUserId:            myUid,
-			UnreadMessageNumber: 0,
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func GetAllCommentMessage(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	code, commentMessages := dataLayer.GetAllCommentMessage(myUid)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.GetAllCommentMessageResponse{
+			State:           definition.Success,
+			StateMessage:    "查询评论信息成功",
+			CommentMessages: commentMessages,
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func GetAllReplyMessage(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	code, replyMessages := dataLayer.GetAllReplyMessage(myUid)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.GetAllReplyMessageResponse{
+			State:         definition.Success,
+			StateMessage:  "查询回复信息成功",
+			ReplyMessages: replyMessages,
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+
+}
+
+func GetAllAtMessage(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	code, atMessages := dataLayer.GetAllAtMessage(myUid)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.GetAllAtMessageResponse{
+			State:        definition.Success,
+			StateMessage: "查询被@信息成功",
+			AtMessages:   atMessages,
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)

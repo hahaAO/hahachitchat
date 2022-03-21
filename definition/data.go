@@ -83,14 +83,14 @@ func (Chat) TableName() string {
 	return "chat"
 }
 
-type Message struct {
+type UnreadMessage struct {
 	UId         uint64      `gorm:"column:u_id; index"`         // 用户id
 	MessageType MessageType `gorm:"column:message_type; index"` // 消息类型
 	MessageId   uint64      `gorm:"column:message_id"`          // 消息id
 }
 
-func (Message) TableName() string {
-	return "Message"
+func (UnreadMessage) TableName() string {
+	return "unreadMessage"
 }
 
 type At struct {

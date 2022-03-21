@@ -22,7 +22,7 @@ const ( // 消息类型
 
 // 延迟删除消息队列
 var DeleteImgChan chan string
-var DeleteMessageChan chan Message
+var DeleteUnreadMessageChan chan UnreadMessage
 var DeleteAtChan chan At          // 只传uid和place
 var DeleteRepliesChan chan uint64 // 注意：传commentId而不是replyId
 var DeleteComentsChan chan uint64 // 注意：传postId而不是commentId

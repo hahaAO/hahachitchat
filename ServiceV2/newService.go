@@ -13,8 +13,8 @@ func ServiceInit() {
 	definition.DeleteImgChan = make(chan string, 10) //初始化创建待删除图片消息队列
 	go dataLayer.DeleteImgConsumer()                 //启动一个协程去订阅id删除图片
 
-	definition.DeleteMessageChan = make(chan definition.Message, 10) //初始化创建待删除消息通知消息队列
-	go dataLayer.DeleteMessageConsumer()                             //启动一个协程去订阅id删除通知消息
+	definition.DeleteUnreadMessageChan = make(chan definition.UnreadMessage, 10) //初始化创建待删除未读消息通知消息队列
+	go dataLayer.DeleteMessageConsumer()                                         //启动一个协程去订阅id删除通知未读消息
 
 	definition.DeleteAtChan = make(chan definition.At, 10) //初始化创建待删除at消息队列
 	go dataLayer.DeleteAtConsumer()                        //启动一个协程去订阅id删除at
@@ -41,7 +41,7 @@ func StartService(port string) {
 	r.GET("/reply/:reply_id", GetReplyById)
 	r.GET("/allposthot", AllPostHot)
 	r.GET("/getimg/:img_id", GetImg)
-	r.GET("/id-by-name/:u_name", GetUidByUname)
+	r.GET("/id-by-name/:u_nickname", GetUidByUserNickname)
 
 	r.POST("/register", Register)
 	r.POST("/login", Login)
@@ -57,7 +57,6 @@ func StartService(port string) {
 	// 需要登录态的操作
 	needSessionRoute := r.Group("", AuthMiddleWare())
 
-	needSessionRoute.GET("/allchat/", GetAllChat)
 	needSessionRoute.GET("/user_state", GetUserState)
 
 	needSessionRoute.POST("/sign-out", SignOut)
@@ -77,6 +76,12 @@ func StartService(port string) {
 	needSessionRoute.POST("/PrivacySetting", PostPrivacySetting)
 
 	needSessionRoute.POST("/create-chat", CreateChat)
+
+	GetMessageRoute := needSessionRoute.Group("/message")
+	GetMessageRoute.GET("/comment", GetAllCommentMessage)
+	GetMessageRoute.GET("/reply", GetAllReplyMessage)
+	GetMessageRoute.GET("/at", GetAllAtMessage)
+	GetMessageRoute.GET("/allchat", GetAllChat)
 
 	// ------------V2--------------
 	routeV2 := r.Group("/v2")

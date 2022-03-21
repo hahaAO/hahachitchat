@@ -304,12 +304,12 @@ func CreateAt(someoneBeAt map[uint64]string, placePrefix string, place_id uint64
 // 增加未读消息
 func CreateMessage(db *gorm.DB, userId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
 	getDB(&db)
-	unreadMessage := definition.Message{
+	unreadMessage := definition.UnreadMessage{
 		UId:         userId,
 		MessageType: messageType,
 		MessageId:   messageId,
 	}
-	if err := db.Model(&definition.Message{}).Create(&unreadMessage).Error; err != nil {
+	if err := db.Model(&definition.UnreadMessage{}).Create(&unreadMessage).Error; err != nil {
 		return definition.DB_ERROR
 	}
 	return definition.DB_SUCCESS
@@ -318,7 +318,7 @@ func CreateMessage(db *gorm.DB, userId uint64, messageType definition.MessageTyp
 // 删除未读消息
 func DeleteUnreadMessage(db *gorm.DB, uId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
 	getDB(&db)
-	var message definition.Message
+	var message definition.UnreadMessage
 	err := db.Clauses(clause.Returning{}).
 		Where("u_id = ? AND message_type = ? AND message_id = ?", uId, messageType, messageId).Delete(&message).Error
 	if err != nil { //有其他问题

@@ -33,7 +33,7 @@ func DB_conn() {
 
 	// 同步数据库模式
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
-		&definition.Reply{}, &definition.Chat{}, &definition.Message{}, &definition.At{})
+		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
@@ -104,20 +104,18 @@ func SelectReplyById(db *gorm.DB, replyId uint64) (definition.DBcode, *definitio
 	return definition.DB_EXIST, &reply
 }
 
-// 根据userid返回Message
-func SelectMessageByUid(db *gorm.DB, uId uint64) (definition.DBcode, []definition.Message) {
+// 根据userid返回 未读消息 的数量
+func CountUnreadMessageByUid(db *gorm.DB, uId uint64) (definition.DBcode, int64) {
 	getDB(&db)
-	var messages []definition.Message
-	err := db.Model(&definition.Message{}).
+	var n int64
+	err := db.Model(&definition.UnreadMessage{}).
 		Where("u_id = ?", uId).
-		Find(&messages).Error
-	if err == gorm.ErrRecordNotFound {
-		return definition.DB_NOEXIST, nil //没有未读消息
-	} else if err != nil {
-		DBlog.Println("[SelectMessageByUid]:", err)
-		return definition.DB_ERROR, nil //其他问题
+		Count(&n).Error
+	if err != nil {
+		DBlog.Println("[CountUnreadMessageByUid]:", err)
+		return definition.DB_ERROR, 0 //其他问题
 	}
-	return definition.DB_EXIST, messages
+	return definition.DB_SUCCESS, n
 }
 
 //根据commendid返回reply
@@ -145,6 +143,22 @@ func SelectUserByname(db *gorm.DB, name string) (definition.DBcode, *definition.
 		return definition.DB_NOEXIST, nil //未注册
 	} else if err != nil {
 		DBlog.Println("SelectUserOnname:", err)
+		return definition.DB_ERROR, nil //其他问题
+	}
+	return definition.DB_EXIST, &user //已注册
+}
+
+//根据 Nickname 获取user （未注册0 已注册1 其他情况3）（User）
+func SelectUserByNickname(db *gorm.DB, nickname string) (definition.DBcode, *definition.User) {
+	getDB(&db)
+	var user definition.User
+	err := db.Model(&definition.User{}).
+		Where("u_nickname = ?", nickname).
+		First(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return definition.DB_NOEXIST, nil //未注册
+	} else if err != nil {
+		DBlog.Println("[SelectUserByNickname]:", err)
 		return definition.DB_ERROR, nil //其他问题
 	}
 	return definition.DB_EXIST, &user //已注册
@@ -396,4 +410,76 @@ func SelectChatByuid(db *gorm.DB, uId uint64) (definition.DBcode, []definition.C
 	}
 	// 则成功
 	return definition.DB_EXIST, chats
+}
+
+// 获取用户（楼主）所有的评论消息 标记未读和已读
+func GetAllCommentMessage(postUId uint64) (definition.DBcode, []definition.CommentMessage) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var comments []definition.Comment
+		if err := gormDB.Model(&definition.Comment{}).Where(" post_u_id = ? ", postUId).Find(&comments).Error; err != nil {
+			DBlog.Println("[GetAllCommentMessage] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+		var unreadMessage []definition.UnreadMessage
+		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", postUId, definition.MessageTypeComment).
+			Find(&unreadMessage).Error; err != nil {
+			DBlog.Println("[GetAllCommentMessage] err2: ", err)
+			return definition.DB_ERROR, nil
+		}
+
+		return definition.DB_SUCCESS, utils.PackageCommentMessage(comments, unreadMessage)
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.([]definition.CommentMessage)
+	} else {
+		return code, nil
+	}
+}
+
+// 获取用户（被回复的人）所有的回复消息 标记未读和已读
+func GetAllReplyMessage(targetUid uint64) (definition.DBcode, []definition.ReplyMessage) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var replies []definition.Reply
+		if err := gormDB.Model(&definition.Reply{}).Where(" target_uid = ? ", targetUid).Find(&replies).Error; err != nil {
+			DBlog.Println("[GetAllReplyMessage] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+		var unreadMessage []definition.UnreadMessage
+		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", targetUid, definition.MessageTypeReply).
+			Find(&unreadMessage).Error; err != nil {
+			DBlog.Println("[GetAllReplyMessage] err2: ", err)
+			return definition.DB_ERROR, nil
+		}
+
+		return definition.DB_SUCCESS, utils.PackageReplyMessage(replies, unreadMessage)
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.([]definition.ReplyMessage)
+	} else {
+		return code, nil
+	}
+}
+
+// 获取用户（被@的人）所有的@消息 标记未读和已读
+func GetAllAtMessage(uId uint64) (definition.DBcode, []definition.AtMessage) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var ats []definition.At
+		if err := gormDB.Model(&definition.At{}).Where(" u_id = ? ", uId).Find(&ats).Error; err != nil {
+			DBlog.Println("[GetAllAtMessage] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+		var unreadMessage []definition.UnreadMessage
+		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", uId, definition.MessageTypeAt).
+			Find(&unreadMessage).Error; err != nil {
+			DBlog.Println("[GetAllAtMessage] err2: ", err)
+			return definition.DB_ERROR, nil
+		}
+
+		return definition.DB_SUCCESS, utils.PackageAtMessage(ats, unreadMessage)
+	})
+	if code == definition.DB_SUCCESS {
+		return code, content.([]definition.AtMessage)
+	} else {
+		return code, nil
+	}
 }

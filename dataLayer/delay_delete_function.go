@@ -23,14 +23,14 @@ func DeleteImgConsumer() {
 
 // 删除消息的生产者和消费者
 func DeleteMessageProduce(uid uint64, messageType definition.MessageType, messageId uint64) {
-	definition.DeleteMessageChan <- definition.Message{
+	definition.DeleteUnreadMessageChan <- definition.UnreadMessage{
 		UId:         uid,
 		MessageType: messageType,
 		MessageId:   messageId,
 	}
 }
 func DeleteMessageConsumer() {
-	for message := range definition.DeleteMessageChan {
+	for message := range definition.DeleteUnreadMessageChan {
 		if code := DeleteUnreadMessage(nil, message.UId, message.MessageType, message.MessageId); code != definition.DB_SUCCESS {
 			Mqlog.Fatalln("[DeleteMessageConsumer] Remove fail message: ", message)
 		}

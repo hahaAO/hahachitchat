@@ -125,6 +125,73 @@ func StringToMap(str string) (map[uint64]string, error) {
 	return res, nil
 }
 
+func PackageCommentMessage(comments []definition.Comment, unreadMessages []definition.UnreadMessage) []definition.CommentMessage {
+	var res []definition.CommentMessage
+	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	for _, message := range unreadMessages {
+		unreadMessageMap[message.MessageId] = struct{}{}
+	}
+	for _, comment := range comments {
+		commentMessage := definition.CommentMessage{
+			CommentId:   comment.CommentId,
+			CommentTxt:  comment.CommentTxt,
+			CommentUId:  comment.UId,
+			CommentTime: comment.CommentTime,
+			PostId:      comment.PostId,
+			IsUnread:    false,
+		}
+		if _, exist := unreadMessageMap[comment.CommentId]; exist { //是未读的评论
+			commentMessage.IsUnread = true
+		}
+		res = append(res, commentMessage)
+	}
+	return res
+}
+
+func PackageReplyMessage(replies []definition.Reply, unreadMessages []definition.UnreadMessage) []definition.ReplyMessage {
+	var res []definition.ReplyMessage
+	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	for _, message := range unreadMessages {
+		unreadMessageMap[message.MessageId] = struct{}{}
+	}
+	for _, reply := range replies {
+		replyMessage := definition.ReplyMessage{
+			ReplyId:   reply.ReplyId,
+			PostId:    reply.PostId,
+			CommentId: reply.CommentId,
+			ReplyUId:  reply.UId,
+			ReplyTxt:  reply.ReplyTxt,
+			ReplyTime: reply.ReplyTime,
+			IsUnread:  false,
+		}
+		if _, exist := unreadMessageMap[reply.ReplyId]; exist { //是未读的回复
+			replyMessage.IsUnread = true
+		}
+		res = append(res, replyMessage)
+	}
+	return res
+}
+
+func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMessage) []definition.AtMessage {
+	var res []definition.AtMessage
+	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	for _, message := range unreadMessages {
+		unreadMessageMap[message.MessageId] = struct{}{}
+	}
+	for _, at := range ats {
+		atMessage := definition.AtMessage{
+			UId:      at.UId,
+			Place:    at.Place,
+			IsUnread: false,
+		}
+		if _, exist := unreadMessageMap[at.UId]; exist { //是未读的回复
+			atMessage.IsUnread = true
+		}
+		res = append(res, atMessage)
+	}
+	return res
+}
+
 func GetNewPrivacySetting(PrivacySetting byte, PostIsPrivate *bool, CommentAndReplyIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) byte {
 	if PostIsPrivate != nil {
 		if *PostIsPrivate {

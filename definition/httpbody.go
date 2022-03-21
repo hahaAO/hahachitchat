@@ -305,7 +305,47 @@ type GetUserStateResponse struct {
 	State               int    `json:"state"`
 	StateMessage        string `json:"state_message"`
 	MyUserId            uint64 `json:"my_user_id"`
-	UnreadMessageNumber int    `json:"unread_message_number"`
+	UnreadMessageNumber int64  `json:"unread_message_number"`
+}
+
+type CommentMessage struct {
+	CommentId   uint64    `json:"comment_id"`
+	CommentTxt  string    `json:"comment_txt"`
+	CommentUId  uint64    `json:"comment_u_id"`
+	CommentTime time.Time `json:"comment_time"`
+	PostId      uint64    `json:"post_id"`
+	IsUnread    bool      `json:"is_unread"`
+}
+type GetAllCommentMessageResponse struct {
+	State           int              `json:"state"`
+	StateMessage    string           `json:"state_message"`
+	CommentMessages []CommentMessage `json:"comment_messages"`
+}
+
+type ReplyMessage struct {
+	ReplyId   uint64    `json:"reply_id"`
+	PostId    uint64    `json:"post_id"`
+	CommentId uint64    `json:"comment_id"`
+	ReplyUId  uint64    `json:"reply_u_id"`
+	ReplyTxt  string    `json:"reply_txt"`
+	ReplyTime time.Time `json:"reply_time"`
+	IsUnread  bool      `json:"is_unread"`
+}
+type GetAllReplyMessageResponse struct {
+	State         int            `json:"state"`
+	StateMessage  string         `json:"state_message"`
+	ReplyMessages []ReplyMessage `json:"reply_messages"`
+}
+
+type AtMessage struct {
+	UId      uint64 `json:"u_id"`
+	Place    string `json:"place"`
+	IsUnread bool   `json:"is_unread"`
+}
+type GetAllAtMessageResponse struct {
+	State        int         `json:"state"`
+	StateMessage string      `json:"state_message"`
+	AtMessages   []AtMessage `json:"at_messages"`
 }
 
 type GetPrivacySettingResponse struct {
