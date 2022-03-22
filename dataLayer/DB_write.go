@@ -152,11 +152,12 @@ func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition
 func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		scode, _ := SelectUserById(tx, uId)                                //查u_id
-		scode2, _ := SelectPostById(tx, postId)                            //查post_id
+		scode2, spost := SelectPostById(tx, postId)                        //查post_id
 		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST { // 帖子和用户存在
 			someoneBeAtStr := utils.MapToString(someoneBeAt)
 			comment := definition.Comment{
 				PostId:      postId,
+				PostUid:     spost.UId,
 				UId:         uId,
 				CommentTxt:  comment_txt,
 				ImgId:       imgId,
@@ -292,7 +293,7 @@ func CreateAt(someoneBeAt map[uint64]string, placePrefix string, place_id uint64
 			if err := tx.Model(&definition.At{}).Create(&at).Error; err != nil { // 增加at
 				return definition.DB_ERROR, nil
 			}
-			if code := CreateMessage(tx, uId, definition.MessageTypeAt, at.Id); code != definition.DB_SUCCESS { // 同时增加未读消息
+			if code := CreateMessage(tx, uId, definition.MessageTypeAt, at.Id); code != definition.DB_SUCCESS { // 同时增加at未读消息
 				return code, nil
 			}
 		}

@@ -180,6 +180,7 @@ func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMes
 	}
 	for _, at := range ats {
 		atMessage := definition.AtMessage{
+			AtId:     at.Id,
 			UId:      at.UId,
 			Place:    at.Place,
 			IsUnread: false,

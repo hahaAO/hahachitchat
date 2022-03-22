@@ -710,8 +710,7 @@ func CreateCommentV2(c *gin.Context) {
 		}
 	}
 
-	someoneBeAt := make(map[uint64]string)
-	ccode, ccomid := dataLayer.CreateCommentV2(req.PostId, uId, req.CommentTxt, imgId, someoneBeAt)
+	ccode, ccomid := dataLayer.CreateCommentV2(req.PostId, uId, req.CommentTxt, imgId, req.SomeoneBeAt)
 	switch ccode {
 	case definition.DB_SUCCESS: // 成功
 		c.JSON(http.StatusOK, definition.CreateCommentV2Response{

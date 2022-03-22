@@ -339,6 +339,7 @@ type GetAllReplyMessageResponse struct {
 }
 
 type AtMessage struct {
+	AtId     uint64 `json:"at_id"`
 	UId      uint64 `json:"u_id"`
 	Place    string `json:"place"`
 	IsUnread bool   `json:"is_unread"`
