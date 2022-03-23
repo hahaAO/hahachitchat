@@ -168,10 +168,13 @@ func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string
 				DBlog.Println("[CreateCommentV2] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			if code := CreateAt(someoneBeAt, "comment", comment.CommentId); code != definition.DB_SUCCESS { // 插入成功则 at 相关人
+			code := CreateAt(someoneBeAt, "comment", comment.CommentId)
+			if  code != definition.DB_SUCCESS { // 插入成功则 at 相关人
 				return code, nil
 			}
-			code := CreateMessage(tx, comment.PostUid, definition.MessageTypeComment, comment.CommentId) // 消息提醒楼主
+			if comment.PostUid!=uId{ // 自己不是楼主
+				code = CreateMessage(tx, comment.PostUid, definition.MessageTypeComment, comment.CommentId) // 消息提醒楼主
+			}
 			return code, comment.CommentId
 		} else if scode == definition.DB_NOEXIST {
 			return definition.DB_NOEXIST_USER, 0
@@ -221,10 +224,13 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 				DBlog.Println("[CreateReply] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			if code := CreateAt(someoneBeAt, "reply", reply.ReplyId); code != definition.DB_SUCCESS { // 插入成功则 at 相关人
+			code := CreateAt(someoneBeAt, "reply", reply.ReplyId)
+			if code != definition.DB_SUCCESS { // 插入成功则 at 相关人
 				return code, nil
 			}
-			code := CreateMessage(tx, reply.TargetUid, definition.MessageTypeReply, reply.ReplyId) // 消息提醒回复目标
+			if uId!=reply.TargetUid{ // 自己不是回复目标
+				code = CreateMessage(tx, reply.TargetUid, definition.MessageTypeReply, reply.ReplyId) // 消息提醒回复目标
+			}
 			return code, reply.ReplyId
 		} else if scode == definition.DB_NOEXIST {
 			return definition.DB_NOEXIST_USER, 0
@@ -242,7 +248,7 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 }
 
 // 创建chat 同时创建未读消息
-func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId string) (definition.DBcode, uint64) {
+func CreateChat(senderId uint64, addresseeId uint64, ChatTxt string, ImgId string) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		sCode, _ := SelectUserById(tx, senderId)
 		switch sCode {
@@ -251,7 +257,7 @@ func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId strin
 		case definition.DB_NOEXIST:
 			return definition.DB_NOEXIST_USER, 0
 		}
-		sCode2, _ := SelectUserById(tx, AddresseeId)
+		sCode2, _ := SelectUserById(tx, addresseeId)
 		switch sCode2 {
 		case definition.DB_ERROR:
 			return definition.DB_ERROR, 0
@@ -261,18 +267,19 @@ func CreateChat(senderId uint64, AddresseeId uint64, ChatTxt string, ImgId strin
 
 		chat := definition.Chat{
 			SenderId:    senderId,
-			AddresseeId: AddresseeId,
+			AddresseeId: addresseeId,
 			ChatTxt:     ChatTxt,
 			ImgId:       ImgId,
 		}
-		err := tx.Model(&definition.Chat{}).Create(&chat).Error
-		if err != nil {
+		if err := tx.Model(&definition.Chat{}).Create(&chat).Error;err != nil {
 			DBlog.Println("[CreateChat] err: ", err)
 			return definition.DB_ERROR, 0 // 其他问题,插入失败
-		} else {
+		}
+		if senderId!=addresseeId{ // 私聊对象不是自己
 			code := CreateMessage(tx, chat.AddresseeId, definition.MessageTypeChat, chat.ChatId) // 消息提醒私聊对象
 			return code, chat.ChatId
 		}
+		return definition.DB_SUCCESS, chat.ChatId
 	})
 	if code == definition.DB_SUCCESS {
 		return code, content.(uint64)
