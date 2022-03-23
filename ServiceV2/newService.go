@@ -66,7 +66,6 @@ func StartService(port string) {
 	needSessionRoute.POST("/delete-post", DeletePostById)
 	needSessionRoute.POST("/delete-comment", DeleteCommentById)
 	needSessionRoute.POST("/delete-reply", DeleteReplyById)
-	needSessionRoute.POST("/delete-unread-message", DeleteUnreadMessage)
 	needSessionRoute.POST("/uploadimg", UploadImg)
 	needSessionRoute.POST("/save-post", SavePost)
 	needSessionRoute.POST("/cancel-save", CancelSavePost)
@@ -77,11 +76,13 @@ func StartService(port string) {
 
 	needSessionRoute.POST("/create-chat", CreateChat)
 
-	GetMessageRoute := needSessionRoute.Group("/message")
-	GetMessageRoute.GET("/comment", GetAllCommentMessage)
-	GetMessageRoute.GET("/reply", GetAllReplyMessage)
-	GetMessageRoute.GET("/at", GetAllAtMessage)
-	GetMessageRoute.GET("/allchat", GetAllChat)
+	MessageRoute := needSessionRoute.Group("/message")
+	MessageRoute.GET("/comment", GetAllCommentMessage)
+	MessageRoute.GET("/reply", GetAllReplyMessage)
+	MessageRoute.GET("/at", GetAllAtMessage)
+	MessageRoute.GET("/allchat", GetAllChat)
+	MessageRoute.POST("/read", ReadMessage)
+	MessageRoute.POST("/ignore",IgnoreMessage)
 
 	// ------------V2--------------
 	routeV2 := r.Group("/v2")

@@ -83,10 +83,19 @@ func (Chat) TableName() string {
 	return "chat"
 }
 
+// 消息是从 “评论、回复、@、聊天” 这4种场景中产生的，对应4个表 comment、reply、at、chat
+// 消息有3种状态： 未读、已读、忽略。这里存储的消息只有未读和忽略的
+// 先从4种场景的表中查出所有状态的消息，再根据此表确认消息的状态
+// 用法如下:
+//	场景表没有---->没有消息
+//	场景表有---->此表没有---->已读消息
+//	场景表有---->此表有---->标记未删除---->未读消息
+//	场景表有---->此表有---->标记已删除---->忽略的消息
 type UnreadMessage struct {
-	UId         uint64      `gorm:"column:u_id; index"`         // 用户id
-	MessageType MessageType `gorm:"column:message_type; index"` // 消息类型 4种 comment reply at chat
-	MessageId   uint64      `gorm:"column:message_id"`          // 消息id
+	UId         uint64      `gorm:"column:u_id; index"`              // 用户id
+	MessageType MessageType `gorm:"column:message_type; index"`      // 消息类型 4种 comment reply at chat
+	MessageId   uint64      `gorm:"column:message_id"`               // 消息id
+	IsIgnore    bool        `gorm:"column:is_ignore; default:false"` // 用户忽略了这条消息
 }
 
 func (UnreadMessage) TableName() string {

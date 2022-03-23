@@ -971,7 +971,7 @@ func DeleteReplyById(c *gin.Context) {
 	}
 }
 
-func DeleteUnreadMessage(c *gin.Context) {
+func ReadMessage(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uId, ok := userId.(uint64)
 	if !exists || !ok {
@@ -987,7 +987,7 @@ func DeleteUnreadMessage(c *gin.Context) {
 
 	scode := dataLayer.DeleteUnreadMessage(nil, uId, req.MessageType, req.MessageId)
 	switch scode {
-	case definition.DB_SUCCESS: // 回复存在
+	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.DeleteUnreadMessageResponse{
 			State:        definition.Success,
 			StateMessage: "删除成功",
@@ -1566,6 +1566,34 @@ func GetAllAtMessage(c *gin.Context) {
 			State:        definition.Success,
 			StateMessage: "查询被@信息成功",
 			AtMessages:   atMessages,
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func IgnoreMessage(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	var req definition.IgnoreMessageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code := dataLayer.UpdateMessageIsIgnore(nil, myUid, req.MessageType, req.MessageId)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.IgnoreMessageResponse{
+			State:        definition.Success,
+			StateMessage: "删除成功",
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)

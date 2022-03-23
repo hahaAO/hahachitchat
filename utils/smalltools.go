@@ -127,9 +127,9 @@ func StringToMap(str string) (map[uint64]string, error) {
 
 func PackageCommentMessage(comments []definition.Comment, unreadMessages []definition.UnreadMessage) []definition.CommentMessage {
 	var res []definition.CommentMessage
-	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	unreadMessageMap := make(map[uint64]bool, len(unreadMessages)) // 转为 hash 集合，优化算法
 	for _, message := range unreadMessages {
-		unreadMessageMap[message.MessageId] = struct{}{}
+		unreadMessageMap[message.MessageId] = message.IsIgnore
 	}
 	for _, comment := range comments {
 		commentMessage := definition.CommentMessage{
@@ -140,7 +140,10 @@ func PackageCommentMessage(comments []definition.Comment, unreadMessages []defin
 			PostId:      comment.PostId,
 			IsUnread:    false,
 		}
-		if _, exist := unreadMessageMap[comment.CommentId]; exist { //是未读的评论
+		if IsIgnore, exist := unreadMessageMap[comment.CommentId]; exist { //是未读的评论
+			if IsIgnore { // 用户忽略了消息,不加进返回
+				continue
+			}
 			commentMessage.IsUnread = true
 		}
 		res = append(res, commentMessage)
@@ -150,9 +153,9 @@ func PackageCommentMessage(comments []definition.Comment, unreadMessages []defin
 
 func PackageReplyMessage(replies []definition.Reply, unreadMessages []definition.UnreadMessage) []definition.ReplyMessage {
 	var res []definition.ReplyMessage
-	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	unreadMessageMap := make(map[uint64]bool, len(unreadMessages)) // 转为 hash 集合，优化算法
 	for _, message := range unreadMessages {
-		unreadMessageMap[message.MessageId] = struct{}{}
+		unreadMessageMap[message.MessageId] = message.IsIgnore
 	}
 	for _, reply := range replies {
 		replyMessage := definition.ReplyMessage{
@@ -164,7 +167,10 @@ func PackageReplyMessage(replies []definition.Reply, unreadMessages []definition
 			ReplyTime: reply.ReplyTime,
 			IsUnread:  false,
 		}
-		if _, exist := unreadMessageMap[reply.ReplyId]; exist { //是未读的回复
+		if IsIgnore, exist := unreadMessageMap[reply.ReplyId]; exist { //是未读的回复
+			if IsIgnore { // 用户忽略了消息,不加进返回
+				continue
+			}
 			replyMessage.IsUnread = true
 		}
 		res = append(res, replyMessage)
@@ -174,9 +180,9 @@ func PackageReplyMessage(replies []definition.Reply, unreadMessages []definition
 
 func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMessage) []definition.AtMessage {
 	var res []definition.AtMessage
-	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	unreadMessageMap := make(map[uint64]bool, len(unreadMessages)) // 转为 hash 集合，优化算法
 	for _, message := range unreadMessages {
-		unreadMessageMap[message.MessageId] = struct{}{}
+		unreadMessageMap[message.MessageId] = message.IsIgnore
 	}
 	for _, at := range ats {
 		atMessage := definition.AtMessage{
@@ -185,7 +191,10 @@ func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMes
 			Place:    at.Place,
 			IsUnread: false,
 		}
-		if _, exist := unreadMessageMap[at.Id]; exist { //是未读的@
+		if IsIgnore, exist := unreadMessageMap[at.Id]; exist { //是未读的@
+			if IsIgnore { // 用户忽略了消息,不加进返回
+				continue
+			}
 			atMessage.IsUnread = true
 		}
 		res = append(res, atMessage)
@@ -195,16 +204,19 @@ func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMes
 
 func PackageChatInfos(myUId uint64, chats []definition.Chat, unreadMessages []definition.UnreadMessage) map[uint64][]definition.ChatInfo {
 	chatInfos := make(map[uint64][]definition.ChatInfo)
-	unreadMessageMap := make(map[uint64]struct{}, len(unreadMessages)) // 转为 hash 集合，优化算法
+	unreadMessageMap := make(map[uint64]bool, len(unreadMessages)) // 转为 hash 集合，优化算法
 	for _, message := range unreadMessages {
-		unreadMessageMap[message.MessageId] = struct{}{}
+		unreadMessageMap[message.MessageId] = message.IsIgnore
 	}
 	for _, chat := range chats {
 		var uId uint64     // 聊天对象的id
 		var amISender bool // 我是否是发送人
 		isUnread := false  // 是否已读
 
-		if _, exist := unreadMessageMap[chat.ChatId]; exist { //是未读的私聊
+		if IsIgnore, exist := unreadMessageMap[chat.ChatId]; exist { //是未读的私聊
+			if IsIgnore { // 用户忽略了消息,不加进返回
+				continue
+			}
 			isUnread = true
 		}
 

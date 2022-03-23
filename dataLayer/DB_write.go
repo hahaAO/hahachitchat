@@ -337,6 +337,20 @@ func DeleteUnreadMessage(db *gorm.DB, uId uint64, messageType definition.Message
 	}
 }
 
+// 标记忽略消息
+func UpdateMessageIsIgnore(db *gorm.DB, uId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
+	getDB(&db)
+	err := db.Model(&definition.UnreadMessage{}).
+		Where("u_id = ? AND message_type = ? AND message_id = ?", uId, messageType, messageId).
+		Update("is_ignore", true).Error
+	if err != nil { //有其他问题
+		DBlog.Println("[UpdateMessageIsDelete] err: ", err)
+		return definition.DB_ERROR
+	} else { //标记删除成功
+		return definition.DB_SUCCESS
+	}
+}
+
 // 删除 @ 通过通道删除message
 func DeleteAt(db *gorm.DB, uId uint64, place string) definition.DBcode {
 	getDB(&db)
