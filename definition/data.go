@@ -24,15 +24,15 @@ func (User) TableName() string {
 }
 
 type Post struct {
-	PostId      uint64    `gorm:"column:post_id; primaryKey" `                                           //帖子id,唯一主键
-	UId         uint64    `gorm:"column:u_id; not null"`                                                 //用户id,非空
-	Zone        ZoneType  `gorm:"column:zone; index; not null; default:1; check:max_checker,(zone < 4)"` //帖子分区
-	PostName    string    `gorm:"column:post_name; not null"`                                            //帖子主题
-	PostTxt     string    `gorm:"column:post_txt; not null"`                                             //帖子内容
-	PostTime    time.Time `gorm:"column:post_time; autoCreateTime"`                                      //帖子发布时间
-	PostTxtHtml string    `gorm:"column:post_txt_html"`                                                  //帖子内容的html
-	ImgId       string    `gorm:"column:img_id"`                                                         //图片唯一id用作镇楼图
-	SomeoneBeAt string    `gorm:"column:someone_be_at;  default:'{}'"`                                   //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
+	PostId      uint64    `gorm:"column:post_id; primaryKey" json:"post_id"`                                           //帖子id,唯一主键
+	UId         uint64    `gorm:"column:u_id; not null" json:"u_id"`                                                 //用户id,非空
+	Zone        ZoneType  `gorm:"column:zone; index; not null; default:1; check:max_checker,(zone < 4)" json:"zone"` //帖子分区
+	PostName    string    `gorm:"column:post_name; not null" json:"post_name"`                                            //帖子主题
+	PostTxt     string    `gorm:"column:post_txt; not null" json:"post_txt"`                                             //帖子内容
+	PostTime    time.Time `gorm:"column:post_time; autoCreateTime" json:"post_time"`                                      //帖子发布时间
+	PostTxtHtml string    `gorm:"column:post_txt_html" json:"post_txt_html"`                                                  //帖子内容的html
+	ImgId       string    `gorm:"column:img_id" json:"img_id"`                                                         //图片唯一id用作镇楼图
+	SomeoneBeAt string    `gorm:"column:someone_be_at;  default:'{}'" json:"someone_be_at"`                                   //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
 }
 
 func (Post) TableName() string {

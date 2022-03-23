@@ -165,11 +165,11 @@ func SelectUserByNickname(db *gorm.DB, nickname string) (definition.DBcode, *def
 }
 
 //根据post id获取post
-func SelectPostById(db *gorm.DB, post_id uint64) (definition.DBcode, *definition.Post) {
+func SelectPostById(db *gorm.DB, postId uint64) (definition.DBcode, *definition.Post) {
 	getDB(&db)
 	var post definition.Post
 	err := db.Model(&definition.Post{}).
-		Where("post_id = ?", post_id).
+		Where("post_id = ?", postId).
 		First(&post).Error
 	if err == gorm.ErrRecordNotFound {
 		return definition.DB_NOEXIST, nil //无此id0
@@ -178,6 +178,20 @@ func SelectPostById(db *gorm.DB, post_id uint64) (definition.DBcode, *definition
 		return definition.DB_ERROR, nil //其他情况3
 	}
 	return definition.DB_EXIST, &post //查到有此id1
+}
+
+//根据post id 批量获取posts
+func SelectPostsById(db *gorm.DB, postIds []uint64) (definition.DBcode, []definition.Post) {
+	getDB(&db)
+	var posts []definition.Post
+	err := db.Model(&definition.Post{}).
+		Where("post_id in ?", postIds).
+		Find(&posts).Error
+	if err != nil {
+		DBlog.Println("SelectPostsById err:", err)
+		return definition.DB_ERROR, nil
+	}
+	return definition.DB_SUCCESS, posts
 }
 
 //加了读redis缓存的功能		根据comment_id获取comment

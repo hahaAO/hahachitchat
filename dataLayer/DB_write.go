@@ -347,14 +347,14 @@ func UpdateMessageIsIgnore(uId uint64, messageType definition.MessageType, messa
 		switch err {
 		case gorm.ErrRecordNotFound:
 			if err := tx.Model(&definition.UnreadMessage{}).Create(&definition.UnreadMessage{
-				UId: uId,
+				UId:         uId,
 				MessageType: messageType,
 				MessageId:   messageId,
 				IsIgnore:    true,
-			}).Error;err != nil{
+			}).Error; err != nil {
 				DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
 				return definition.DB_ERROR, nil
-			}else {
+			} else {
 				return definition.DB_SUCCESS, nil
 			}
 		case nil:

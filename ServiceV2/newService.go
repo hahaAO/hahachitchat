@@ -82,12 +82,13 @@ func StartService(port string) {
 	MessageRoute.GET("/at", GetAllAtMessage)
 	MessageRoute.GET("/allchat", GetAllChat)
 	MessageRoute.POST("/read", ReadMessage)
-	MessageRoute.POST("/ignore",IgnoreMessage)
+	MessageRoute.POST("/ignore", IgnoreMessage)
 
 	// ------------V2--------------
 	routeV2 := r.Group("/v2")
 	routeV2.GET("/zone/:zone", AllPostByZone)
 	routeV2.GET("/comment/:comment_id", GetCommentByIdV2)
+	routeV2.POST("/posts", BatchQueryPost)
 
 	routeV2.POST("/create-post", AuthMiddleWare(), CreatePostV2)
 	routeV2.POST("/create-comment", AuthMiddleWare(), CreateCommentV2)

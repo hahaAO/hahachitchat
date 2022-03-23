@@ -384,3 +384,12 @@ type PostPrivacySettingResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 }
+
+type BatchQueryPostRequest struct {
+	PostIds []uint64 `json:"post_ids" binding:"required"`
+}
+type BatchQueryPostResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+	Posts        []Post `json:"posts"`
+}
