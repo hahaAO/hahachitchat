@@ -1588,12 +1588,12 @@ func IgnoreMessage(c *gin.Context) {
 		return
 	}
 
-	code := dataLayer.UpdateMessageIsIgnore(nil, myUid, req.MessageType, req.MessageId)
+	code := dataLayer.UpdateMessageIsIgnore( myUid, req.MessageType, req.MessageId)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.IgnoreMessageResponse{
 			State:        definition.Success,
-			StateMessage: "删除成功",
+			StateMessage: "忽略成功",
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)

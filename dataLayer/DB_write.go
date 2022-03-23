@@ -169,10 +169,10 @@ func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
 			code := CreateAt(someoneBeAt, "comment", comment.CommentId)
-			if  code != definition.DB_SUCCESS { // 插入成功则 at 相关人
+			if code != definition.DB_SUCCESS { // 插入成功则 at 相关人
 				return code, nil
 			}
-			if comment.PostUid!=uId{ // 自己不是楼主
+			if comment.PostUid != uId { // 自己不是楼主
 				code = CreateMessage(tx, comment.PostUid, definition.MessageTypeComment, comment.CommentId) // 消息提醒楼主
 			}
 			return code, comment.CommentId
@@ -228,7 +228,7 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 			if code != definition.DB_SUCCESS { // 插入成功则 at 相关人
 				return code, nil
 			}
-			if uId!=reply.TargetUid{ // 自己不是回复目标
+			if uId != reply.TargetUid { // 自己不是回复目标
 				code = CreateMessage(tx, reply.TargetUid, definition.MessageTypeReply, reply.ReplyId) // 消息提醒回复目标
 			}
 			return code, reply.ReplyId
@@ -271,11 +271,11 @@ func CreateChat(senderId uint64, addresseeId uint64, ChatTxt string, ImgId strin
 			ChatTxt:     ChatTxt,
 			ImgId:       ImgId,
 		}
-		if err := tx.Model(&definition.Chat{}).Create(&chat).Error;err != nil {
+		if err := tx.Model(&definition.Chat{}).Create(&chat).Error; err != nil {
 			DBlog.Println("[CreateChat] err: ", err)
 			return definition.DB_ERROR, 0 // 其他问题,插入失败
 		}
-		if senderId!=addresseeId{ // 私聊对象不是自己
+		if senderId != addresseeId { // 私聊对象不是自己
 			code := CreateMessage(tx, chat.AddresseeId, definition.MessageTypeChat, chat.ChatId) // 消息提醒私聊对象
 			return code, chat.ChatId
 		}
@@ -338,17 +338,38 @@ func DeleteUnreadMessage(db *gorm.DB, uId uint64, messageType definition.Message
 }
 
 // 标记忽略消息
-func UpdateMessageIsIgnore(db *gorm.DB, uId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
-	getDB(&db)
-	err := db.Model(&definition.UnreadMessage{}).
-		Where("u_id = ? AND message_type = ? AND message_id = ?", uId, messageType, messageId).
-		Update("is_ignore", true).Error
-	if err != nil { //有其他问题
-		DBlog.Println("[UpdateMessageIsDelete] err: ", err)
-		return definition.DB_ERROR
-	} else { //标记删除成功
-		return definition.DB_SUCCESS
-	}
+func UpdateMessageIsIgnore(uId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var message definition.UnreadMessage
+
+		err := tx.Model(&definition.UnreadMessage{}).
+			Where("u_id = ? AND message_type = ? AND message_id = ?", uId, messageType, messageId).First(&message).Error
+		switch err {
+		case gorm.ErrRecordNotFound:
+			if err := tx.Model(&definition.UnreadMessage{}).Create(&definition.UnreadMessage{
+				UId: uId,
+				MessageType: messageType,
+				MessageId:   messageId,
+				IsIgnore:    true,
+			}).Error;err != nil{
+				DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
+				return definition.DB_ERROR, nil
+			}else {
+				return definition.DB_SUCCESS, nil
+			}
+		case nil:
+			message.IsIgnore = true
+			if err := tx.Save(&message).Error; err != nil {
+				DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
+				return definition.DB_ERROR, nil
+			}
+			return definition.DB_SUCCESS, nil
+		default:
+			DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+	})
+	return code
 }
 
 // 删除 @ 通过通道删除message
