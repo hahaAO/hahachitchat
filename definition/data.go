@@ -63,7 +63,7 @@ type Reply struct {
 	TargetUid   uint64    `gorm:"column:target_uid; not null" json:"target_uid"`        //回应对象的用户id
 	ReplyTxt    string    `gorm:"column:reply_txt; not null" json:"reply_txt"`          //回复内容
 	ReplyTime   time.Time `gorm:"column:reply_time; autoCreateTime" json:"reply_time"`  //回复时间
-	SomeoneBeAt string    `gorm:"column:someone_be_at;  default:'{}'"`                  //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
+	SomeoneBeAt string    `gorm:"column:someone_be_at;  default:'{}'" json:"someone_be_at"`                  //被@的人的 uid 和 uNickname 以 map[uint64]string的json格式存储
 }
 
 func (Reply) TableName() string {

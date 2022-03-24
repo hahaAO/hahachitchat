@@ -79,7 +79,7 @@ type CreateReplyResponse struct {
 type CreateChatRequest struct {
 	ImgFileHeader *multipart.FileHeader `form:"image"`                           // 图片 image
 	AddresseeId   uint64                `form:"addressee_id" binding:"required"` // 收件人 addressee_id
-	ChatTxt       string                `form:"image" binding:"required"`        // 聊天内容 chat_txt
+	ChatTxt       string                `form:"chat_txt" binding:"required"`        // 聊天内容 chat_txt
 }
 type CreateChatResponse struct {
 	State        int    `json:"state"`
