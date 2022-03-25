@@ -79,7 +79,7 @@ type CreateReplyResponse struct {
 type CreateChatRequest struct {
 	ImgFileHeader *multipart.FileHeader `form:"image"`                           // 图片 image
 	AddresseeId   uint64                `form:"addressee_id" binding:"required"` // 收件人 addressee_id
-	ChatTxt       string                `form:"chat_txt" binding:"required"`        // 聊天内容 chat_txt
+	ChatTxt       string                `form:"chat_txt" binding:"required"`     // 聊天内容 chat_txt
 }
 type CreateChatResponse struct {
 	State        int    `json:"state"`
@@ -348,10 +348,12 @@ type GetAllReplyMessageResponse struct {
 }
 
 type AtMessage struct {
-	AtId     uint64 `json:"at_id"`
-	UId      uint64 `json:"u_id"`
-	Place    string `json:"place"`
-	IsUnread bool   `json:"is_unread"`
+	AtId       uint64 `json:"at_id"`
+	UId        uint64 `json:"u_id"`
+	PostID     uint64 `json:"post_id"`
+	MessageTxt string `json:"message_txt"`
+	Place      string `json:"place"`
+	IsUnread   bool   `json:"is_unread"`
 }
 type GetAllAtMessageResponse struct {
 	State        int         `json:"state"`

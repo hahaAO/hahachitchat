@@ -464,14 +464,14 @@ func GetAllAtMessage(uId uint64) (definition.DBcode, []definition.AtMessage) {
 			DBlog.Println("[GetAllAtMessage] err: ", err)
 			return definition.DB_ERROR, nil
 		}
-		var unreadMessage []definition.UnreadMessage
+		var unreadMessages []definition.UnreadMessage
 		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", uId, definition.MessageTypeAt).
-			Find(&unreadMessage).Error; err != nil {
+			Find(&unreadMessages).Error; err != nil {
 			DBlog.Println("[GetAllAtMessage] err2: ", err)
 			return definition.DB_ERROR, nil
 		}
 
-		return definition.DB_SUCCESS, utils.PackageAtMessage(ats, unreadMessage)
+		return definition.DB_SUCCESS, utils.PackageAtMessage(ats,unreadMessages)
 	})
 	if code == definition.DB_SUCCESS {
 		return code, content.([]definition.AtMessage)

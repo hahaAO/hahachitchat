@@ -185,17 +185,20 @@ func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMes
 		unreadMessageMap[message.MessageId] = message.IsIgnore
 	}
 	for _, at := range ats {
-		atMessage := definition.AtMessage{
-			AtId:     at.Id,
-			UId:      at.UId,
-			Place:    at.Place,
-			IsUnread: false,
-		}
+		isUnread := false
 		if IsIgnore, exist := unreadMessageMap[at.Id]; exist { //是未读的@
 			if IsIgnore { // 用户忽略了消息,不加进返回
 				continue
 			}
-			atMessage.IsUnread = true
+			isUnread = true
+		}
+		atMessage := definition.AtMessage{
+			AtId:       at.Id,
+			UId:        at.UId,
+			PostID:     at.PostID,
+			MessageTxt: at.MessageTxt,
+			Place:      at.Place,
+			IsUnread:   isUnread,
 		}
 		res = append(res, atMessage)
 	}
