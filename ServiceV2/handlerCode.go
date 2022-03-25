@@ -1425,7 +1425,7 @@ func GetUserSavedPost(c *gin.Context) {
 	}
 }
 
-func GetUserSubscribedUser(c *gin.Context) {
+func GetSubscriptions(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
 	myUid, ok := myUserId.(uint64)
 	if !exists || !ok {
@@ -1632,7 +1632,7 @@ func GetAllAtMessage(c *gin.Context) {
 	}
 }
 
-func IgnoreMessage(c *gin.Context) {
+func IgnoreMessages(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
 	myUid, ok := myUserId.(uint64)
 	if !exists || !ok {
@@ -1640,16 +1640,16 @@ func IgnoreMessage(c *gin.Context) {
 		return
 	}
 
-	var req definition.IgnoreMessageRequest
+	var req definition.IgnoreMessagesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
 
-	code := dataLayer.UpdateMessageIsIgnore(myUid, req.MessageType, req.MessageId)
+	code := dataLayer.UpdateMessageIsIgnore(myUid, req.MessageType,req.MessageIds)
 	switch code {
 	case definition.DB_SUCCESS:
-		c.JSON(http.StatusOK, definition.IgnoreMessageResponse{
+		c.JSON(http.StatusOK, definition.IgnoreMessagesResponse{
 			State:        definition.Success,
 			StateMessage: "忽略成功",
 		})

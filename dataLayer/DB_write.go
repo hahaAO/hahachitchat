@@ -340,36 +340,35 @@ func DeleteUnreadMessage(db *gorm.DB, uId uint64, messageType definition.Message
 }
 
 // 标记忽略消息
-func UpdateMessageIsIgnore(uId uint64, messageType definition.MessageType, messageId uint64) definition.DBcode {
+func UpdateMessageIsIgnore(uId uint64,messageType definition.MessageType ,ignoreMessageIds []uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		var message definition.UnreadMessage
-
-		err := tx.Model(&definition.UnreadMessage{}).
-			Where("u_id = ? AND message_type = ? AND message_id = ?", uId, messageType, messageId).First(&message).Error
-		switch err {
-		case gorm.ErrRecordNotFound:
-			if err := tx.Model(&definition.UnreadMessage{}).Create(&definition.UnreadMessage{
-				UId:         uId,
-				MessageType: messageType,
-				MessageId:   messageId,
-				IsIgnore:    true,
-			}).Error; err != nil {
+		for _, ignoreMessageId := range ignoreMessageIds {
+			var message definition.UnreadMessage
+			err := tx.Model(&definition.UnreadMessage{}).
+				Where("u_id = ? AND message_type = ? AND message_id = ?", uId,messageType, ignoreMessageId).First(&message).Error
+			switch err {
+			case gorm.ErrRecordNotFound:
+				if err := tx.Model(&definition.UnreadMessage{}).Create(&definition.UnreadMessage{
+					UId:         uId,
+					MessageType: messageType,
+					MessageId:   ignoreMessageId,
+					IsIgnore:    true,
+				}).Error; err != nil {
+					DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
+					return definition.DB_ERROR, nil
+				}
+			case nil:
+				if err := tx.Model(&definition.UnreadMessage{}). Where(" u_id =? AND message_type = ? AND message_id =? ",message.UId,message.MessageType,message.MessageId).
+					Update("is_ignore",true).Error; err != nil {
+					DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
+					return definition.DB_ERROR, nil
+				}
+			default:
 				DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
 				return definition.DB_ERROR, nil
-			} else {
-				return definition.DB_SUCCESS, nil
 			}
-		case nil:
-			if err := tx.Model(&definition.UnreadMessage{}). Where(" u_id =? AND message_type = ? AND message_id =? ",message.UId,message.MessageType,message.MessageId).
-				Update("is_ignore",true).Error; err != nil {
-				DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
-				return definition.DB_ERROR, nil
-			}
-			return definition.DB_SUCCESS, nil
-		default:
-			DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
-			return definition.DB_ERROR, nil
 		}
+		return definition.DB_SUCCESS, nil
 	})
 	return code
 }

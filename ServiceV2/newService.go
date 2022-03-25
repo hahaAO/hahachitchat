@@ -49,7 +49,7 @@ func StartService(port string) {
 	//可能需要登录态的操作 个人资料(根据用户隐私设置判断是否展示)
 	profileRoute := r.Group("/profile", SetSessionMiddleWare())
 	profileRoute.GET("/user-saved/:u_id", GetUserSavedPost)
-	profileRoute.GET("/subscribed-user/:u_id", GetUserSubscribedUser)
+	profileRoute.GET("/subscriptions/:u_id", GetSubscriptions)
 	profileRoute.GET("/allpostid-by-uid/:u_id", GetUserAllPostId)
 	profileRoute.GET("/allcommentid-by-uid/:u_id", GetUserAllCommentId)
 	profileRoute.GET("/allreplyid-by-uid/:u_id", GetUserAllReplyId)
@@ -83,7 +83,7 @@ func StartService(port string) {
 	MessageRoute.GET("/allchat", GetAllChat)
 	MessageRoute.GET("/chat-user/:u_id", GetChatByUserId)
 	MessageRoute.POST("/read", ReadMessage)
-	MessageRoute.POST("/ignore", IgnoreMessage)
+	MessageRoute.POST("/ignore", IgnoreMessages)
 
 	// ------------V2--------------
 	routeV2 := r.Group("/v2")
