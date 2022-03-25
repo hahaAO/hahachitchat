@@ -232,6 +232,7 @@ func PackageChatInfos(myUId uint64, chats []definition.Chat, unreadMessages []de
 		}
 		// 拼装聊天记录
 		chatInfos[uId] = append(chatInfos[uId], definition.ChatInfo{
+			ChatId:    chat.ChatId,
 			AmISender: amISender,
 			ChatTxt:   chat.ChatTxt,
 			ImgId:     chat.ImgId,

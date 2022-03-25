@@ -104,7 +104,7 @@ func (UnreadMessage) TableName() string {
 
 type At struct {
 	Id         uint64 `gorm:"column:id; primaryKey" json:"at_id"`                       //回复id,唯一主键
-	UId        uint64 `gorm:"column:u_id; uniqueIndex:idx_uid_and_place" json:"u_id"`  // 被@的用户id
+	UId        uint64 `gorm:"column:u_id; uniqueIndex:idx_uid_and_place" json:"u_id"`   // 被@的用户id
 	Place      string `gorm:"column:place; uniqueIndex:idx_uid_and_place" json:"place"` // @的用户的地方,如 post_1 comment_2 这种格式
 	PostID     uint64 `gorm:"column:post_id" json:"post_id"`
 	MessageTxt string `gorm:"column:message_txt" json:"message_txt"`

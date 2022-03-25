@@ -360,8 +360,8 @@ func UpdateMessageIsIgnore(uId uint64, messageType definition.MessageType, messa
 				return definition.DB_SUCCESS, nil
 			}
 		case nil:
-			message.IsIgnore = true
-			if err := tx.Save(&message).Error; err != nil {
+			if err := tx.Model(&definition.UnreadMessage{}). Where(" u_id =? AND message_type = ? AND message_id =? ",message.UId,message.MessageType,message.MessageId).
+				Update("is_ignore",true).Error; err != nil {
 				DBlog.Println("[UpdateMessageIsIgnore] err: ", err)
 				return definition.DB_ERROR, nil
 			}

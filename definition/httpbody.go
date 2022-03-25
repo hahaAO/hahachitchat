@@ -299,6 +299,7 @@ type GetUserSubscribedUserResponse struct {
 }
 
 type ChatInfo struct {
+	ChatId   uint64    `json:"chat_id"`
 	AmISender bool      `json:"am_i_sender"`
 	ChatTxt   string    `json:"chat_txt"`
 	ImgId     string    `json:"img_id"`
