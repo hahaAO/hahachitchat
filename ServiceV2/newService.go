@@ -81,6 +81,7 @@ func StartService(port string) {
 	MessageRoute.GET("/reply", GetAllReplyMessage)
 	MessageRoute.GET("/at", GetAllAtMessage)
 	MessageRoute.GET("/allchat", GetAllChat)
+	MessageRoute.GET("/chat-user/:u_id", GetChatByUserId)
 	MessageRoute.POST("/read", ReadMessage)
 	MessageRoute.POST("/ignore", IgnoreMessage)
 

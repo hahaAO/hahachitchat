@@ -412,7 +412,9 @@ func SelectAllReplyIdByUid(myUid uint64, uId uint64) (definition.DBcode, []uint6
 func GetAllCommentMessage(postUId uint64) (definition.DBcode, []definition.CommentMessage) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var comments []definition.Comment
-		if err := gormDB.Model(&definition.Comment{}).Where(" post_u_id = ? ", postUId).Find(&comments).Error; err != nil {
+		if err := gormDB.Model(&definition.Comment{}).Where(" post_u_id = ? ", postUId).
+			Where(" u_id != ? ", postUId).
+			Find(&comments).Error; err != nil {
 			DBlog.Println("[GetAllCommentMessage] err: ", err)
 			return definition.DB_ERROR, nil
 		}
@@ -436,7 +438,9 @@ func GetAllCommentMessage(postUId uint64) (definition.DBcode, []definition.Comme
 func GetAllReplyMessage(targetUid uint64) (definition.DBcode, []definition.ReplyMessage) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var replies []definition.Reply
-		if err := gormDB.Model(&definition.Reply{}).Where(" target_uid = ? ", targetUid).Find(&replies).Error; err != nil {
+		if err := gormDB.Model(&definition.Reply{}).Where(" target_uid = ? ", targetUid).
+			Where(" u_id != ?",targetUid).
+			Find(&replies).Error; err != nil {
 			DBlog.Println("[GetAllReplyMessage] err: ", err)
 			return definition.DB_ERROR, nil
 		}
@@ -506,6 +510,39 @@ func GetAllChatInfosByUid(uId uint64) (definition.DBcode, map[uint64][]definitio
 	})
 	if code == definition.DB_EXIST {
 		return code, content.(map[uint64][]definition.ChatInfo)
+	} else {
+		return code, nil
+	}
+}
+
+//根据用户u_id 和 对象uid 获取属于私聊chat 标记未读和已读
+func GetChatInfosByUid(myUId uint64 , uId uint64) (definition.DBcode, []definition.ChatInfo) {
+	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var chats []definition.Chat
+		err := tx.Model(&definition.Chat{}).Where("sender_id = ? OR addressee_id = ?", myUId, uId).
+			Or("sender_id = ? AND addressee_id = ?", uId, myUId).
+			Find(&chats).Error
+		if err == gorm.ErrRecordNotFound { //没有私聊
+			return definition.DB_NOEXIST, nil
+		} else if err != nil { // 则有其他问题
+			return definition.DB_ERROR, nil
+		}
+		if len(chats) == 0 { //没有私聊
+			return definition.DB_NOEXIST, nil
+		}
+
+		// 查未读的私聊
+		var unreadMessage []definition.UnreadMessage
+		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", uId, definition.MessageTypeChat).
+			Find(&unreadMessage).Error; err != nil {
+			DBlog.Println("[SelectChatByuid] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+
+		return definition.DB_EXIST, utils.PackageChatInfo(myUId,uId, chats, unreadMessage)
+	})
+	if code == definition.DB_EXIST {
+		return code, content.([]definition.ChatInfo)
 	} else {
 		return code, nil
 	}

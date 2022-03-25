@@ -1503,6 +1503,41 @@ func GetAllChat(c *gin.Context) {
 	}
 }
 
+func GetChatByUserId(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	uIdStr:=c.Param("u_id")
+	uId,err:=strconv.ParseUint(uIdStr,10,64)
+	if err!=nil{
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code, chatInfo := dataLayer.GetChatInfosByUid(myUid,uId)
+	switch code {
+	case definition.DB_EXIST:
+		c.JSON(http.StatusOK, definition.GetChatInfoResponse{
+			State:        definition.Success,
+			StateMessage: "查询聊天记录成功",
+			ChatInfo:    chatInfo,
+		})
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.GetChatInfoResponse{
+			State:        definition.Success,
+			StateMessage: "没有聊天记录,快去交个朋友吧",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
 func GetUserState(c *gin.Context) {
 	myUserId, exists := c.Get("u_id")
 	myUid, ok := myUserId.(uint64)

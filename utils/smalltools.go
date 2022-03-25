@@ -244,6 +244,34 @@ func PackageChatInfos(myUId uint64, chats []definition.Chat, unreadMessages []de
 	return chatInfos
 }
 
+func PackageChatInfo(myUId uint64, uId uint64, chats []definition.Chat, unreadMessages []definition.UnreadMessage) []definition.ChatInfo {
+	var chatInfos []definition.ChatInfo
+	unreadMessageMap := make(map[uint64]bool, len(unreadMessages)) // 转为 hash 集合，优化算法
+	for _, message := range unreadMessages {
+		unreadMessageMap[message.MessageId] = message.IsIgnore
+	}
+
+	for _, chat := range chats {
+		isUnread := false                                            // 是否已读
+		if IsIgnore, exist := unreadMessageMap[chat.ChatId]; exist { //是未读的私聊
+			if IsIgnore { // 用户忽略了消息,不加进返回
+				continue
+			}
+			isUnread = true
+		}
+		// 拼装聊天记录
+		chatInfos = append(chatInfos, definition.ChatInfo{
+			ChatId:    chat.ChatId,
+			AmISender: chat.SenderId == myUId,
+			ChatTxt:   chat.ChatTxt,
+			ImgId:     chat.ImgId,
+			ChatTime:  chat.ChatTime,
+			IsUnread:  isUnread,
+		})
+	}
+	return chatInfos
+}
+
 func GetNewPrivacySetting(PrivacySetting byte, PostIsPrivate *bool, CommentAndReplyIsPrivate *bool, SavedPostIsPrivate *bool, SubscribedIsPrivate *bool) byte {
 	if PostIsPrivate != nil {
 		if *PostIsPrivate {

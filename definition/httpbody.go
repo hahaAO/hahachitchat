@@ -299,7 +299,7 @@ type GetUserSubscribedUserResponse struct {
 }
 
 type ChatInfo struct {
-	ChatId   uint64    `json:"chat_id"`
+	ChatId    uint64    `json:"chat_id"`
 	AmISender bool      `json:"am_i_sender"`
 	ChatTxt   string    `json:"chat_txt"`
 	ImgId     string    `json:"img_id"`
@@ -310,6 +310,12 @@ type GetAllChatResponse struct {
 	State        int                   `json:"state"`
 	StateMessage string                `json:"state_message"`
 	ChatInfos    map[uint64][]ChatInfo `json:"chat_infos"` // 根据uid获取私聊消息
+}
+
+type GetChatInfoResponse struct {
+	State        int        `json:"state"`
+	StateMessage string     `json:"state_message"`
+	ChatInfo     []ChatInfo `json:"chat_info"`
 }
 
 type GetUserStateResponse struct {
