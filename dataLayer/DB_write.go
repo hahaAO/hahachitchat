@@ -98,7 +98,7 @@ func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition
 				DBlog.Println("CreatePost err1:", err)
 				return definition.DB_ERROR, 0 //其他问题,插入失败
 			}
-			code := CreateAt(someoneBeAt, "post", post.PostId,post.PostTxt,post.PostId) // 插入成功则 at 相关人
+			code := CreateAt(someoneBeAt, uId,"post", post.PostId,post.PostTxt,post.PostId) // 插入成功则 at 相关人
 			return code, post.PostId                           //1则成功
 		case definition.DB_ERROR: // 其他问题,查询失败
 			return definition.DB_ERROR, 0
@@ -168,7 +168,7 @@ func CreateCommentV2(postId uint64, uId uint64, comment_txt string, imgId string
 				DBlog.Println("[CreateCommentV2] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			code := CreateAt(someoneBeAt, "comment", comment.CommentId,comment.CommentTxt,comment.PostId)
+			code := CreateAt(someoneBeAt, uId,"comment", comment.CommentId,comment.CommentTxt,comment.PostId)
 			if code != definition.DB_SUCCESS { // 插入成功则 at 相关人
 				return code, nil
 			}
@@ -224,7 +224,7 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 				DBlog.Println("[CreateReply] err1:", err)
 				return definition.DB_ERROR, 0 // 其他问题,插入失败
 			}
-			code := CreateAt(someoneBeAt, "reply", reply.ReplyId,reply.ReplyTxt,reply.PostId)
+			code := CreateAt(someoneBeAt, uId,"reply", reply.ReplyId,reply.ReplyTxt,reply.PostId)
 			if code != definition.DB_SUCCESS { // 插入成功则 at 相关人
 				return code, nil
 			}
@@ -289,12 +289,13 @@ func CreateChat(senderId uint64, addresseeId uint64, ChatTxt string, ImgId strin
 }
 
 // 增加at 同时增加未读消息
-func CreateAt(someoneBeAt map[uint64]string, placePrefix string, place_id uint64, messageTxt string, postId uint64) definition.DBcode { // placePrefix(前缀)有三种 post、comment、reply
+func CreateAt(someoneBeAt map[uint64]string, callerUId uint64,placePrefix string, place_id uint64, messageTxt string, postId uint64) definition.DBcode { // placePrefix(前缀)有三种 post、comment、reply
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		for uId, _ := range someoneBeAt {
 			at := definition.At{
 				UId:        uId,
 				Place:      fmt.Sprintf("%s_%d", placePrefix, place_id),
+				CallerUId: callerUId,
 				MessageTxt: messageTxt,
 				PostID:     postId,
 			}

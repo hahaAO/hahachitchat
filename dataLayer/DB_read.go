@@ -533,7 +533,7 @@ func GetChatInfosByUid(myUId uint64 , uId uint64) (definition.DBcode, []definiti
 
 		// 查未读的私聊
 		var unreadMessage []definition.UnreadMessage
-		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", uId, definition.MessageTypeChat).
+		if err := gormDB.Model(&definition.UnreadMessage{}).Where(" u_id = ? AND message_type = ?", myUId, definition.MessageTypeChat).
 			Find(&unreadMessage).Error; err != nil {
 			DBlog.Println("[SelectChatByuid] err: ", err)
 			return definition.DB_ERROR, nil

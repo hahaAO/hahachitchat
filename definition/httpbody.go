@@ -147,7 +147,7 @@ type DeleteUnreadMessageResponse struct {
 }
 
 type IgnoreMessagesRequest struct {
-	MessageIds []uint64 `json:"message_ids" binding:"required"`
+	MessageIds  []uint64    `json:"message_ids" binding:"required"`
 	MessageType MessageType `json:"message_type" binding:"required"`
 }
 type IgnoreMessagesResponse struct {
@@ -357,6 +357,7 @@ type GetAllReplyMessageResponse struct {
 type AtMessage struct {
 	AtId       uint64 `json:"at_id"`
 	UId        uint64 `json:"u_id"`
+	CallerUId  uint64 `json:"caller_u_id"`
 	PostID     uint64 `json:"post_id"`
 	MessageTxt string `json:"message_txt"`
 	Place      string `json:"place"`

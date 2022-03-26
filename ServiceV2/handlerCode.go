@@ -84,6 +84,7 @@ func GetUserById(c *gin.Context) {
 	scode, suser := dataLayer.SelectUserById(nil, uId)
 	switch scode {
 	case definition.DB_EXIST:
+		c.Header("Cache-Control", "max-age=100") // 缓存到本地100秒
 		c.JSON(http.StatusOK, definition.GetUserByIdResponse{
 			State:        definition.Success,
 			StateMessage: "查询用户成功",
