@@ -138,7 +138,7 @@ func Redis_CreateSession(session definition.Session) definition.DBcode {
 		redis_conn.Do(
 			"SET",
 			fmt.Sprintf("session::%s", session.Randid), //随机的id作为键
-			session.Id,                                 //真实的id作为值
+			session.Id, //真实的id作为值
 			"EX",
 			session.Expire, //过期时间
 		))

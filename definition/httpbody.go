@@ -322,7 +322,11 @@ type GetUserStateResponse struct {
 	State               int    `json:"state"`
 	StateMessage        string `json:"state_message"`
 	MyUserId            uint64 `json:"my_user_id"`
-	UnreadMessageNumber int64  `json:"unread_message_number"`
+	UnreadMessageNumber uint64 `json:"unread_message_number"`
+	UnreadCommentNumber uint64 `json:"unread_comment_number"`
+	UnreadReplyNumber   uint64 `json:"unread_reply_number"`
+	UnreadChatNumber    uint64 `json:"unread_chat_number"`
+	UnreadAtNumber      uint64 `json:"unread_at_number"`
 }
 
 type CommentMessage struct {

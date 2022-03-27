@@ -195,7 +195,7 @@ func PackageAtMessage(ats []definition.At, unreadMessages []definition.UnreadMes
 		atMessage := definition.AtMessage{
 			AtId:       at.Id,
 			UId:        at.UId,
-			CallerUId: at.CallerUId,
+			CallerUId:  at.CallerUId,
 			PostID:     at.PostID,
 			MessageTxt: at.MessageTxt,
 			Place:      at.Place,

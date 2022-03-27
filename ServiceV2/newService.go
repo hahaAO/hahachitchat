@@ -24,6 +24,8 @@ func ServiceInit() {
 
 	definition.DeleteComentsChan = make(chan uint64, 10) //初始化创建待删除评论通知消息队列
 	go dataLayer.DeleteCommentsConsumer()                //启动一个协程去订阅id删除评论
+
+	go dataLayer.RunNotificationHub() // 在线消息通知中心
 }
 
 func StartService(port string) {
@@ -58,11 +60,13 @@ func StartService(port string) {
 	needSessionRoute := r.Group("", AuthMiddleWare())
 
 	needSessionRoute.GET("/user_state", GetUserState)
+	needSessionRoute.GET("/ws-connect", WebSocketConnect)
 
 	needSessionRoute.POST("/sign-out", SignOut)
-	//needSessionRoute.POST("/create-post", CreatePost)
-	//needSessionRoute.POST("/create-comment", CreateComment)
+	needSessionRoute.POST("/create-post", CreatePost)
+	needSessionRoute.POST("/create-comment", CreateComment)
 	needSessionRoute.POST("/create-reply", CreateReply)
+	needSessionRoute.POST("/create-chat", CreateChat)
 	needSessionRoute.POST("/delete-post", DeletePostById)
 	needSessionRoute.POST("/delete-comment", DeleteCommentById)
 	needSessionRoute.POST("/delete-reply", DeleteReplyById)
@@ -73,8 +77,6 @@ func StartService(port string) {
 	needSessionRoute.POST("/cancel-subscribe", CancelSubscribe)
 	needSessionRoute.GET("/PrivacySetting", GetPrivacySetting)
 	needSessionRoute.POST("/PrivacySetting", PostPrivacySetting)
-
-	needSessionRoute.POST("/create-chat", CreateChat)
 
 	MessageRoute := needSessionRoute.Group("/message")
 	MessageRoute.GET("/comment", GetAllCommentMessage)
@@ -90,9 +92,6 @@ func StartService(port string) {
 	routeV2.GET("/zone/:zone", AllPostByZone)
 	routeV2.GET("/comment/:comment_id", GetCommentByIdV2)
 	routeV2.POST("/posts", BatchQueryPost)
-
-	routeV2.POST("/create-post", AuthMiddleWare(), CreatePostV2)
-	routeV2.POST("/create-comment", AuthMiddleWare(), CreateCommentV2)
 
 	r.Run(port)
 }

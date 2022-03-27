@@ -105,17 +105,36 @@ func SelectReplyById(db *gorm.DB, replyId uint64) (definition.DBcode, *definitio
 }
 
 // 根据userid返回 未读消息 的数量
-func CountUnreadMessageByUid(db *gorm.DB, uId uint64) (definition.DBcode, int64) {
+func CountUnreadMessageByUid(db *gorm.DB, uId uint64) (definition.DBcode, uint64, uint64, uint64, uint64) {
 	getDB(&db)
-	var n int64
+	var messages []definition.UnreadMessage
+	var unreadCommentNumber uint64
+	var unreadReplyNumber uint64
+	var unreadChatNumber uint64
+	var unreadAtNumber uint64
+
 	err := db.Model(&definition.UnreadMessage{}).
-		Where("u_id = ?", uId).
-		Count(&n).Error
+		Where("u_id = ? AND is_ignore = ?", uId, false).
+		Find(&messages).Error
 	if err != nil {
 		DBlog.Println("[CountUnreadMessageByUid]:", err)
-		return definition.DB_ERROR, 0 //其他问题
+		return definition.DB_ERROR, 0, 0, 0, 0 //其他问题
 	}
-	return definition.DB_SUCCESS, n
+
+	for _, message := range messages {
+		switch message.MessageType {
+		case definition.MessageTypeComment:
+			unreadCommentNumber++
+		case definition.MessageTypeReply:
+			unreadReplyNumber++
+		case definition.MessageTypeChat:
+			unreadChatNumber++
+		case definition.MessageTypeAt:
+			unreadAtNumber++
+		}
+	}
+	return definition.DB_SUCCESS, unreadCommentNumber, unreadReplyNumber, unreadChatNumber, unreadAtNumber
+
 }
 
 //根据commendid返回reply
@@ -439,7 +458,7 @@ func GetAllReplyMessage(targetUid uint64) (definition.DBcode, []definition.Reply
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var replies []definition.Reply
 		if err := gormDB.Model(&definition.Reply{}).Where(" target_uid = ? ", targetUid).
-			Where(" u_id != ?",targetUid).
+			Where(" u_id != ?", targetUid).
 			Find(&replies).Error; err != nil {
 			DBlog.Println("[GetAllReplyMessage] err: ", err)
 			return definition.DB_ERROR, nil
@@ -475,7 +494,7 @@ func GetAllAtMessage(uId uint64) (definition.DBcode, []definition.AtMessage) {
 			return definition.DB_ERROR, nil
 		}
 
-		return definition.DB_SUCCESS, utils.PackageAtMessage(ats,unreadMessages)
+		return definition.DB_SUCCESS, utils.PackageAtMessage(ats, unreadMessages)
 	})
 	if code == definition.DB_SUCCESS {
 		return code, content.([]definition.AtMessage)
@@ -516,10 +535,10 @@ func GetAllChatInfosByUid(uId uint64) (definition.DBcode, map[uint64][]definitio
 }
 
 //根据用户u_id 和 对象uid 获取属于私聊chat 标记未读和已读
-func GetChatInfosByUid(myUId uint64 , uId uint64) (definition.DBcode, []definition.ChatInfo) {
+func GetChatInfosByUid(myUId uint64, uId uint64) (definition.DBcode, []definition.ChatInfo) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var chats []definition.Chat
-		err := tx.Model(&definition.Chat{}).Where("sender_id = ? OR addressee_id = ?", myUId, uId).
+		err := tx.Model(&definition.Chat{}).Where("sender_id = ? AND addressee_id = ?", myUId, uId).
 			Or("sender_id = ? AND addressee_id = ?", uId, myUId).
 			Find(&chats).Error
 		if err == gorm.ErrRecordNotFound { //没有私聊
@@ -539,7 +558,7 @@ func GetChatInfosByUid(myUId uint64 , uId uint64) (definition.DBcode, []definiti
 			return definition.DB_ERROR, nil
 		}
 
-		return definition.DB_EXIST, utils.PackageChatInfo(myUId,uId, chats, unreadMessage)
+		return definition.DB_EXIST, utils.PackageChatInfo(myUId, uId, chats, unreadMessage)
 	})
 	if code == definition.DB_EXIST {
 		return code, content.([]definition.ChatInfo)

@@ -5,6 +5,7 @@ import (
 	"code/Hahachitchat/definition"
 	"code/Hahachitchat/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"net/http"
 	"path"
 	"strconv"
@@ -536,7 +537,7 @@ func Login(c *gin.Context) {
 			//设置cookie与session
 			session := utils.CreateSession(suser.UId) //先初始化sesion
 			c.SetCookie("randid", session.Randid, session.Expire,
-				"/", "", false, true)                        // 把cookie写入响应头 设置cookie
+				"/", "", false, true) // 把cookie写入响应头 设置cookie
 			rcode := dataLayer.Redis_CreateSession(*session) //把session存入Redis
 			if rcode != definition.DB_SUCCESS {              //设置session失败
 				c.JSON(http.StatusOK, definition.LoginResponse{
@@ -619,7 +620,7 @@ func SignOut(c *gin.Context) {
 //	}
 //}
 
-func CreatePostV2(c *gin.Context) {
+func CreatePost(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uId, ok := userId.(uint64)
 	if !exists || !ok {
@@ -706,7 +707,7 @@ func CreatePostV2(c *gin.Context) {
 //	}
 //}
 
-func CreateCommentV2(c *gin.Context) {
+func CreateComment(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uId, ok := userId.(uint64)
 	if !exists || !ok {
@@ -1512,20 +1513,20 @@ func GetChatByUserId(c *gin.Context) {
 		return
 	}
 
-	uIdStr:=c.Param("u_id")
-	uId,err:=strconv.ParseUint(uIdStr,10,64)
-	if err!=nil{
+	uIdStr := c.Param("u_id")
+	uId, err := strconv.ParseUint(uIdStr, 10, 64)
+	if err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
 
-	code, chatInfo := dataLayer.GetChatInfosByUid(myUid,uId)
+	code, chatInfo := dataLayer.GetChatInfosByUid(myUid, uId)
 	switch code {
 	case definition.DB_EXIST:
 		c.JSON(http.StatusOK, definition.GetChatInfoResponse{
 			State:        definition.Success,
 			StateMessage: "查询聊天记录成功",
-			ChatInfo:    chatInfo,
+			ChatInfo:     chatInfo,
 		})
 	case definition.DB_NOEXIST:
 		c.JSON(http.StatusOK, definition.GetChatInfoResponse{
@@ -1547,14 +1548,18 @@ func GetUserState(c *gin.Context) {
 		return
 	}
 
-	code, unreadMessagesNumber := dataLayer.CountUnreadMessageByUid(nil, myUid)
+	code, unreadCommentNumber, unreadReplyNumber, unreadChatNumber, unreadAtNumber := dataLayer.CountUnreadMessageByUid(nil, myUid)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.GetUserStateResponse{
 			State:               definition.Success,
 			StateMessage:        "查询用户状态成功",
 			MyUserId:            myUid,
-			UnreadMessageNumber: unreadMessagesNumber,
+			UnreadMessageNumber: unreadCommentNumber + unreadReplyNumber + unreadChatNumber + unreadAtNumber,
+			UnreadCommentNumber: unreadCommentNumber,
+			UnreadReplyNumber:   unreadReplyNumber,
+			UnreadChatNumber:    unreadChatNumber,
+			UnreadAtNumber:      unreadAtNumber,
 		})
 	case definition.DB_ERROR: // 其他问题
 		SetDBErrorResponse(c)
@@ -1647,7 +1652,7 @@ func IgnoreMessages(c *gin.Context) {
 		return
 	}
 
-	code := dataLayer.UpdateMessageIsIgnore(myUid, req.MessageType,req.MessageIds)
+	code := dataLayer.UpdateMessageIsIgnore(myUid, req.MessageType, req.MessageIds)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.IgnoreMessagesResponse{
@@ -1659,4 +1664,26 @@ func IgnoreMessages(c *gin.Context) {
 	default:
 		SetServerErrorResponse(c)
 	}
+}
+
+func WebSocketConnect(c *gin.Context) {
+	myUserId, exists := c.Get("u_id")
+	myUid, ok := myUserId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	upGrader := websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		dataLayer.Serverlog.Println("[WebSocketConnect] err: ", err)
+		return
+	}
+
+	dataLayer.RegisterNotificationHub(myUid, ws)
 }
