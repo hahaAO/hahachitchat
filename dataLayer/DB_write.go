@@ -566,7 +566,7 @@ func UpdatePrivacySettingByUid(uId uint64, PostIsPrivate *bool, CommentAndReplyI
 
 		user.PrivacySetting = utils.GetNewPrivacySetting(user.PrivacySetting, PostIsPrivate, CommentAndReplyIsPrivate, SavedPostIsPrivate, SubscribedIsPrivate)
 
-		err := tx.Model(&definition.User{}).Save(&user).Error
+		err := tx.Save(&user).Error
 		if err != nil {
 			DBlog.Println("[UpdatePrivacySettingByUid] err: ", err)
 			return definition.DB_ERROR, nil

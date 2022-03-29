@@ -6,7 +6,30 @@ import (
 	"code/Hahachitchat/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
+
+func ForbiddenMiddleWare() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, ok := definition.ForbiddenConfig.ForbiddenIP[c.ClientIP()]
+		if ok {
+			SetForbiddenResponse(c)
+			c.Abort()
+			return
+		}
+		if uidData,exist :=c.Get("u_id");exist{
+			if uId,ok:=uidData.(uint64);ok{
+				_, ok = definition.ForbiddenConfig.ForbiddenUser[strconv.FormatUint(uId,10) ]
+				if ok{
+					SetForbiddenResponse(c)
+					c.Abort()
+					return
+				}
+			}
+		}
+		c.Next()
+	}
+}
 
 func HearsetMiddleWare() gin.HandlerFunc { // 响应头设置，解决跨域问题
 	return func(c *gin.Context) {
@@ -60,7 +83,7 @@ func SetSessionMiddleWare() gin.HandlerFunc { // 用户有登录态则写入，�
 			return
 		}
 		// 有登录态
-		c.Set("u_id", uId) // 写入 u_id 后续可以获取
+		c.Set("u_id", *uId) // 写入 u_id 后续可以获取
 		c.Next()
 	}
 }

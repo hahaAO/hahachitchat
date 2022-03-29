@@ -38,3 +38,10 @@ type Post_idandhot struct {
 	Post_id  uint64 `json:"post_id"`
 	Post_hot int64  `json:"post_hot"`
 }
+
+type Forbidden struct {
+	ForbiddenIP map[string]struct{} `json:"forbidden_ip"`
+	ForbiddenUser map[string]struct{} `json:"forbidden_user"`
+}
+
+var ForbiddenConfig Forbidden

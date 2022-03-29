@@ -3,6 +3,7 @@ package ServiceV2
 import (
 	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/definition"
+	"code/Hahachitchat/utils"
 	"github.com/gin-gonic/gin"
 	"os"
 )
@@ -26,13 +27,15 @@ func ServiceInit() {
 	go dataLayer.DeleteCommentsConsumer()                //启动一个协程去订阅id删除评论
 
 	go dataLayer.RunNotificationHub() // 在线消息通知中心
+
+	go utils.LoadForbiddenConfig() // 加载封禁名单
 }
 
 func StartService(port string) {
 	ServiceInit()
 
 	r := gin.Default()
-	r.Use(HearsetMiddleWare())
+	r.Use(HearsetMiddleWare(), ForbiddenMiddleWare())
 
 	r.GET("/", DefaultTest)
 	r.GET("/allpostid", AllPostId)
@@ -75,8 +78,8 @@ func StartService(port string) {
 	needSessionRoute.POST("/cancel-save", CancelSavePost)
 	needSessionRoute.POST("/subscribe", Subscribe)
 	needSessionRoute.POST("/cancel-subscribe", CancelSubscribe)
-	needSessionRoute.GET("/PrivacySetting", GetPrivacySetting)
-	needSessionRoute.POST("/PrivacySetting", PostPrivacySetting)
+	needSessionRoute.GET("/privacy-setting", GetPrivacySetting)
+	needSessionRoute.POST("/privacy-setting", PostPrivacySetting)
 
 	MessageRoute := needSessionRoute.Group("/message")
 	MessageRoute.GET("/comment", GetAllCommentMessage)

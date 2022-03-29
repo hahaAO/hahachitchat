@@ -7,6 +7,12 @@ import (
 )
 
 // 放一些通用的返回
+func SetForbiddenResponse(c *gin.Context) {
+	c.JSON(http.StatusForbidden, definition.CommonResponse{
+		State:        definition.BadRequest,
+		StateMessage: "服务器出错",
+	})
+}
 
 func SetUnauthorizedResponse(c *gin.Context) {
 	c.JSON(http.StatusUnauthorized, definition.CommonResponse{
