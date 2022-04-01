@@ -3,7 +3,6 @@ package ServiceV2
 import (
 	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/definition"
-	"code/Hahachitchat/utils"
 	"github.com/gin-gonic/gin"
 	"os"
 )
@@ -28,7 +27,7 @@ func ServiceInit() {
 
 	go dataLayer.RunNotificationHub() // 在线消息通知中心
 
-	go utils.LoadForbiddenConfig() // 加载封禁名单
+	go dataLayer.LoadForbiddenConfig() // 加载封禁名单
 }
 
 func StartService(port string) {

@@ -17,10 +17,10 @@ func ForbiddenMiddleWare() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		if uidData,exist :=c.Get("u_id");exist{
-			if uId,ok:=uidData.(uint64);ok{
-				_, ok = definition.ForbiddenConfig.ForbiddenUser[strconv.FormatUint(uId,10) ]
-				if ok{
+		if uidData, exist := c.Get("u_id"); exist {
+			if uId, ok := uidData.(uint64); ok {
+				_, ok = definition.ForbiddenConfig.ForbiddenUser[strconv.FormatUint(uId, 10)]
+				if ok {
 					SetForbiddenResponse(c)
 					c.Abort()
 					return
