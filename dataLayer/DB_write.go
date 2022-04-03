@@ -577,3 +577,69 @@ func UpdatePrivacySettingByUid(uId uint64, PostIsPrivate *bool, CommentAndReplyI
 	})
 	return code
 }
+
+func UpdatePostVote(uId uint64, postId uint64, vote bool) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var postVote definition.PostVote
+		err := tx.Model(&definition.PostVote{}).Where(" post_id = ? AND u_id = ? ", postId, uId).First(&postVote).Error
+		if err == gorm.ErrRecordNotFound {
+			err = tx.Model(&definition.PostVote{}).Create(&definition.PostVote{
+				PostId: postId,
+				UId:    uId,
+				Vote:   vote,
+			}).Error
+			if err != nil {
+				DBlog.Println("[UpdatePostVote] err: ", err)
+				return definition.DB_ERROR, nil
+			} else {
+				return definition.DB_SUCCESS, nil
+			}
+		} else if err != nil {
+			DBlog.Println("[UpdatePostVote] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+
+		postVote.Vote=vote
+		err=tx.Save(&postVote).Error
+		if err!=nil{
+			DBlog.Println("[UpdatePostVote] err: ", err)
+			return definition.DB_ERROR, nil
+		}else {
+			return definition.DB_SUCCESS, nil
+		}
+	})
+	return code
+}
+
+func UpdateCommentVote(uId uint64, commentId uint64, vote bool) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		var commentVote definition.CommentVote
+		err := tx.Model(&definition.CommentVote{}).Where(" comment_id = ? AND u_id = ? ", commentId, uId).First(&commentVote).Error
+		if err == gorm.ErrRecordNotFound {
+			err = tx.Model(&definition.CommentVote{}).Create(&definition.CommentVote{
+				CommentId: commentId,
+				UId:    uId,
+				Vote:   vote,
+			}).Error
+			if err != nil {
+				DBlog.Println("[UpdateCommentVote] err: ", err)
+				return definition.DB_ERROR, nil
+			} else {
+				return definition.DB_SUCCESS, nil
+			}
+		} else if err != nil {
+			DBlog.Println("[UpdateCommentVote] err: ", err)
+			return definition.DB_ERROR, nil
+		}
+
+		commentVote.Vote=vote
+		err=tx.Save(&commentVote).Error
+		if err!=nil{
+			DBlog.Println("[UpdateCommentVote] err: ", err)
+			return definition.DB_ERROR, nil
+		}else {
+			return definition.DB_SUCCESS, nil
+		}
+	})
+	return code
+}

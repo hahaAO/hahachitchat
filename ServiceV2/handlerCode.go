@@ -1690,3 +1690,119 @@ func WebSocketConnect(c *gin.Context) {
 
 	dataLayer.RegisterNotificationHub(myUid, ws)
 }
+
+func GetPostVote(c *gin.Context) {
+	postIdStr := c.Param("post_id")
+	postId, err := strconv.ParseUint(postIdStr, 10, 64)
+	if err != nil { //参数不能转为int
+		SetParamErrorResponse(c)
+		return
+	}
+	code, postVotes := dataLayer.SelectPostVoteById(nil, postId)
+	switch code {
+	case definition.DB_SUCCESS:
+		res := make(map[uint64]bool, len(postVotes))
+		for _, vote := range postVotes {
+			res[vote.UId] = vote.Vote
+		}
+		c.JSON(http.StatusOK, definition.GetPostVoteResponse{
+			State:        definition.Success,
+			StateMessage: "查询投票情况成功",
+			VoteMessage:  res,
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func VotePost(c *gin.Context) {
+	userId, exists := c.Get("u_id")
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	var req definition.VotePostRequest
+	if err := c.ShouldBindJSON(req); err != nil {
+		SetParamErrorResponse(c)
+		return
+	} else if req.Vote == nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code:= dataLayer.UpdatePostVote(uId, req.PostId,*req.Vote)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.VotePostResponse{
+			State:        definition.Success,
+			StateMessage: "更新投票情况成功",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+
+}
+
+func GetCommentVote(c *gin.Context) {
+	commentIdStr := c.Param("comment_id")
+	commentId, err := strconv.ParseUint(commentIdStr, 10, 64)
+	if err != nil { //参数不能转为int
+		SetParamErrorResponse(c)
+		return
+	}
+	code, commmentVotes := dataLayer.SelectCommentVoteById(nil, commentId)
+	switch code {
+	case definition.DB_SUCCESS:
+		res := make(map[uint64]bool, len(commmentVotes))
+		for _, vote := range commmentVotes {
+			res[vote.UId] = vote.Vote
+		}
+		c.JSON(http.StatusOK, definition.GetCommentVoteResponse{
+			State:        definition.Success,
+			StateMessage: "查询投票情况成功",
+			VoteMessage:  res,
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func VoteComment(c *gin.Context) {
+	userId, exists := c.Get("u_id")
+	uId, ok := userId.(uint64)
+	if !exists || !ok {
+		SetGetUidErrorResponse(c)
+		return
+	}
+
+	var req definition.VoteCommentRequest
+	if err := c.ShouldBindJSON(req); err != nil {
+		SetParamErrorResponse(c)
+		return
+	} else if req.Vote == nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code:= dataLayer.UpdateCommentVote(uId, req.CommentId,*req.Vote)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.VoteCommentResponse{
+			State:        definition.Success,
+			StateMessage: "更新投票情况成功",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+
+}

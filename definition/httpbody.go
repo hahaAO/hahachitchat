@@ -415,15 +415,45 @@ type AllUserResponse struct {
 }
 
 type GetBanUserIdsResponse struct {
-	State        int    `json:"state"`
-	StateMessage string `json:"state_message"`
+	State        int      `json:"state"`
+	StateMessage string   `json:"state_message"`
 	BanUsers     []uint64 `json:"ban_user_ids"`
 }
 
 type SetBanUserIdsRequest struct {
-	BanUsers     []uint64 `json:"ban_user_ids" binding:"required"`
+	BanUsers []uint64 `json:"ban_user_ids" binding:"required"`
 }
 type SetBanUserIdsResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
+type GetPostVoteResponse struct {
+	State        int             `json:"state"`
+	StateMessage string          `json:"state_message"`
+	VoteMessage  map[uint64]bool `json:"vote_message"` // map的键为uid 值为true则点赞 false为踩
+}
+
+type GetCommentVoteResponse struct {
+	State        int             `json:"state"`
+	StateMessage string          `json:"state_message"`
+	VoteMessage  map[uint64]bool `json:"vote_message"` // map的键为uid 值为true则点赞 false为踩
+}
+
+type VotePostRequest struct {
+	PostId uint64 `json:"post_id" binding:"required"`
+	Vote   *bool  `json:"vote" binding:"required"`
+}
+type VotePostResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
+type VoteCommentRequest struct {
+	CommentId uint64 `json:"comment_id" binding:"required"`
+	Vote      *bool  `json:"vote" binding:"required"`
+}
+type VoteCommentResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 }

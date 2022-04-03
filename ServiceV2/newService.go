@@ -95,10 +95,18 @@ func StartService(port string) {
 	routeV2.GET("/comment/:comment_id", GetCommentByIdV2)
 	routeV2.POST("/posts", BatchQueryPost)
 
+	// 点赞功能
+	voteRoute:= r.Group("/vote")
+	voteRoute.GET("/post/:post_id",GetPostVote)
+	voteRoute.GET("/comment/:comment_id",GetCommentVote)
+	needSessionRoute.POST("/post/",VotePost)
+	needSessionRoute.POST("/comment/",VoteComment)
+
+	// ------------管理页面--------------
 	adminRoute := r.Group("/admin")
 	adminRoute.GET("/users",GetAllUser)
 	adminRoute.GET("/ban-users",GetBanUser)
-	adminRoute.POST("/set-ban-user",SetBanUser)
+	adminRoute.POST("/set-ban-users",SetBanUser)
 
 	r.Run(port)
 }

@@ -114,3 +114,25 @@ type At struct {
 func (At) TableName() string {
 	return "at"
 }
+
+type PostVote struct {
+	ID     uint64 `gorm:"column:id; primaryKey"`                                 //唯一主键
+	PostId uint64 `gorm:"column:post_id; uniqueIndex:idx_pid_and_uid; not null"` //帖子id,
+	UId    uint64 `gorm:"column:u_id; uniqueIndex:idx_pid_and_uid; not null"`    //用户id,非空
+	Vote   bool   `gorm:"column:vote"`                                           // 1赞同 0反对
+}
+
+func (PostVote) TableName() string {
+	return "post_vote"
+}
+
+type CommentVote struct {
+	ID        uint64 `gorm:"column:id; primaryKey"`                                    //唯一主键
+	CommentId uint64 `gorm:"column:comment_id; uniqueIndex:idx_cid_and_uid; not null"` //帖子id,唯一主键
+	UId       uint64 `gorm:"column:u_id; uniqueIndex:idx_cid_and_uid; not null"`       //用户id,非空
+	Vote      bool   `gorm:"column:vote"`                                              // 1赞同 0反对
+}
+
+func (CommentVote) TableName() string {
+	return "comment_vote"
+}

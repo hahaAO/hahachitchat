@@ -33,7 +33,8 @@ func DB_conn() {
 
 	// 同步数据库模式
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
-		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{})
+		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{},
+		&definition.PostVote{}, &definition.CommentVote{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
@@ -72,16 +73,17 @@ func runTX(a func(tx *gorm.DB) (definition.DBcode, interface{})) (definition.DBc
 	return code, content
 }
 
-func AllUserMessage(db *gorm.DB) (definition.DBcode,[]definition.User){
+func AllUserMessage(db *gorm.DB) (definition.DBcode, []definition.User) {
 	getDB(&db)
 	var users []definition.User
-	err:=db.Model(&definition.User{}).Find(&users).Error;if err==nil{
+	err := db.Model(&definition.User{}).Find(&users).Error
+	if err != nil {
 		return definition.DB_ERROR, nil //其他问题
 	}
-	if len(users)<=0{
+	if len(users) <= 0 {
 		return definition.DB_NOEXIST, nil //其他问题
 	}
-	return definition.DB_EXIST,users
+	return definition.DB_EXIST, users
 
 }
 
@@ -578,4 +580,24 @@ func GetChatInfosByUid(myUId uint64, uId uint64) (definition.DBcode, []definitio
 	} else {
 		return code, nil
 	}
+}
+
+func SelectPostVoteById(db *gorm.DB, postId uint64) (definition.DBcode, []definition.PostVote) {
+	getDB(&db)
+	var postVotes []definition.PostVote
+	if err := db.Model(&definition.PostVote{}).Where(" post_id = ? ", postId).Find(&postVotes).Error; err != nil {
+		DBlog.Println("[SelectPostVoteById] err: ", err)
+		return definition.DB_ERROR, nil
+	}
+	return definition.DB_SUCCESS, postVotes
+}
+
+func SelectCommentVoteById(db *gorm.DB, commmentId uint64) (definition.DBcode, []definition.CommentVote) {
+	getDB(&db)
+	var commentVotes []definition.CommentVote
+	if err := db.Model(&definition.CommentVote{}).Where(" comment_id = ? ", commmentId).Find(&commentVotes).Error; err != nil {
+		DBlog.Println("[SelectCommentVoteById] err: ", err)
+		return definition.DB_ERROR, nil
+	}
+	return definition.DB_SUCCESS, commentVotes
 }
