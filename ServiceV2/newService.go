@@ -95,5 +95,10 @@ func StartService(port string) {
 	routeV2.GET("/comment/:comment_id", GetCommentByIdV2)
 	routeV2.POST("/posts", BatchQueryPost)
 
+	adminRoute := r.Group("/admin")
+	adminRoute.GET("/users",GetAllUser)
+	adminRoute.GET("/ban-users",GetBanUser)
+	adminRoute.POST("/set-ban-user",SetBanUser)
+
 	r.Run(port)
 }

@@ -72,6 +72,19 @@ func runTX(a func(tx *gorm.DB) (definition.DBcode, interface{})) (definition.DBc
 	return code, content
 }
 
+func AllUserMessage(db *gorm.DB) (definition.DBcode,[]definition.User){
+	getDB(&db)
+	var users []definition.User
+	err:=db.Model(&definition.User{}).Find(&users).Error;if err==nil{
+		return definition.DB_ERROR, nil //其他问题
+	}
+	if len(users)<=0{
+		return definition.DB_NOEXIST, nil //其他问题
+	}
+	return definition.DB_EXIST,users
+
+}
+
 //根据uid返回user
 func SelectUserById(db *gorm.DB, a uint64) (definition.DBcode, *definition.User) {
 	getDB(&db)

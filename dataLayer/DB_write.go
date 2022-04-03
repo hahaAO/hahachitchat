@@ -450,6 +450,7 @@ func DeleteCommentsByPostId(postId uint64) definition.DBcode {
 		return definition.DB_SUCCESS, nil
 	})
 	return code
+
 }
 
 //根据reply_id 删除回复 通过通道删除 message、at

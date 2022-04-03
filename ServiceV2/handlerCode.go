@@ -12,7 +12,10 @@ import (
 )
 
 func DefaultTest(c *gin.Context) {
-	c.String(http.StatusOK, "nihao nihao!")
+	c.JSON(http.StatusOK, definition.CommonResponse{
+		State:        definition.Success,
+		StateMessage: "来吧展示",
+	})
 }
 
 func AllPostId(c *gin.Context) {

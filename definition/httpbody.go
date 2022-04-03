@@ -407,3 +407,23 @@ type BatchQueryPostResponse struct {
 	StateMessage string `json:"state_message"`
 	Posts        []Post `json:"posts"`
 }
+
+type AllUserResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+	Users        []User `json:"users"`
+}
+
+type GetBanUserIdsResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+	BanUsers     []uint64 `json:"ban_user_ids"`
+}
+
+type SetBanUserIdsRequest struct {
+	BanUsers     []uint64 `json:"ban_user_ids" binding:"required"`
+}
+type SetBanUserIdsResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
