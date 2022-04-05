@@ -16,7 +16,8 @@ type User struct {
 
 	//PrivacySetting 00000000 0位允许 1为禁止 用位运算的&判断
 	//PrivacySetting 128 64 32 16 8关注的人 4收藏帖子 2评论和回复记录 1发帖记录
-	PrivacySetting byte `gorm:"column:privacy_setting; default:0"` //用户隐私设置，为8位byte
+	PrivacySetting     byte   `gorm:"column:privacy_setting; default:0"`            //用户隐私设置，为8位byte
+	DisableSendMsgTime string `gorm:"column:disable_send_msg_time; default:''"` // 用户禁言到什么时候
 }
 
 func (User) TableName() string {
@@ -119,7 +120,7 @@ type PostVote struct {
 	ID     uint64 `gorm:"column:id; primaryKey"`                                 //唯一主键
 	PostId uint64 `gorm:"column:post_id; uniqueIndex:idx_pid_and_uid; not null"` //帖子id,
 	UId    uint64 `gorm:"column:u_id; uniqueIndex:idx_pid_and_uid; not null"`    //用户id,非空
-	Vote   bool   `gorm:"column:vote"`                                           // 1赞同 0反对
+	Vote   int    `gorm:"column:vote"`                                           // 1赞同 -1反对 0无感
 }
 
 func (PostVote) TableName() string {
@@ -130,7 +131,7 @@ type CommentVote struct {
 	ID        uint64 `gorm:"column:id; primaryKey"`                                    //唯一主键
 	CommentId uint64 `gorm:"column:comment_id; uniqueIndex:idx_cid_and_uid; not null"` //帖子id,唯一主键
 	UId       uint64 `gorm:"column:u_id; uniqueIndex:idx_cid_and_uid; not null"`       //用户id,非空
-	Vote      bool   `gorm:"column:vote"`                                              // 1赞同 0反对
+	Vote      int    `gorm:"column:vote"`                                              // 1赞同 -1反对 0无感
 }
 
 func (CommentVote) TableName() string {

@@ -80,7 +80,7 @@ func Redis_SelectCommentByid(comment_id uint64) (definition.DBcode, definition.C
 	comment.UId, _ = strconv.ParseUint(string(args[2].([]byte)), 10, 64)
 	comment.CommentTxt = string(args[3].([]byte))
 	commentunix, _ := strconv.ParseInt(string(args[4].([]byte)), 10, 64)
-	comment.CommentTime = time.Unix(0, commentunix) //精确到纳秒的时间戳
+	comment.CommentTime = time.Unix(commentunix, 0) //精确到纳秒的时间戳
 	comment.ImgId = string(args[5].([]byte))
 	comment.SomeoneBeAt = string(args[6].([]byte))
 	return definition.DB_EXIST, comment //查到有此id 成功

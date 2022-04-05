@@ -3,7 +3,9 @@ package ServiceV2
 import (
 	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/definition"
+	"github.com/chenjiandongx/ginprom"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"os"
 )
 
@@ -34,6 +36,13 @@ func StartService(port string) {
 	ServiceInit()
 
 	r := gin.Default()
+	// use prometheus metrics exporter middleware.
+	r.Use(ginprom.PromMiddleware(ginprom.NewDefaultOpts()))
+
+	// register the `/metrices` route.
+
+	r.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
+
 	r.Use(HearsetMiddleWare(), ForbiddenMiddleWare())
 
 	r.GET("/", DefaultTest)
@@ -96,17 +105,18 @@ func StartService(port string) {
 	routeV2.POST("/posts", BatchQueryPost)
 
 	// 点赞功能
-	voteRoute:= r.Group("/vote")
-	voteRoute.GET("/post/:post_id",GetPostVote)
-	voteRoute.GET("/comment/:comment_id",GetCommentVote)
-	needSessionRoute.POST("/post/",VotePost)
-	needSessionRoute.POST("/comment/",VoteComment)
+	voteRoute := r.Group("/vote")
+	voteRoute.GET("/post/:post_id", GetPostVote)
+	voteRoute.GET("/comment/:comment_id", GetCommentVote)
+	voteRoute.POST("/post", AuthMiddleWare(), VotePost)
+	voteRoute.POST("/comment", AuthMiddleWare(), VoteComment)
 
 	// ------------管理页面--------------
 	adminRoute := r.Group("/admin")
-	adminRoute.GET("/users",GetAllUser)
-	adminRoute.GET("/ban-users",GetBanUser)
-	adminRoute.POST("/set-ban-users",SetBanUser)
+	adminRoute.GET("/users", GetAllUser)
+	adminRoute.GET("/ban-users", GetBanUser)
+	adminRoute.POST("/set-ban-users", SetBanUser)
+	adminRoute.POST("/silence-user",SilenceUser)
 
 	r.Run(port)
 }

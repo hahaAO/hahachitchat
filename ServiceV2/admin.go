@@ -47,7 +47,8 @@ func GetBanUser(c *gin.Context) {
 
 func SetBanUser(c *gin.Context) {
 	var req definition.SetBanUserIdsRequest
-	err := c.ShouldBindJSON(&req);if err != nil {
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
@@ -57,8 +58,8 @@ func SetBanUser(c *gin.Context) {
 		banUser[strconv.FormatUint(user, 10)] = struct{}{}
 	}
 	var newForbiddenConfig definition.Forbidden
-	newForbiddenConfig.ForbiddenIP=definition.ForbiddenConfig.ForbiddenIP
-	newForbiddenConfig.ForbiddenUser=banUser
+	newForbiddenConfig.ForbiddenIP = definition.ForbiddenConfig.ForbiddenIP
+	newForbiddenConfig.ForbiddenUser = banUser
 
 	jsonFile, err := os.OpenFile("./definition/forbidden.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
 	defer jsonFile.Close()
@@ -68,11 +69,11 @@ func SetBanUser(c *gin.Context) {
 		return
 	}
 
-	if byte ,err := json.Marshal(&newForbiddenConfig); err != nil {
+	if byte, err := json.Marshal(&newForbiddenConfig); err != nil {
 		dataLayer.Serverlog.Fatalln("jsonFile Unmarshal err: ", err)
 		SetServerErrorResponse(c)
-	}else {
-		if _,err:=jsonFile.Write(byte);err!=nil{
+	} else {
+		if _, err := jsonFile.Write(byte); err != nil {
 			dataLayer.Serverlog.Fatalln("jsonFile.Write(byte) err: ", err)
 			SetServerErrorResponse(c)
 			return
@@ -81,5 +82,26 @@ func SetBanUser(c *gin.Context) {
 			State:        definition.Success,
 			StateMessage: "设置封禁用户信息",
 		})
+	}
+}
+
+func SilenceUser(c *gin.Context) {
+	var req definition.SilenceUserRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+	code := dataLayer.UpdateSilenceUser(nil, req.UserId, req.DisableSendMsgTime)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.SilenceUserResponse{
+			State:        definition.Success,
+			StateMessage: "禁言用户成功",
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
 	}
 }

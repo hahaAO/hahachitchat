@@ -322,6 +322,7 @@ type GetUserStateResponse struct {
 	State               int    `json:"state"`
 	StateMessage        string `json:"state_message"`
 	MyUserId            uint64 `json:"my_user_id"`
+	DisableSendMsgTime  string `json:"disable_send_msg_time"`
 	UnreadMessageNumber uint64 `json:"unread_message_number"`
 	UnreadCommentNumber uint64 `json:"unread_comment_number"`
 	UnreadReplyNumber   uint64 `json:"unread_reply_number"`
@@ -442,7 +443,7 @@ type GetCommentVoteResponse struct {
 
 type VotePostRequest struct {
 	PostId uint64 `json:"post_id" binding:"required"`
-	Vote   *bool  `json:"vote" binding:"required"`
+	Vote   *int   `json:"vote" binding:"required"`
 }
 type VotePostResponse struct {
 	State        int    `json:"state"`
@@ -451,9 +452,18 @@ type VotePostResponse struct {
 
 type VoteCommentRequest struct {
 	CommentId uint64 `json:"comment_id" binding:"required"`
-	Vote      *bool  `json:"vote" binding:"required"`
+	Vote      *int   `json:"vote" binding:"required"`
 }
 type VoteCommentResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
+type SilenceUserRequest struct {
+	UserId             uint64 `json:"user_id" binding:"required"`
+	DisableSendMsgTime string `json:"disable_send_msg_time" binding:"required"`
+}
+type SilenceUserResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 }

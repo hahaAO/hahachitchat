@@ -1703,7 +1703,11 @@ func GetPostVote(c *gin.Context) {
 	case definition.DB_SUCCESS:
 		res := make(map[uint64]bool, len(postVotes))
 		for _, vote := range postVotes {
-			res[vote.UId] = vote.Vote
+			if vote.Vote > 0 {
+				res[vote.UId] = true
+			} else if vote.Vote < 0 {
+				res[vote.UId] = false
+			}
 		}
 		c.JSON(http.StatusOK, definition.GetPostVoteResponse{
 			State:        definition.Success,
@@ -1726,7 +1730,7 @@ func VotePost(c *gin.Context) {
 	}
 
 	var req definition.VotePostRequest
-	if err := c.ShouldBindJSON(req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	} else if req.Vote == nil {
@@ -1734,7 +1738,7 @@ func VotePost(c *gin.Context) {
 		return
 	}
 
-	code:= dataLayer.UpdatePostVote(uId, req.PostId,*req.Vote)
+	code := dataLayer.UpdatePostVote(uId, req.PostId, *req.Vote)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.VotePostResponse{
@@ -1761,7 +1765,11 @@ func GetCommentVote(c *gin.Context) {
 	case definition.DB_SUCCESS:
 		res := make(map[uint64]bool, len(commmentVotes))
 		for _, vote := range commmentVotes {
-			res[vote.UId] = vote.Vote
+			if vote.Vote > 0 {
+				res[vote.UId] = true
+			} else if vote.Vote < 0 {
+				res[vote.UId] = false
+			}
 		}
 		c.JSON(http.StatusOK, definition.GetCommentVoteResponse{
 			State:        definition.Success,
@@ -1784,7 +1792,7 @@ func VoteComment(c *gin.Context) {
 	}
 
 	var req definition.VoteCommentRequest
-	if err := c.ShouldBindJSON(req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		SetParamErrorResponse(c)
 		return
 	} else if req.Vote == nil {
@@ -1792,7 +1800,7 @@ func VoteComment(c *gin.Context) {
 		return
 	}
 
-	code:= dataLayer.UpdateCommentVote(uId, req.CommentId,*req.Vote)
+	code := dataLayer.UpdateCommentVote(uId, req.CommentId, *req.Vote)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.VoteCommentResponse{
