@@ -903,6 +903,40 @@ func DeletePostById(c *gin.Context) {
 	}
 }
 
+func AdminDeletePostById(c *gin.Context) {
+	var req definition.DeletePostByIdRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+	scode, _ := dataLayer.SelectPostById(nil, req.PostId)
+	switch scode {
+	case definition.DB_EXIST: // 帖子存在
+		dcode := dataLayer.DeletePostOnId(req.PostId)
+		if dcode == definition.DB_SUCCESS {
+			c.JSON(http.StatusOK, definition.DeletePostByIdResponse{
+				State:        definition.Success,
+				StateMessage: "删除成功",
+			})
+		} else {
+			c.JSON(http.StatusOK, definition.DeletePostByIdResponse{
+				State:        definition.ServerError,
+				StateMessage: "删除失败",
+			})
+		}
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.DeletePostByIdResponse{
+			State:        definition.BadRequest,
+			StateMessage: "删除的帖子不存在",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+
+	}
+}
+
 func DeleteCommentById(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uId, ok := userId.(uint64)
@@ -951,6 +985,40 @@ func DeleteCommentById(c *gin.Context) {
 	}
 }
 
+func AdminDeleteCommentById(c *gin.Context) {
+	var req definition.DeleteCommentByIdRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	scode, _ := dataLayer.SelectCommentById(nil, req.CommentId)
+	switch scode {
+	case definition.DB_EXIST: // 评论存在
+		dcode := dataLayer.DeleteCommentById(req.CommentId)
+		if dcode == definition.DB_SUCCESS {
+			c.JSON(http.StatusOK, definition.DeleteCommentByIdResponse{
+				State:        definition.Success,
+				StateMessage: "删除成功",
+			})
+		} else {
+			c.JSON(http.StatusOK, definition.DeleteCommentByIdResponse{
+				State:        definition.ServerError,
+				StateMessage: "删除失败",
+			})
+		}
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.DeleteCommentByIdResponse{
+			State:        definition.BadRequest,
+			StateMessage: "删除的评论不存在",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
 func DeleteReplyById(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uId, ok := userId.(uint64)
@@ -985,6 +1053,40 @@ func DeleteReplyById(c *gin.Context) {
 			c.JSON(http.StatusOK, definition.DeleteReplyByIdResponse{
 				State:        definition.NoPermission,
 				StateMessage: "无权删除",
+			})
+		}
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.DeleteReplyByIdResponse{
+			State:        definition.BadRequest,
+			StateMessage: "删除的回复不存在",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func AdminDeleteReplyById(c *gin.Context) {
+	var req definition.DeleteReplyByIdRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	scode, _ := dataLayer.SelectReplyById(nil, req.ReplyId)
+	switch scode {
+	case definition.DB_EXIST: // 回复存在
+		dcode := dataLayer.DeleteReplyById(nil, req.ReplyId)
+		if dcode == definition.DB_SUCCESS {
+			c.JSON(http.StatusOK, definition.DeleteReplyByIdResponse{
+				State:        definition.Success,
+				StateMessage: "删除成功",
+			})
+		} else {
+			c.JSON(http.StatusOK, definition.DeleteReplyByIdResponse{
+				State:        definition.ServerError,
+				StateMessage: "删除失败",
 			})
 		}
 	case definition.DB_NOEXIST:
