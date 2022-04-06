@@ -4,10 +4,12 @@ import (
 	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/definition"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 func GetAllUser(c *gin.Context) {
@@ -52,7 +54,19 @@ func PostStatisticsPieChart(c *gin.Context) {
 		SetParamErrorResponse(c)
 		return
 	}
-	code, countSmallTalk, countStudyShare, countMarket := dataLayer.PostZoneCount(nil, req.StartTime, req.EndTime)
+
+	startTime := time.UnixMilli(req.StartTimeSTP)
+	endTime := time.UnixMilli(req.EndTimeSTP)
+
+	fmt.Println(startTime)
+	fmt.Println(endTime)
+
+	if startTime.After(endTime) {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code, countSmallTalk, countStudyShare, countMarket := dataLayer.PostZoneCount(nil, startTime, endTime)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.PostStatisticsPieChartResponse{

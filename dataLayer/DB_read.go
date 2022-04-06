@@ -35,7 +35,7 @@ func DB_conn() {
 	// 同步数据库模式
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
 		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{},
-		&definition.PostVote{}, &definition.CommentVote{})
+		&definition.PostVote{}, &definition.CommentVote{},&definition.PostStatistic{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
@@ -606,7 +606,7 @@ func SelectCommentVoteById(db *gorm.DB, commmentId uint64) (definition.DBcode, [
 func PostZoneCount(db *gorm.DB, startTime time.Time, endTime time.Time) (definition.DBcode, uint64, uint64, uint64) {
 	getDB(&db)
 	var postStatistics []definition.PostStatistic
-	err := db.Model(&definition.PostStatistic{}).Where("post_time < ? AND post_time > ?", endTime, startTime).Select("zone").Find(&postStatistics).Error
+	err := db.Model(&definition.PostStatistic{}).Where("post_time BETWEEN ? AND  ?", startTime, endTime).Select("zone").Find(&postStatistics).Error
 	if err != nil {
 		DBlog.Println("[PostZoneCount] err: ", err)
 		return definition.DB_ERROR, 0, 0, 0

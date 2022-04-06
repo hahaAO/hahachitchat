@@ -469,8 +469,8 @@ type SilenceUserResponse struct {
 }
 
 type PostStatisticsPieChartRequest struct {
-	StartTime time.Time `json:"start_time" binding:"required"`
-	EndTime   time.Time `json:"end_time" binding:"required"`
+	StartTimeSTP int64 `json:"start_time" binding:"required"`
+	EndTimeSTP   int64 `json:"end_time" binding:"required"`
 }
 type PostStatisticsPieChartResponse struct {
 	State           int    `json:"state"`
