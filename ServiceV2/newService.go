@@ -120,5 +120,8 @@ func StartService(port string) {
 	adminRoute.POST("/delete-post", AdminDeletePostById)
 	adminRoute.POST("/delete-comment", AdminDeleteCommentById)
 	adminRoute.POST("/delete-reply", AdminDeleteReplyById)
+	postStatisticsRoute := adminRoute.Group("/post-statistics")
+	postStatisticsRoute.GET("/pie-chart", PostStatisticsPieChart)
+
 	r.Run(port)
 }

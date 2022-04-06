@@ -654,6 +654,7 @@ func CreatePost(c *gin.Context) {
 	ccode, cpostId := dataLayer.CreatePostV2(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt)
 	switch ccode {
 	case definition.DB_SUCCESS:
+		go dataLayer.CreatePostStatistic(nil, req.Zone, imgId != "")
 		c.JSON(http.StatusOK, definition.CreatePostV2Response{
 			State:        definition.Success,
 			StateMessage: "创建帖子成功",
@@ -1652,7 +1653,11 @@ func GetUserState(c *gin.Context) {
 		SetGetUidErrorResponse(c)
 		return
 	}
-
+	code1, user := dataLayer.SelectUserById(nil, myUid)
+	if code1 != definition.DB_EXIST {
+		SetServerErrorResponse(c)
+		return
+	}
 	code, unreadCommentNumber, unreadReplyNumber, unreadChatNumber, unreadAtNumber := dataLayer.CountUnreadMessageByUid(nil, myUid)
 	switch code {
 	case definition.DB_SUCCESS:
@@ -1660,6 +1665,7 @@ func GetUserState(c *gin.Context) {
 			State:               definition.Success,
 			StateMessage:        "查询用户状态成功",
 			MyUserId:            myUid,
+			DisableSendMsgTime:  user.DisableSendMsgTime,
 			UnreadMessageNumber: unreadCommentNumber + unreadReplyNumber + unreadChatNumber + unreadAtNumber,
 			UnreadCommentNumber: unreadCommentNumber,
 			UnreadReplyNumber:   unreadReplyNumber,

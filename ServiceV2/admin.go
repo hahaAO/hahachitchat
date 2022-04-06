@@ -45,6 +45,31 @@ func GetBanUser(c *gin.Context) {
 	})
 }
 
+func PostStatisticsPieChart(c *gin.Context) {
+	var req definition.PostStatisticsPieChartRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+	code, countSmallTalk, countStudyShare, countMarket := dataLayer.PostZoneCount(nil, req.StartTime, req.EndTime)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.PostStatisticsPieChartResponse{
+			State:           definition.Success,
+			StateMessage:    "查询分区统计成功",
+			CountSmallTalk:  countSmallTalk,
+			CountStudyShare: countStudyShare,
+			CountMarket:     countMarket,
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+
+	}
+}
+
 func SetBanUser(c *gin.Context) {
 	var req definition.SetBanUserIdsRequest
 	err := c.ShouldBindJSON(&req)

@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"time"
 )
 
 const (
@@ -600,4 +601,29 @@ func SelectCommentVoteById(db *gorm.DB, commmentId uint64) (definition.DBcode, [
 		return definition.DB_ERROR, nil
 	}
 	return definition.DB_SUCCESS, commentVotes
+}
+
+func PostZoneCount(db *gorm.DB, startTime time.Time, endTime time.Time) (definition.DBcode, uint64, uint64, uint64) {
+	getDB(&db)
+	var postStatistics []definition.PostStatistic
+	err := db.Model(&definition.PostStatistic{}).Where("post_time < ? AND post_time > ?", endTime, startTime).Select("zone").Find(&postStatistics).Error
+	if err != nil {
+		DBlog.Println("[PostZoneCount] err: ", err)
+		return definition.DB_ERROR, 0, 0, 0
+	}
+	countSmallTalk := uint64(0)
+	countStudyShare := uint64(0)
+	countMarket := uint64(0)
+	for _, p := range postStatistics {
+		switch p.Zone {
+		case definition.SmallTalk:
+			countSmallTalk++
+		case definition.StudyShare:
+			countStudyShare++
+		case definition.Market:
+			countMarket++
+		}
+	}
+	return definition.DB_SUCCESS, countSmallTalk, countStudyShare, countMarket
+
 }

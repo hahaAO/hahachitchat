@@ -5,18 +5,18 @@ package definition
 import "time"
 
 type User struct {
-	UId        uint64    `gorm:"column:u_id; primaryKey" json:"u_id"`                  //用户id,唯一主键
-	UName      string    `gorm:"column:u_name; uniqueIndex; not null" json:"u_name"`     //用户名,唯一索引
+	UId        uint64    `gorm:"column:u_id; primaryKey" json:"u_id"`                        //用户id,唯一主键
+	UName      string    `gorm:"column:u_name; uniqueIndex; not null" json:"u_name"`         //用户名,唯一索引
 	UPassword  string    `gorm:"column:u_password; not null" json:"u_password"`              //用户密码,非空
-	UTime      time.Time `gorm:"column:u_time; autoCreateTime" json:"u_time"`            //用户注册时间
+	UTime      time.Time `gorm:"column:u_time; autoCreateTime" json:"u_time"`                //用户注册时间
 	UNickname  string    `gorm:"column:u_nickname; uniqueIndex; not null" json:"u_nickname"` //用户称昵,唯一索引，非空
-	ImgId      string    `gorm:"column:img_id; default:defaultAvatar" json:"img_id"`     //图片唯一id用作用户头像
+	ImgId      string    `gorm:"column:img_id; default:defaultAvatar" json:"img_id"`         //图片唯一id用作用户头像
 	SavedPost  string    `gorm:"column:saved_post" json:"saved_post"`                        //用户收藏帖子,数组格式为:"1 2 3"
 	Subscribed string    `gorm:"column:subscribed" json:"subscribed"`                        //用户关注的人,数组格式为:"1 2 3"
 
 	//PrivacySetting 00000000 0位允许 1为禁止 用位运算的&判断
 	//PrivacySetting 128 64 32 16 8关注的人 4收藏帖子 2评论和回复记录 1发帖记录
-	PrivacySetting     byte   `gorm:"column:privacy_setting; default:0" json:"privacy_setting"`        //用户隐私设置，为8位byte
+	PrivacySetting     byte   `gorm:"column:privacy_setting; default:0" json:"privacy_setting"`              //用户隐私设置，为8位byte
 	DisableSendMsgTime string `gorm:"column:disable_send_msg_time; default:''" json:"disable_send_msg_time"` // 用户禁言到什么时候
 }
 
@@ -136,4 +136,15 @@ type CommentVote struct {
 
 func (CommentVote) TableName() string {
 	return "comment_vote"
+}
+
+type PostStatistic struct {
+	ID       uint64    `gorm:"column:id; primaryKey"` //唯一主键
+	Zone     ZoneType  `gorm:"column:zone; index; not null" json:"zone"`
+	PostTime time.Time `gorm:"column:post_time; index; autoCreateTime"`
+	HaveImg  bool      `gorm:"column:have_img;"`
+}
+
+func (PostStatistic) TableName() string {
+	return "post_statistic"
 }

@@ -652,3 +652,16 @@ func UpdateSilenceUser(db *gorm.DB, userId uint64, disableSendMsgTime string) de
 	}
 	return definition.DB_SUCCESS
 }
+
+func CreatePostStatistic(db *gorm.DB, zone definition.ZoneType, haveImg bool) definition.DBcode {
+	getDB(&db)
+	err := db.Model(&definition.PostStatistic{}).Create(&definition.PostStatistic{
+		Zone:    zone,
+		HaveImg: haveImg,
+	}).Error
+	if err != nil {
+		DBlog.Println("[CreatePostStatistic] err: ", err)
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}

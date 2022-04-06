@@ -467,3 +467,15 @@ type SilenceUserResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 }
+
+type PostStatisticsPieChartRequest struct {
+	StartTime time.Time `json:"start_time" binding:"required"`
+	EndTime   time.Time `json:"end_time" binding:"required"`
+}
+type PostStatisticsPieChartResponse struct {
+	State           int    `json:"state"`
+	StateMessage    string `json:"state_message"`
+	CountSmallTalk  uint64 `json:"count_small_talk"`
+	CountStudyShare uint64 `json:"count_study_share"`
+	CountMarket     uint64 `json:"count_market"`
+}
