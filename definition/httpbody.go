@@ -429,6 +429,20 @@ type SetBanUserIdsResponse struct {
 	StateMessage string `json:"state_message"`
 }
 
+type GetBanIPsResponse struct {
+	State        int      `json:"state"`
+	StateMessage string   `json:"state_message"`
+	BanIPList     []uint64  `json:"ban_ip_list"`
+}
+
+type SetBanIPsRequest struct {
+	BanIPList []uint64 `json:"ban_ip_list" binding:"required"`
+}
+type SetBanIPsResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
 type GetPostVoteResponse struct {
 	State        int             `json:"state"`
 	StateMessage string          `json:"state_message"`

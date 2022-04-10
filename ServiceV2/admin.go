@@ -42,8 +42,22 @@ func GetBanUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, definition.GetBanUserIdsResponse{
 		State:        definition.Success,
-		StateMessage: "查询所有用户信息成功",
+		StateMessage: "查询封禁用户信息成功",
 		BanUsers:     res,
+	})
+}
+
+func GetBanIPs(c *gin.Context) {
+	var res []uint64
+	for idStr, _ := range definition.ForbiddenConfig.ForbiddenIP {
+		id, _ := strconv.ParseUint(idStr, 10, 64)
+		res = append(res, id)
+	}
+
+	c.JSON(http.StatusOK, definition.GetBanIPsResponse{
+		State:        definition.Success,
+		StateMessage: "查询封禁IP信息成功",
+		BanIPList:     res,
 	})
 }
 
@@ -167,6 +181,46 @@ func SetBanUser(c *gin.Context) {
 		c.JSON(http.StatusOK, definition.SetBanUserIdsResponse{
 			State:        definition.Success,
 			StateMessage: "设置封禁用户信息",
+		})
+	}
+}
+
+func SetBanIPs(c *gin.Context) {
+	var req definition.SetBanIPsRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	banIPs := make(map[string]struct{})
+	for _, ip := range req.BanIPList {
+		banIPs[strconv.FormatUint(ip, 10)] = struct{}{}
+	}
+	var newForbiddenConfig definition.Forbidden
+	newForbiddenConfig.ForbiddenUser = definition.ForbiddenConfig.ForbiddenUser
+	newForbiddenConfig.ForbiddenIP = banIPs
+
+	jsonFile, err := os.OpenFile("./definition/forbidden.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	defer jsonFile.Close()
+	if err != nil {
+		dataLayer.Serverlog.Fatalln("jsonFile os.Open err: ", err)
+		SetServerErrorResponse(c)
+		return
+	}
+
+	if byte, err := json.Marshal(&newForbiddenConfig); err != nil {
+		dataLayer.Serverlog.Fatalln("jsonFile Unmarshal err: ", err)
+		SetServerErrorResponse(c)
+	} else {
+		if _, err := jsonFile.Write(byte); err != nil {
+			dataLayer.Serverlog.Fatalln("jsonFile.Write(byte) err: ", err)
+			SetServerErrorResponse(c)
+			return
+		}
+		c.JSON(http.StatusOK, definition.SetBanIPsResponse{
+			State:        definition.Success,
+			StateMessage: "设置封禁IP信息成功",
 		})
 	}
 }
