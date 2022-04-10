@@ -35,7 +35,7 @@ func DB_conn() {
 	// 同步数据库模式
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
 		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{},
-		&definition.PostVote{}, &definition.CommentVote{},&definition.PostStatistic{})
+		&definition.PostVote{}, &definition.CommentVote{}, &definition.PostStatistic{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
@@ -625,5 +625,54 @@ func PostZoneCount(db *gorm.DB, startTime time.Time, endTime time.Time) (definit
 		}
 	}
 	return definition.DB_SUCCESS, countSmallTalk, countStudyShare, countMarket
+}
 
+// map[string]uint64 的 string 是 04-11 这样。uint64 是 当日发帖的数量
+func PostEverydayCount(db *gorm.DB) (definition.DBcode, map[string]int64) {
+	getDB(&db)
+	// 从 2022 年 4 月 1 日起，每次查 1 天
+	res := make(map[string]int64)
+	str := "2022-04-01"
+	startTime, _ := time.Parse("2006-01-02", str)
+	endTime := startTime.Add(24 * 60 * 60 * time.Second)
+
+	for {
+		if startTime.After(time.Now()) {
+			break
+		}
+
+		var n int64
+		err := db.Model(&definition.PostStatistic{}).Where("post_time BETWEEN ? AND  ?", startTime, endTime).Count(&n).Error
+		if err != nil {
+			return definition.DB_ERROR, nil
+		} else {
+			res[startTime.Format("2006-01-02")] = n
+		}
+
+		startTime = endTime
+		endTime = endTime.Add(24 * 60 * 60 * time.Second)
+	}
+
+	return definition.DB_SUCCESS, res
+}
+
+// map[int]uint64 的 int 是当天小时。uint64 是 当日发帖的数量
+func PostEveryHourCount(db *gorm.DB, startTime time.Time) (definition.DBcode, map[int]int64) {
+	getDB(&db)
+	res := make(map[int]int64)
+
+	for i := 0; i < 23; i++ {
+		startTime = startTime.Add(time.Duration(i) * time.Hour)
+		endTime := startTime.Add(time.Hour)
+
+		var n int64
+		err := db.Model(&definition.PostStatistic{}).Where("post_time BETWEEN ? AND  ?", startTime, endTime).Count(&n).Error
+		if err != nil {
+			return definition.DB_ERROR, nil
+		} else {
+			res[i] = n
+		}
+	}
+
+	return definition.DB_SUCCESS, res
 }

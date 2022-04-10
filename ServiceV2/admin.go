@@ -84,6 +84,53 @@ func PostStatisticsPieChart(c *gin.Context) {
 	}
 }
 
+func PostStatisticsLineChart(c *gin.Context) {
+	code, res := dataLayer.PostEverydayCount(nil)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.PostStatisticsLineChartResponse{
+			State:          definition.Success,
+			StateMessage:   "查询每日统计成功",
+			PostCountByDay: res,
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+
+	}
+}
+
+func PostStatisticsBarChart(c *gin.Context) {
+	var req definition.PostStatisticsBarChartRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	startTime, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code, res := dataLayer.PostEveryHourCount(nil, startTime)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.PostStatisticsBarChartResponse{
+			State:           definition.Success,
+			StateMessage:    "查询每小时统计成功",
+			PostCountByHour: res,
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+
+	}
+}
+
 func SetBanUser(c *gin.Context) {
 	var req definition.SetBanUserIdsRequest
 	err := c.ShouldBindJSON(&req)

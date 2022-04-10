@@ -479,3 +479,18 @@ type PostStatisticsPieChartResponse struct {
 	CountStudyShare uint64 `json:"count_study_share"`
 	CountMarket     uint64 `json:"count_market"`
 }
+
+type PostStatisticsLineChartResponse struct {
+	State           int    `json:"state"`
+	StateMessage    string `json:"state_message"`
+	PostCountByDay  map[string]int64 `json:"post_count_by_day"` // 每天的发帖量
+}
+
+type PostStatisticsBarChartRequest struct {
+	Date string `json:"date" binding:"required"` // 格式为 2016-01-02
+}
+type PostStatisticsBarChartResponse struct {
+	State           int    `json:"state"`
+	StateMessage    string `json:"state_message"`
+	PostCountByHour  map[int]int64 `json:"post_count_by_day"`// 每小时的发帖量
+}
