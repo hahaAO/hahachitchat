@@ -57,7 +57,7 @@ func GetBanIPs(c *gin.Context) {
 	c.JSON(http.StatusOK, definition.GetBanIPsResponse{
 		State:        definition.Success,
 		StateMessage: "查询封禁IP信息成功",
-		BanIPList:     res,
+		BanIPList:    res,
 	})
 }
 
@@ -238,6 +238,37 @@ func SilenceUser(c *gin.Context) {
 		c.JSON(http.StatusOK, definition.SilenceUserResponse{
 			State:        definition.Success,
 			StateMessage: "禁言用户成功",
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func SetTopPost(c *gin.Context) {
+	var req definition.SetTopPostRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	var code definition.DBcode
+	if req.IsTop == nil {
+		SetParamErrorResponse(c)
+		return
+	} else if *req.IsTop == true {
+		code = dataLayer.CreateTopPost(nil, req.PostId, req.Describe)
+	} else if *req.IsTop == false {
+		code = dataLayer.DeleteTopPost(nil, req.PostId)
+	}
+
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.SetTopPostResponse{
+			State:        definition.Success,
+			StateMessage: "设置精品帖子成功",
 		})
 	case definition.DB_ERROR:
 		SetDBErrorResponse(c)

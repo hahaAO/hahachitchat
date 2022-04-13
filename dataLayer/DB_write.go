@@ -392,19 +392,24 @@ func DeleteAt(db *gorm.DB, uId uint64, place string) definition.DBcode {
 	}
 }
 
-// DeletePostOnId 根据post_id 通过通道删除 at、comment、图片
-func DeletePostOnId(post_id uint64) definition.DBcode {
+// DeletePostOnId 根据post_id 通过通道删除 at、comment、图片  删除精品贴记录
+func DeletePostOnId(postId uint64) definition.DBcode {
 	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		var post definition.Post
-		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", post_id).Delete(&post).Error; err != nil { //有其他问题
+		if err := tx.Clauses(clause.Returning{}).Where("post_id = ?", postId).Delete(&post).Error; err != nil { //有其他问题
 			DBlog.Println("DeletePostOnId err2:", err)
 			return definition.DB_ERROR, nil
 		}
-		DeleteAtProduce(post.SomeoneBeAt, "post", post_id) // 主题中at删除
-		DeleteCommentsProduce(post_id)                     // 帖子下的评论删除
+		if code := DeleteTopPost(tx, postId); code != definition.DB_SUCCESS { // 删除精品贴记录
+			DBlog.Println("DeletePostOnId DeleteTopPost err")
+			return definition.DB_ERROR, nil
+		}
+
+		DeleteAtProduce(post.SomeoneBeAt, "post", postId) // 主题中at删除
+		DeleteCommentsProduce(postId)                     // 帖子下的评论删除
 
 		DeleteImgProduce(post.ImgId) //把要删除的图片id发到消息队列
-		DBlog.Printf("DeletePostOnId:	post_id %d 删除成功\n", post_id)
+		DBlog.Printf("DeletePostOnId:	post_id %d 删除成功\n", postId)
 		return definition.DB_SUCCESS, nil
 	})
 	return code
@@ -661,6 +666,29 @@ func CreatePostStatistic(db *gorm.DB, zone definition.ZoneType, haveImg bool) de
 	}).Error
 	if err != nil {
 		DBlog.Println("[CreatePostStatistic] err: ", err)
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}
+
+func CreateTopPost(db *gorm.DB, postId uint64, dedcribe string) definition.DBcode {
+	getDB(&db)
+	err := db.Model(&definition.TopPost{}).Create(definition.TopPost{
+		PostId:   postId,
+		Describe: dedcribe,
+	}).Error
+	if err != nil {
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}
+
+func DeleteTopPost(db *gorm.DB, postId uint64) definition.DBcode {
+	getDB(&db)
+	var topPost definition.TopPost
+	err := db.Clauses(clause.Returning{}).
+		Where("post_id = ?", postId).Delete(&topPost).Error
+	if err != nil {
 		return definition.DB_ERROR
 	}
 	return definition.DB_SUCCESS

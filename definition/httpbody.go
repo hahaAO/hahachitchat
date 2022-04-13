@@ -432,7 +432,7 @@ type SetBanUserIdsResponse struct {
 type GetBanIPsResponse struct {
 	State        int      `json:"state"`
 	StateMessage string   `json:"state_message"`
-	BanIPList     []uint64  `json:"ban_ip_list"`
+	BanIPList    []uint64 `json:"ban_ip_list"`
 }
 
 type SetBanIPsRequest struct {
@@ -494,17 +494,33 @@ type PostStatisticsPieChartResponse struct {
 	CountMarket     uint64 `json:"count_market"`
 }
 
+type SetTopPostRequest struct {
+	PostId   uint64 `json:"post_id" binding:"required"`
+	Describe string `json:"describe"`
+	IsTop    *bool  `json:"is_top" binding:"required"`
+}
+type SetTopPostResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
+type GetTopPostResponse struct {
+	State        int       `json:"state"`
+	StateMessage string    `json:"state_message"`
+	TopPosts     []TopPost `json:"top_posts"` // 每小时的发帖量
+}
+
 type PostStatisticsLineChartResponse struct {
-	State           int    `json:"state"`
-	StateMessage    string `json:"state_message"`
-	PostCountByDay  map[string]int64 `json:"post_count_by_day"` // 每天的发帖量
+	State          int              `json:"state"`
+	StateMessage   string           `json:"state_message"`
+	PostCountByDay map[string]int64 `json:"post_count_by_day"` // 每天的发帖量
 }
 
 type PostStatisticsBarChartRequest struct {
 	Date string `json:"date" binding:"required"` // 格式为 2016-01-02
 }
 type PostStatisticsBarChartResponse struct {
-	State           int    `json:"state"`
-	StateMessage    string `json:"state_message"`
-	PostCountByHour  map[int]int64 `json:"post_count_by_day"`// 每小时的发帖量
+	State           int           `json:"state"`
+	StateMessage    string        `json:"state_message"`
+	PostCountByHour map[int]int64 `json:"post_count_by_day"` // 每小时的发帖量
 }

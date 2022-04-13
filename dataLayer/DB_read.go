@@ -661,7 +661,7 @@ func PostEveryHourCount(db *gorm.DB, startTime time.Time) (definition.DBcode, ma
 	getDB(&db)
 	res := make(map[int]int64)
 
-	for i := 0; i < 23; i++ {
+	for i := 0; i < 24; i++ {
 		startTime = startTime.Add(time.Duration(i) * time.Hour)
 		endTime := startTime.Add(time.Hour)
 
@@ -675,4 +675,16 @@ func PostEveryHourCount(db *gorm.DB, startTime time.Time) (definition.DBcode, ma
 	}
 
 	return definition.DB_SUCCESS, res
+}
+
+func SelectTopPost(db *gorm.DB) (definition.DBcode, []definition.TopPost) {
+	getDB(&db)
+	var topPosts []definition.TopPost
+	err := db.Model(&definition.TopPost{}).Find(&topPosts).Error
+	if err != nil {
+		DBlog.Println("[SelectTopPost] err: ", err)
+		return definition.DB_ERROR, nil
+	}
+	return definition.DB_SUCCESS, topPosts
+
 }

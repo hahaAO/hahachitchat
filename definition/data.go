@@ -148,3 +148,12 @@ type PostStatistic struct {
 func (PostStatistic) TableName() string {
 	return "post_statistic"
 }
+
+type TopPost struct {
+	PostId   uint64 `gorm:"column:post_id; primaryKey" json:"post_id"` //唯一主键
+	Describe string `gorm:"column:describe" json:"describe"`
+}
+
+func (TopPost) TableName() string {
+	return "top_post"
+}

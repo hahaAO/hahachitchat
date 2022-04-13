@@ -47,6 +47,7 @@ func StartService(port string) {
 
 	r.GET("/", DefaultTest)
 	r.GET("/allpostid", AllPostId)
+	r.GET("/top-post",GetTopPost)
 	r.GET("/allcommentid/:post_id", AllCommentIdByPostId)
 	r.GET("/user/:u_id", GetUserById)
 	r.GET("/post/:post_id", GetPostById)
@@ -122,6 +123,7 @@ func StartService(port string) {
 	adminRoute.POST("/delete-post", AdminDeletePostById)
 	adminRoute.POST("/delete-comment", AdminDeleteCommentById)
 	adminRoute.POST("/delete-reply", AdminDeleteReplyById)
+	adminRoute.POST( "/set-top-post",SetTopPost)
 	postStatisticsRoute := adminRoute.Group("/post-statistics")
 	postStatisticsRoute.GET("/line-chart", PostStatisticsLineChart)
 	postStatisticsRoute.POST("/pie-chart", PostStatisticsPieChart)
