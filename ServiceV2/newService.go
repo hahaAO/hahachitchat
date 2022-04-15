@@ -120,8 +120,7 @@ func StartService(port string) {
 	adminRoute.POST("/cancel-ban-users",CancelBanUser)
 	adminRoute.GET("/ban-ips", GetBanIPs)
 	adminRoute.POST("/add-ban-ips", AddBanIP)
-	adminRoute.POST("/cancel-ban-users", CancelBanIp)
-
+	adminRoute.POST("/cancel-ban-ip", CancelBanIp)
 	adminRoute.POST("/silence-user", SilenceUser)
 	adminRoute.POST("/delete-post", AdminDeletePostById)
 	adminRoute.POST("/delete-comment", AdminDeleteCommentById)
