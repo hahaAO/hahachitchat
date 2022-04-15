@@ -17,9 +17,16 @@ func ForbiddenMiddleWare() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		if uidData, exist := c.Get("u_id"); exist {
-			if uId, ok := uidData.(uint64); ok {
-				_, ok = definition.ForbiddenConfig.ForbiddenUser[strconv.FormatUint(uId, 10)]
+		session := utils.GetSession(c.Request)
+		if session == nil { // cookie 中没有 session
+			return
+		} else {
+			code, uId := dataLayer.Redis_SelectSessionidByRandid(*session)
+			if code != definition.DB_SUCCESS { // session 错误
+				return
+			}
+			if uId != nil {
+				_, ok = definition.ForbiddenConfig.ForbiddenUser[strconv.FormatUint(*uId, 10)]
 				if ok {
 					SetForbiddenResponse(c)
 					c.Abort()

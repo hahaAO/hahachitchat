@@ -401,8 +401,7 @@ func DeletePostOnId(postId uint64) definition.DBcode {
 			return definition.DB_ERROR, nil
 		}
 		if code := DeleteTopPost(tx, postId); code != definition.DB_SUCCESS { // 删除精品贴记录
-			DBlog.Println("DeletePostOnId DeleteTopPost err")
-			return definition.DB_ERROR, nil
+			DBlog.Println("DeletePostOnId DeleteTopPost err") // 值落日志不影响结果
 		}
 
 		DeleteAtProduce(post.SomeoneBeAt, "post", postId) // 主题中at删除
@@ -673,7 +672,7 @@ func CreatePostStatistic(db *gorm.DB, zone definition.ZoneType, haveImg bool) de
 
 func CreateTopPost(db *gorm.DB, postId uint64, dedcribe string) definition.DBcode {
 	getDB(&db)
-	err := db.Model(&definition.TopPost{}).Create(definition.TopPost{
+	err := db.Model(&definition.TopPost{}).Create(&definition.TopPost{
 		PostId:   postId,
 		Describe: dedcribe,
 	}).Error

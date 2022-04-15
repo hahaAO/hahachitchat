@@ -432,7 +432,7 @@ type SetBanUserIdsResponse struct {
 type GetBanIPsResponse struct {
 	State        int      `json:"state"`
 	StateMessage string   `json:"state_message"`
-	BanIPList    []uint64 `json:"ban_ip_list"`
+	BanIPList    []string `json:"ban_ip_list"`
 }
 
 type SetBanIPsRequest struct {

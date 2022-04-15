@@ -48,10 +48,9 @@ func GetBanUser(c *gin.Context) {
 }
 
 func GetBanIPs(c *gin.Context) {
-	var res []uint64
-	for idStr, _ := range definition.ForbiddenConfig.ForbiddenIP {
-		id, _ := strconv.ParseUint(idStr, 10, 64)
-		res = append(res, id)
+	var res []string
+	for ip, _ := range definition.ForbiddenConfig.ForbiddenIP {
+		res = append(res, ip)
 	}
 
 	c.JSON(http.StatusOK, definition.GetBanIPsResponse{

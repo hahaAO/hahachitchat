@@ -35,7 +35,7 @@ func DB_conn() {
 	// 同步数据库模式
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
 		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{},
-		&definition.PostVote{}, &definition.CommentVote{}, &definition.PostStatistic{})
+		&definition.PostVote{}, &definition.CommentVote{}, &definition.PostStatistic{}, &definition.TopPost{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
@@ -280,7 +280,7 @@ func AllSelectPost(db *gorm.DB) (definition.DBcode, []definition.Post) {
 func AllPostByZone(db *gorm.DB, zone definition.ZoneType) (definition.DBcode, []definition.Post) {
 	getDB(&db)
 	var posts []definition.Post
-	err := db.Model(&definition.Post{}).Where("zone =?", zone).Find(&posts).Error
+	err := db.Model(&definition.Post{}).Where("zone =?", zone).Order("post_id desc").Find(&posts).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return definition.DB_NOEXIST, nil
