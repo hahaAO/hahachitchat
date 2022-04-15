@@ -157,3 +157,21 @@ type TopPost struct {
 func (TopPost) TableName() string {
 	return "top_post"
 }
+
+type ForbiddenIp struct {
+	Ip     string `gorm:"column:ip; primaryKey" json:"ip"` //唯一主键
+	Reason string `gorm:"column:reason" json:"reason"`
+}
+
+func (ForbiddenIp) TableName() string {
+	return "forbidden_ip"
+}
+
+type ForbiddenUser struct {
+	UserId uint64 `gorm:"column:user_id; primaryKey" json:"user_id"` //唯一主键
+	Reason string `gorm:"column:reason" json:"reason"`
+}
+
+func (ForbiddenUser) TableName() string {
+	return "forbidden_user"
+}

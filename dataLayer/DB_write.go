@@ -681,12 +681,55 @@ func CreateTopPost(db *gorm.DB, postId uint64, dedcribe string) definition.DBcod
 	}
 	return definition.DB_SUCCESS
 }
-
 func DeleteTopPost(db *gorm.DB, postId uint64) definition.DBcode {
 	getDB(&db)
 	var topPost definition.TopPost
 	err := db.Clauses(clause.Returning{}).
 		Where("post_id = ?", postId).Delete(&topPost).Error
+	if err != nil {
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}
+
+func CreateBanUser(db *gorm.DB, userId uint64, reason string) definition.DBcode {
+	getDB(&db)
+	err := db.Model(&definition.ForbiddenUser{}).Create(&definition.ForbiddenUser{
+		UserId: userId,
+		Reason: reason,
+	}).Error
+	if err != nil {
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}
+func DeleteBanUser(db *gorm.DB, userId uint64) definition.DBcode {
+	getDB(&db)
+	var forbiddenUser definition.ForbiddenUser
+	err := db.Clauses(clause.Returning{}).
+		Where("user_id = ?", userId).Delete(&forbiddenUser).Error
+	if err != nil {
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}
+
+func CreateBanIP(db *gorm.DB, ip string, reason string) definition.DBcode {
+	getDB(&db)
+	err := db.Model(&definition.ForbiddenIp{}).Create(&definition.ForbiddenIp{
+		Ip:     ip,
+		Reason: reason,
+	}).Error
+	if err != nil {
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}
+func DeleteBanIP(db *gorm.DB, ip string) definition.DBcode {
+	getDB(&db)
+	var forbiddenIP definition.ForbiddenIp
+	err := db.Clauses(clause.Returning{}).
+		Where("ip = ?", ip).Delete(&forbiddenIP).Error
 	if err != nil {
 		return definition.DB_ERROR
 	}

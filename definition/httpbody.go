@@ -416,29 +416,47 @@ type AllUserResponse struct {
 }
 
 type GetBanUserIdsResponse struct {
-	State        int      `json:"state"`
-	StateMessage string   `json:"state_message"`
-	BanUsers     []uint64 `json:"ban_user_ids"`
+	State              int             `json:"state"`
+	StateMessage       string          `json:"state_message"`
+	BanUserIdAndReason []ForbiddenUser `json:"ban_user_id_and_reason"`
 }
 
-type SetBanUserIdsRequest struct {
-	BanUsers []uint64 `json:"ban_user_ids" binding:"required"`
+type AddBanUserRequest struct {
+	BanUserId uint64 `json:"ban_user_id" binding:"required"`
+	Reason    string `json:"reason" binding:"required"`
 }
-type SetBanUserIdsResponse struct {
+type AddBanUserResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
+type CancelBanUserRequest struct {
+	BanUserId uint64 `json:"ban_user_id" binding:"required"`
+}
+type CancelBanUserResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 }
 
 type GetBanIPsResponse struct {
-	State        int      `json:"state"`
-	StateMessage string   `json:"state_message"`
-	BanIPList    []string `json:"ban_ip_list"`
+	State          int           `json:"state"`
+	StateMessage   string        `json:"state_message"`
+	BanIPAndReason []ForbiddenIp `json:"ban_ip_and_reason"`
 }
 
-type SetBanIPsRequest struct {
-	BanIPList []uint64 `json:"ban_ip_list" binding:"required"`
+type AddBanIPRequest struct {
+	BanIP  string `json:"ban_ip" binding:"required"`
+	Reason string `json:"reason" binding:"required"`
 }
-type SetBanIPsResponse struct {
+type AddBanIPResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
+type CancelBanIpRequest struct {
+	BanIP string `json:"ban_ip" binding:"required"`
+}
+type CancelBanIpResponse struct {
 	State        int    `json:"state"`
 	StateMessage string `json:"state_message"`
 }

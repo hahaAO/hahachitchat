@@ -3,12 +3,9 @@ package ServiceV2
 import (
 	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/definition"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 )
 
@@ -34,30 +31,35 @@ func GetAllUser(c *gin.Context) {
 }
 
 func GetBanUser(c *gin.Context) {
-	var res []uint64
-	for idStr, _ := range definition.ForbiddenConfig.ForbiddenUser {
-		id, _ := strconv.ParseUint(idStr, 10, 64)
-		res = append(res, id)
+	code, forbiddenUser := dataLayer.SelectForbiddenUser(nil)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.GetBanUserIdsResponse{
+			State:              definition.Success,
+			StateMessage:       "查询封禁用户信息成功",
+			BanUserIdAndReason: forbiddenUser,
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
 	}
-
-	c.JSON(http.StatusOK, definition.GetBanUserIdsResponse{
-		State:        definition.Success,
-		StateMessage: "查询封禁用户信息成功",
-		BanUsers:     res,
-	})
 }
 
 func GetBanIPs(c *gin.Context) {
-	var res []string
-	for ip, _ := range definition.ForbiddenConfig.ForbiddenIP {
-		res = append(res, ip)
+	code, forbiddenIp := dataLayer.SelectForbiddenIp(nil)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.GetBanIPsResponse{
+			State:          definition.Success,
+			StateMessage:   "查询封禁IP信息成功",
+			BanIPAndReason: forbiddenIp,
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
 	}
-
-	c.JSON(http.StatusOK, definition.GetBanIPsResponse{
-		State:        definition.Success,
-		StateMessage: "查询封禁IP信息成功",
-		BanIPList:    res,
-	})
 }
 
 func PostStatisticsPieChart(c *gin.Context) {
@@ -144,83 +146,93 @@ func PostStatisticsBarChart(c *gin.Context) {
 	}
 }
 
-func SetBanUser(c *gin.Context) {
-	var req definition.SetBanUserIdsRequest
+func AddBanUser(c *gin.Context) {
+	var req definition.AddBanUserRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
 
-	banUser := make(map[string]struct{})
-	for _, user := range req.BanUsers {
-		banUser[strconv.FormatUint(user, 10)] = struct{}{}
-	}
-	var newForbiddenConfig definition.Forbidden
-	newForbiddenConfig.ForbiddenIP = definition.ForbiddenConfig.ForbiddenIP
-	newForbiddenConfig.ForbiddenUser = banUser
-
-	jsonFile, err := os.OpenFile("./definition/forbidden.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
-	defer jsonFile.Close()
-	if err != nil {
-		dataLayer.Serverlog.Fatalln("jsonFile os.Open err: ", err)
-		SetServerErrorResponse(c)
-		return
-	}
-
-	if byte, err := json.Marshal(&newForbiddenConfig); err != nil {
-		dataLayer.Serverlog.Fatalln("jsonFile Unmarshal err: ", err)
-		SetServerErrorResponse(c)
-	} else {
-		if _, err := jsonFile.Write(byte); err != nil {
-			dataLayer.Serverlog.Fatalln("jsonFile.Write(byte) err: ", err)
-			SetServerErrorResponse(c)
-			return
-		}
-		c.JSON(http.StatusOK, definition.SetBanUserIdsResponse{
+	code:= dataLayer.CreateBanUser(nil,req.BanUserId,req.Reason)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.AddBanUserResponse{
 			State:        definition.Success,
-			StateMessage: "设置封禁用户信息",
+			StateMessage: "封禁成功",
 		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
 	}
 }
 
-func SetBanIPs(c *gin.Context) {
-	var req definition.SetBanIPsRequest
+func CancelBanUser(c *gin.Context) {
+	var req definition.CancelBanUserRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		SetParamErrorResponse(c)
 		return
 	}
 
-	banIPs := make(map[string]struct{})
-	for _, ip := range req.BanIPList {
-		banIPs[strconv.FormatUint(ip, 10)] = struct{}{}
-	}
-	var newForbiddenConfig definition.Forbidden
-	newForbiddenConfig.ForbiddenUser = definition.ForbiddenConfig.ForbiddenUser
-	newForbiddenConfig.ForbiddenIP = banIPs
-
-	jsonFile, err := os.OpenFile("./definition/forbidden.json", os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
-	defer jsonFile.Close()
-	if err != nil {
-		dataLayer.Serverlog.Fatalln("jsonFile os.Open err: ", err)
+	code:=dataLayer.DeleteBanUser(nil,req.BanUserId)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.CancelBanUserResponse{
+			State:        definition.Success,
+			StateMessage: "解除封禁成功",
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
 		SetServerErrorResponse(c)
+	}
+
+
+}
+
+func AddBanIP(c *gin.Context) {
+	var req definition.AddBanIPRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
 		return
 	}
 
-	if byte, err := json.Marshal(&newForbiddenConfig); err != nil {
-		dataLayer.Serverlog.Fatalln("jsonFile Unmarshal err: ", err)
-		SetServerErrorResponse(c)
-	} else {
-		if _, err := jsonFile.Write(byte); err != nil {
-			dataLayer.Serverlog.Fatalln("jsonFile.Write(byte) err: ", err)
-			SetServerErrorResponse(c)
-			return
-		}
-		c.JSON(http.StatusOK, definition.SetBanIPsResponse{
+	code:= dataLayer.CreateBanIP(nil,req.BanIP,req.Reason)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.AddBanIPResponse{
 			State:        definition.Success,
-			StateMessage: "设置封禁IP信息成功",
+			StateMessage: "封禁成功",
 		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func CancelBanIp(c *gin.Context) {
+	var req definition.CancelBanIpRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code:=dataLayer.DeleteBanIP(nil,req.BanIP)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.CancelBanIpResponse{
+			State:        definition.Success,
+			StateMessage: "解除封禁成功",
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
 	}
 }
 

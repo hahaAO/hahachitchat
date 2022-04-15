@@ -35,7 +35,8 @@ func DB_conn() {
 	// 同步数据库模式
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
 		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{},
-		&definition.PostVote{}, &definition.CommentVote{}, &definition.PostStatistic{}, &definition.TopPost{})
+		&definition.PostVote{}, &definition.CommentVote{}, &definition.PostStatistic{},
+		&definition.TopPost{},&definition.ForbiddenIp{},&definition.ForbiddenUser{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
@@ -686,5 +687,26 @@ func SelectTopPost(db *gorm.DB) (definition.DBcode, []definition.TopPost) {
 		return definition.DB_ERROR, nil
 	}
 	return definition.DB_SUCCESS, topPosts
+}
 
+func SelectForbiddenIp(db *gorm.DB) (definition.DBcode, []definition.ForbiddenIp) {
+	getDB(&db)
+	var forbiddenIp []definition.ForbiddenIp
+	err := db.Model(&definition.ForbiddenIp{}).Find(&forbiddenIp).Error
+	if err != nil {
+		DBlog.Println("[SelectForbiddenIp] err: ", err)
+		return definition.DB_ERROR, nil
+	}
+	return definition.DB_SUCCESS, forbiddenIp
+}
+
+func SelectForbiddenUser(db *gorm.DB) (definition.DBcode, []definition.ForbiddenUser) {
+	getDB(&db)
+	var forbiddenUser []definition.ForbiddenUser
+	err := db.Model(&definition.ForbiddenUser{}).Find(&forbiddenUser).Error
+	if err != nil {
+		DBlog.Println("[SelectForbiddenUser] err: ", err)
+		return definition.DB_ERROR, nil
+	}
+	return definition.DB_SUCCESS, forbiddenUser
 }

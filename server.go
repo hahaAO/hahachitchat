@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	definition.ServiceStartTime=time.Now()
+	definition.ServiceStartTime = time.Now()
 	dataLayer.DB_conn()
 
 	dataLayer.Redis_open()

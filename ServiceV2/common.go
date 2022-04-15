@@ -10,7 +10,7 @@ import (
 func SetForbiddenResponse(c *gin.Context) {
 	c.JSON(http.StatusForbidden, definition.CommonResponse{
 		State:        definition.BadRequest,
-		StateMessage: "服务器出错",
+		StateMessage: "该用户被封禁",
 	})
 }
 

@@ -6,7 +6,6 @@ import (
 	"code/Hahachitchat/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 )
 
 func ForbiddenMiddleWare() gin.HandlerFunc {
@@ -26,7 +25,7 @@ func ForbiddenMiddleWare() gin.HandlerFunc {
 				return
 			}
 			if uId != nil {
-				_, ok = definition.ForbiddenConfig.ForbiddenUser[strconv.FormatUint(*uId, 10)]
+				_, ok = definition.ForbiddenConfig.ForbiddenUser[*uId]
 				if ok {
 					SetForbiddenResponse(c)
 					c.Abort()

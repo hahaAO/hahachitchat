@@ -4,6 +4,7 @@ import "time"
 
 const ImgDocPath = "./imgdoc"
 const Socket = ":15656"
+
 var ServiceStartTime time.Time
 
 type ZoneType = uint8 // 类型别名
@@ -44,7 +45,7 @@ type Post_idandhot struct {
 
 type Forbidden struct {
 	ForbiddenIP   map[string]struct{} `json:"forbidden_ip"`
-	ForbiddenUser map[string]struct{} `json:"forbidden_user"`
+	ForbiddenUser map[uint64]struct{} `json:"forbidden_user"`
 }
 
 var ForbiddenConfig Forbidden
