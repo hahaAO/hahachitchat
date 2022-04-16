@@ -667,8 +667,15 @@ func CreatePost(c *gin.Context) {
 		}
 	}
 
-	ccode, cpostId := dataLayer.CreatePostV2(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt)
+	ccode, cpostId := dataLayer.CreatePostV2(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt,false)
 	switch ccode {
+	case definition.DB_SUCCESS_APPROVAL:
+		go dataLayer.CreatePostStatistic(nil, req.Zone, imgId != "")
+		c.JSON(http.StatusAccepted, definition.CreatePostV2Response{
+			State:        definition.Success,
+			StateMessage: "帖子需要审核",
+			PostId:       cpostId,//审批帖子的id
+		})
 	case definition.DB_SUCCESS:
 		go dataLayer.CreatePostStatistic(nil, req.Zone, imgId != "")
 		c.JSON(http.StatusOK, definition.CreatePostV2Response{

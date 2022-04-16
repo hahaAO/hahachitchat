@@ -126,6 +126,13 @@ func StartService(port string) {
 	adminRoute.POST("/delete-comment", AdminDeleteCommentById)
 	adminRoute.POST("/delete-reply", AdminDeleteReplyById)
 	adminRoute.POST("/set-top-post", SetTopPost)
+	// 审批功能
+	adminRoute.POST("/set-approval-user",SetApprovalUser)
+	adminRoute.GET("/need-approval-post",GetNeedApprovalPost)
+	adminRoute.POST("/approval-post",ApprovalPost)
+	//日志功能
+
+	// 查看统计图
 	postStatisticsRoute := adminRoute.Group("/post-statistics")
 	postStatisticsRoute.GET("/line-chart", PostStatisticsLineChart)
 	postStatisticsRoute.POST("/pie-chart", PostStatisticsPieChart)

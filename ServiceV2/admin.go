@@ -154,7 +154,7 @@ func AddBanUser(c *gin.Context) {
 		return
 	}
 
-	code:= dataLayer.CreateBanUser(nil,req.BanUserId,req.Reason)
+	code := dataLayer.CreateBanUser(nil, req.BanUserId, req.Reason)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.AddBanUserResponse{
@@ -176,7 +176,7 @@ func CancelBanUser(c *gin.Context) {
 		return
 	}
 
-	code:=dataLayer.DeleteBanUser(nil,req.BanUserId)
+	code := dataLayer.DeleteBanUser(nil, req.BanUserId)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.CancelBanUserResponse{
@@ -189,7 +189,6 @@ func CancelBanUser(c *gin.Context) {
 		SetServerErrorResponse(c)
 	}
 
-
 }
 
 func AddBanIP(c *gin.Context) {
@@ -200,7 +199,7 @@ func AddBanIP(c *gin.Context) {
 		return
 	}
 
-	code:= dataLayer.CreateBanIP(nil,req.BanIP,req.Reason)
+	code := dataLayer.CreateBanIP(nil, req.BanIP, req.Reason)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.AddBanIPResponse{
@@ -222,7 +221,7 @@ func CancelBanIp(c *gin.Context) {
 		return
 	}
 
-	code:=dataLayer.DeleteBanIP(nil,req.BanIP)
+	code := dataLayer.DeleteBanIP(nil, req.BanIP)
 	switch code {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.CancelBanIpResponse{
@@ -257,6 +256,28 @@ func SilenceUser(c *gin.Context) {
 	}
 }
 
+func SetApprovalUser(c *gin.Context) {
+	var req definition.SetApprovalUserRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil || req.NeedApproval == nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code := dataLayer.UpdateApprovalUser(nil, req.UserId, *req.NeedApproval)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.SetApprovalUserResponse{
+			State:        definition.Success,
+			StateMessage: "设置审批用户成功",
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
 func SetTopPost(c *gin.Context) {
 	var req definition.SetTopPostRequest
 	err := c.ShouldBindJSON(&req)
@@ -280,6 +301,46 @@ func SetTopPost(c *gin.Context) {
 		c.JSON(http.StatusOK, definition.SetTopPostResponse{
 			State:        definition.Success,
 			StateMessage: "设置精品帖子成功",
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func GetNeedApprovalPost(c *gin.Context) {
+	code, posts := dataLayer.SelectApprovalPost(nil)
+
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.GetNeedApprovalPostResponse{
+			State:         definition.Success,
+			StateMessage:  "设置精品帖子成功",
+			ApprovalPosts: posts,
+		})
+	case definition.DB_ERROR:
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+
+}
+
+func ApprovalPost(c *gin.Context) {
+	var req definition.ApprovalPostRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code := dataLayer.ApprovalPost(nil, req.ApprovalPostId)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.ApprovalPostResponse{
+			State:        definition.Success,
+			StateMessage: "审批通过",
 		})
 	case definition.DB_ERROR:
 		SetDBErrorResponse(c)

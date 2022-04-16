@@ -75,15 +75,71 @@ func CreateUser(uNname string, uPassword string, uNickname string) (definition.D
 //	}
 //}
 
+// 建立审批帖子
+func CreateApprovalPost(db *gorm.DB, uId uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string, imgId string, someoneBeAtStr string) (definition.DBcode, uint64) {
+	getDB(&db)
+	approvalPost := definition.ApprovalPost{
+		UId:         uId,
+		PostName:    post_name,
+		PostTxt:     post_txt,
+		Zone:        zone,
+		PostTxtHtml: post_txthtml,
+		ImgId:       imgId,
+		SomeoneBeAt: someoneBeAtStr,
+	}
+	if err := db.Model(&definition.ApprovalPost{}).Create(&approvalPost).Error; err != nil {
+		DBlog.Println("[CreateApprovalPost] err1:", err)
+		return definition.DB_ERROR, 0 //其他问题,插入失败
+	}
+	return definition.DB_SUCCESS, approvalPost.PostId
+}
+
+// 并发不安全 异常不安全的
+func ApprovalPost(db *gorm.DB, approvalPostId uint64) definition.DBcode {
+	getDB(&db)
+	var approvalPost definition.ApprovalPost
+	if err := db.Model(&definition.ApprovalPost{}).Where(" post_id = ? ", approvalPostId).First(&approvalPost).Error; err != nil {
+		DBlog.Println("[ApprovalPost] err: ", err)
+		return definition.DB_ERROR
+	}
+
+	someoneBeAt, err := utils.StringToMap(approvalPost.SomeoneBeAt)
+	if err != nil {
+		DBlog.Println("[ApprovalPost] StringToMap err: ", err)
+		return definition.DB_ERROR
+	}
+	code, _ := CreatePostV2(approvalPost.UId, approvalPost.PostName, approvalPost.PostTxt, approvalPost.Zone, approvalPost.PostTxtHtml, approvalPost.ImgId, someoneBeAt, true)
+	if code == definition.DB_SUCCESS {
+		err := db.Model(&definition.ApprovalPost{}).Clauses(clause.Returning{}).Where("post_id = ?", approvalPostId).Delete(&approvalPost).Error
+		if err != nil {
+			DBlog.Println("[ApprovalPost] Delete ApprovalPost err: ", err)
+			return definition.DB_ERROR
+		}
+		return definition.DB_SUCCESS
+	} else {
+		return definition.DB_ERROR
+	}
+}
+
 // 插入post 同时创建 at
-func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string, imgId string, someoneBeAt map[uint64]string) (definition.DBcode, uint64) {
+func CreatePostV2(uId uint64, post_name string, post_txt string, zone definition.ZoneType, post_txthtml string, imgId string, someoneBeAt map[uint64]string, approval bool) (definition.DBcode, uint64) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
-		code, _ := SelectUserById(tx, uId)
+		code, user := SelectUserById(tx, uId)
 		switch code {
 		case definition.DB_NOEXIST: // 无此人id
 			return definition.DB_NOEXIST, 0
 		case definition.DB_EXIST: // 有此人id
 			someoneBeAtStr := utils.MapToString(someoneBeAt)
+
+			if user.NeedApproval && !approval { // 需要审核 且 审批未通过
+				code, postId := CreateApprovalPost(tx, uId, post_name, post_txt, zone, post_txthtml, imgId, someoneBeAtStr)
+				if code == definition.DB_SUCCESS {
+					return definition.DB_SUCCESS_APPROVAL, postId
+				} else {
+					return definition.DB_ERROR, 0
+				}
+			}
+
 			post := definition.Post{
 				UId:         uId,
 				PostName:    post_name,
@@ -651,6 +707,15 @@ func UpdateCommentVote(uId uint64, commentId uint64, vote int) definition.DBcode
 func UpdateSilenceUser(db *gorm.DB, userId uint64, disableSendMsgTime string) definition.DBcode {
 	getDB(&db)
 	err := db.Model(&definition.User{}).Where(" u_id = ? ", userId).Update("disable_send_msg_time", disableSendMsgTime).Error
+	if err != nil {
+		return definition.DB_ERROR
+	}
+	return definition.DB_SUCCESS
+}
+
+func UpdateApprovalUser(db *gorm.DB, userId uint64, needApproval bool) definition.DBcode {
+	getDB(&db)
+	err := db.Model(&definition.User{}).Where(" u_id = ? ", userId).Update("need_approval", needApproval).Error
 	if err != nil {
 		return definition.DB_ERROR
 	}

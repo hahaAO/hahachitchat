@@ -13,6 +13,7 @@ const (
 	DB_ERROR_NICKNAME_UNIQUE        = "111" // 操作失败,昵称唯一
 
 	DB_SUCCESS           DBcode = "200" // 操作成功
+	DB_SUCCESS_APPROVAL  DBcode = "300" // 操作成功,但要审批
 	DB_EXIST             DBcode = "201" // 要查询的数据存在
 	DB_NOEXIST           DBcode = "210" // 要查询的数据不存在
 	DB_NOEXIST_USER      DBcode = "211" // 用户不存在

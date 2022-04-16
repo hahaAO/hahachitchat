@@ -30,7 +30,6 @@ func LoadForbiddenConfig() {
 		}else {
 			DBlog.Println("[LoadForbiddenConfig] err")
 		}
-
 		definition.ForbiddenConfig=newConf
 
 		time.Sleep(5*time.Second)

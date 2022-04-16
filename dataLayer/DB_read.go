@@ -36,8 +36,10 @@ func DB_conn() {
 	gormDB.AutoMigrate(&definition.User{}, &definition.Post{}, &definition.Comment{},
 		&definition.Reply{}, &definition.Chat{}, &definition.UnreadMessage{}, &definition.At{},
 		&definition.PostVote{}, &definition.CommentVote{}, &definition.PostStatistic{},
-		&definition.TopPost{},&definition.ForbiddenIp{},&definition.ForbiddenUser{})
+		&definition.TopPost{}, &definition.ForbiddenIp{}, &definition.ForbiddenUser{}, &definition.ApprovalPost{})
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
+	gormDB.Migrator().CreateConstraint(&definition.ApprovalPost{}, "max_checker")
+
 
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
 }
@@ -691,22 +693,33 @@ func SelectTopPost(db *gorm.DB) (definition.DBcode, []definition.TopPost) {
 
 func SelectForbiddenIp(db *gorm.DB) (definition.DBcode, []definition.ForbiddenIp) {
 	getDB(&db)
-	var forbiddenIp []definition.ForbiddenIp
-	err := db.Model(&definition.ForbiddenIp{}).Find(&forbiddenIp).Error
+	var forbiddenIps []definition.ForbiddenIp
+	err := db.Model(&definition.ForbiddenIp{}).Find(&forbiddenIps).Error
 	if err != nil {
 		DBlog.Println("[SelectForbiddenIp] err: ", err)
 		return definition.DB_ERROR, nil
 	}
-	return definition.DB_SUCCESS, forbiddenIp
+	return definition.DB_SUCCESS, forbiddenIps
 }
 
 func SelectForbiddenUser(db *gorm.DB) (definition.DBcode, []definition.ForbiddenUser) {
 	getDB(&db)
-	var forbiddenUser []definition.ForbiddenUser
-	err := db.Model(&definition.ForbiddenUser{}).Find(&forbiddenUser).Error
+	var forbiddenUsers []definition.ForbiddenUser
+	err := db.Model(&definition.ForbiddenUser{}).Find(&forbiddenUsers).Error
 	if err != nil {
 		DBlog.Println("[SelectForbiddenUser] err: ", err)
 		return definition.DB_ERROR, nil
 	}
-	return definition.DB_SUCCESS, forbiddenUser
+	return definition.DB_SUCCESS, forbiddenUsers
+}
+
+func SelectApprovalPost(db *gorm.DB) (definition.DBcode, []definition.ApprovalPost) {
+	getDB(&db)
+	var approvalPosts []definition.ApprovalPost
+	err := db.Model(&definition.ApprovalPost{}).Find(&approvalPosts).Error
+	if err != nil {
+		DBlog.Println("[SelectApprovalPost] err: ", err)
+		return definition.DB_ERROR, nil
+	}
+	return definition.DB_SUCCESS, approvalPosts
 }

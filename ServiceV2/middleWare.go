@@ -16,6 +16,11 @@ func ForbiddenMiddleWare() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		if c.Request.URL.Path == "/login" {
+			return
+		}
+
 		session := utils.GetSession(c.Request)
 		if session == nil { // cookie 中没有 session
 			return

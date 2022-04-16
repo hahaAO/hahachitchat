@@ -542,3 +542,26 @@ type PostStatisticsBarChartResponse struct {
 	StateMessage    string        `json:"state_message"`
 	PostCountByHour map[int]int64 `json:"post_count_by_day"` // 每小时的发帖量
 }
+
+type GetNeedApprovalPostResponse struct {
+	State         int            `json:"state"`
+	StateMessage  string         `json:"state_message"`
+	ApprovalPosts []ApprovalPost `json:"approval_posts"`
+}
+
+type SetApprovalUserRequest struct {
+	UserId       uint64 `json:"user_id" binding:"required"`
+	NeedApproval *bool  `json:"need_approval" binding:"required"`
+}
+type SetApprovalUserResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
+
+type ApprovalPostRequest struct {
+	ApprovalPostId uint64 `json:"approval_post_id" binding:"required"`
+}
+type ApprovalPostResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
+}
