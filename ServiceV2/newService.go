@@ -3,9 +3,7 @@ package ServiceV2
 import (
 	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/definition"
-	"github.com/chenjiandongx/ginprom"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"os"
 )
 
@@ -36,32 +34,28 @@ func StartService(port string) {
 	ServiceInit()
 
 	r := gin.Default()
-	// use prometheus metrics exporter middleware.
-	r.Use(ginprom.PromMiddleware(ginprom.NewDefaultOpts()))
 
-	// register the `/metrices` route.
+	r.Use(HearsetMiddleWare())
 
-	r.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
+	clientRoute := r.Group("", ClientLogMiddleWare(), ForbiddenMiddleWare())
 
-	r.Use(HearsetMiddleWare(), ForbiddenMiddleWare())
+	clientRoute.GET("/", DefaultTest)
+	clientRoute.GET("/allpostid", AllPostId)
+	clientRoute.GET("/top-post", GetTopPost)
+	clientRoute.GET("/allcommentid/:post_id", AllCommentIdByPostId)
+	clientRoute.GET("/user/:u_id", GetUserById)
+	clientRoute.GET("/post/:post_id", GetPostById)
+	clientRoute.GET("/comment/:comment_id", GetCommentById)
+	clientRoute.GET("/reply/:reply_id", GetReplyById)
+	clientRoute.GET("/allposthot", AllPostHot)
+	clientRoute.GET("/getimg/:img_id", GetImg)
+	clientRoute.GET("/id-by-name/:u_nickname", GetUidByUserNickname)
 
-	r.GET("/", DefaultTest)
-	r.GET("/allpostid", AllPostId)
-	r.GET("/top-post", GetTopPost)
-	r.GET("/allcommentid/:post_id", AllCommentIdByPostId)
-	r.GET("/user/:u_id", GetUserById)
-	r.GET("/post/:post_id", GetPostById)
-	r.GET("/comment/:comment_id", GetCommentById)
-	r.GET("/reply/:reply_id", GetReplyById)
-	r.GET("/allposthot", AllPostHot)
-	r.GET("/getimg/:img_id", GetImg)
-	r.GET("/id-by-name/:u_nickname", GetUidByUserNickname)
-
-	r.POST("/register", Register)
-	r.POST("/login", Login)
+	clientRoute.POST("/register", Register)
+	clientRoute.POST("/login", Login)
 
 	//可能需要登录态的操作 个人资料(根据用户隐私设置判断是否展示)
-	profileRoute := r.Group("/profile", SetSessionMiddleWare())
+	profileRoute := clientRoute.Group("/profile", SetSessionMiddleWare())
 	profileRoute.GET("/user-saved/:u_id", GetUserSavedPost)
 	profileRoute.GET("/subscriptions/:u_id", GetSubscriptions)
 	profileRoute.GET("/allpostid-by-uid/:u_id", GetUserAllPostId)
@@ -69,7 +63,7 @@ func StartService(port string) {
 	profileRoute.GET("/allreplyid-by-uid/:u_id", GetUserAllReplyId)
 
 	// 需要登录态的操作
-	needSessionRoute := r.Group("", AuthMiddleWare())
+	needSessionRoute := clientRoute.Group("", AuthMiddleWare())
 
 	needSessionRoute.GET("/user_state", GetUserState)
 	needSessionRoute.GET("/ws-connect", WebSocketConnect)
@@ -100,13 +94,13 @@ func StartService(port string) {
 	MessageRoute.POST("/ignore", IgnoreMessages)
 
 	// ------------V2--------------
-	routeV2 := r.Group("/v2")
+	routeV2 := clientRoute.Group("/v2")
 	routeV2.GET("/zone/:zone", AllPostByZone)
 	routeV2.GET("/comment/:comment_id", GetCommentByIdV2)
 	routeV2.POST("/posts", BatchQueryPost)
 
 	// 点赞功能
-	voteRoute := r.Group("/vote")
+	voteRoute := clientRoute.Group("/vote")
 	voteRoute.GET("/post/:post_id", GetPostVote)
 	voteRoute.GET("/comment/:comment_id", GetCommentVote)
 	voteRoute.POST("/post", AuthMiddleWare(), VotePost)
@@ -117,7 +111,7 @@ func StartService(port string) {
 	adminRoute.GET("/users", GetAllUser)
 	adminRoute.GET("/ban-users", GetBanUser)
 	adminRoute.POST("/add-ban-users", AddBanUser)
-	adminRoute.POST("/cancel-ban-users",CancelBanUser)
+	adminRoute.POST("/cancel-ban-users", CancelBanUser)
 	adminRoute.GET("/ban-ips", GetBanIPs)
 	adminRoute.POST("/add-ban-ips", AddBanIP)
 	adminRoute.POST("/cancel-ban-ip", CancelBanIp)
@@ -127,11 +121,11 @@ func StartService(port string) {
 	adminRoute.POST("/delete-reply", AdminDeleteReplyById)
 	adminRoute.POST("/set-top-post", SetTopPost)
 	// 审批功能
-	adminRoute.POST("/set-approval-user",SetApprovalUser)
-	adminRoute.GET("/need-approval-post",GetNeedApprovalPost)
-	adminRoute.POST("/approval-post",ApprovalPost)
+	adminRoute.POST("/set-approval-user", SetApprovalUser)
+	adminRoute.GET("/need-approval-post", GetNeedApprovalPost)
+	adminRoute.POST("/approval-post", ApprovalPost)
 	//日志功能
-
+	adminRoute.GET("/log-ws-connect", LogWebSocketConnect)
 	// 查看统计图
 	postStatisticsRoute := adminRoute.Group("/post-statistics")
 	postStatisticsRoute.GET("/line-chart", PostStatisticsLineChart)
