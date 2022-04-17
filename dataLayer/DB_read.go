@@ -40,7 +40,6 @@ func DB_conn() {
 	gormDB.Migrator().CreateConstraint(&definition.Post{}, "max_checker")
 	gormDB.Migrator().CreateConstraint(&definition.ApprovalPost{}, "max_checker")
 
-
 	DBlog.Printf("Successfully connect to postgres %s!\n", dbname)
 }
 
@@ -67,7 +66,7 @@ func runTX(a func(tx *gorm.DB) (definition.DBcode, interface{})) (definition.DBc
 	}
 
 	code, content := a(tx)
-	if code != definition.DB_SUCCESS {
+	if code != definition.DB_SUCCESS && code != definition.DB_SUCCESS_APPROVAL {
 		tx.Rollback()
 		return code, content
 	}

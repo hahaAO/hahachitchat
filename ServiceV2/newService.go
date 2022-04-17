@@ -25,6 +25,8 @@ func ServiceInit() {
 	definition.DeleteComentsChan = make(chan uint64, 10) //初始化创建待删除评论通知消息队列
 	go dataLayer.DeleteCommentsConsumer()                //启动一个协程去订阅id删除评论
 
+	InitClientLog()
+
 	go dataLayer.RunNotificationHub() // 在线消息通知中心
 
 	go dataLayer.LoadForbiddenConfig() // 加载封禁名单

@@ -316,7 +316,7 @@ func GetNeedApprovalPost(c *gin.Context) {
 	case definition.DB_SUCCESS:
 		c.JSON(http.StatusOK, definition.GetNeedApprovalPostResponse{
 			State:         definition.Success,
-			StateMessage:  "设置精品帖子成功",
+			StateMessage:  "获取待审核帖子成功",
 			ApprovalPosts: posts,
 		})
 	case definition.DB_ERROR:

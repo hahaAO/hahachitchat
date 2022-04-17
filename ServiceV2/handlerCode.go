@@ -672,7 +672,7 @@ func CreatePost(c *gin.Context) {
 	case definition.DB_SUCCESS_APPROVAL:
 		go dataLayer.CreatePostStatistic(nil, req.Zone, imgId != "")
 		c.JSON(http.StatusAccepted, definition.CreatePostV2Response{
-			State:        definition.Success,
+			State:        definition.SuccessAccepted,
 			StateMessage: "帖子需要审核",
 			PostId:       cpostId,//审批帖子的id
 		})
