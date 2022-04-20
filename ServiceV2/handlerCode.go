@@ -516,7 +516,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	ccode, cuser := dataLayer.CreateUser(req.UName, req.UPassword, req.UNickname)
+	ccode, cuser := dataLayer.CreateUser(req.UName, req.UPassword, req.UNickname, req.PasswordQuestion, req.PasswordAnswer)
 	switch ccode {
 	case definition.DB_ERROR_UNAME_UNIQUE: //已注册
 		c.JSON(http.StatusOK, definition.RegisterResponse{
@@ -584,6 +584,66 @@ func Login(c *gin.Context) {
 			StateMessage: "该用户未注册,无法登录",
 		})
 	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+}
+
+func PasswordQuestion(c *gin.Context) {
+	uName := c.Param("u_name")
+	if uName == "" {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code, user := dataLayer.SelectUserByname(nil, uName)
+	switch code {
+	case definition.DB_EXIST:
+		c.JSON(http.StatusOK, definition.PasswordQuestionResponse{
+			State:            definition.Success,
+			StateMessage:     "密保问题如下",
+			PasswordQuestion: user.PasswordQuestion,
+		})
+	case definition.DB_NOEXIST:
+		c.JSON(http.StatusOK, definition.PasswordQuestionResponse{
+			State:        definition.BadRequest,
+			StateMessage: "没有该用户",
+		})
+	case definition.DB_ERROR: // 其他问题
+		SetDBErrorResponse(c)
+	default:
+		SetServerErrorResponse(c)
+	}
+
+}
+
+func ResetPassword(c *gin.Context) {
+	var req definition.ResetPasswordRequest
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		SetParamErrorResponse(c)
+		return
+	}
+
+	code := dataLayer.UpdatePassword(req.UName, req.NewPassword, req.PasswordAnswer)
+	switch code {
+	case definition.DB_SUCCESS:
+		c.JSON(http.StatusOK, definition.ResetPasswordResponse{
+			State:        definition.Success,
+			StateMessage: "修改密码成功",
+		})
+	case definition.DB_ERROR_PARAM:
+		c.JSON(http.StatusOK, definition.ResetPasswordResponse{
+			State:        definition.BadRequest,
+			StateMessage: "密保答案不对",
+		})
+	case definition.DB_NOEXIST_USER:
+		c.JSON(http.StatusOK, definition.ResetPasswordResponse{
+			State:        definition.BadRequest,
+			StateMessage: "没有该用户",
+		})
+	case definition.DB_ERROR:
 		SetDBErrorResponse(c)
 	default:
 		SetServerErrorResponse(c)
@@ -667,14 +727,14 @@ func CreatePost(c *gin.Context) {
 		}
 	}
 
-	ccode, cpostId := dataLayer.CreatePostV2(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt,false)
+	ccode, cpostId := dataLayer.CreatePostV2(uId, req.PostName, req.PostTxt, req.Zone, req.PostTxtHtml, imgId, req.SomeoneBeAt, false)
 	switch ccode {
 	case definition.DB_SUCCESS_APPROVAL:
 		go dataLayer.CreatePostStatistic(nil, req.Zone, imgId != "")
 		c.JSON(http.StatusAccepted, definition.CreatePostV2Response{
 			State:        definition.SuccessAccepted,
 			StateMessage: "帖子需要审核",
-			PostId:       cpostId,//审批帖子的id
+			PostId:       cpostId, //审批帖子的id
 		})
 	case definition.DB_SUCCESS:
 		go dataLayer.CreatePostStatistic(nil, req.Zone, imgId != "")
@@ -1207,6 +1267,7 @@ func UploadImg(c *gin.Context) {
 	}
 
 }
+
 func SavePost(c *gin.Context) {
 	userId, exists := c.Get("u_id")
 	uId, ok := userId.(uint64)

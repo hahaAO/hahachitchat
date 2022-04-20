@@ -55,6 +55,8 @@ func StartService(port string) {
 
 	clientRoute.POST("/register", Register)
 	clientRoute.POST("/login", Login)
+	clientRoute.POST("/passwordQuestion/:u_name",PasswordQuestion)
+	clientRoute.POST("/reset-password",ResetPassword)
 
 	//可能需要登录态的操作 个人资料(根据用户隐私设置判断是否展示)
 	profileRoute := clientRoute.Group("/profile", SetSessionMiddleWare())

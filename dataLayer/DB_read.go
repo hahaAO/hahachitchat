@@ -17,6 +17,7 @@ const (
 	user     = "postgres"
 	password = "vgdvgd111"
 	dbname   = "hahadb"
+	TimeZone = "PRC"
 )
 
 var gormDB *gorm.DB
@@ -24,8 +25,8 @@ var gormDB *gorm.DB
 //连接一个数据库，并测试连接
 func DB_conn() {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
+		"password=%s dbname=%s sslmode=disable TimeZone=%s",
+		host, port, user, password, dbname, TimeZone)
 	var err error
 	gormDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -635,7 +636,7 @@ func PostEverydayCount(db *gorm.DB) (definition.DBcode, map[string]int64) {
 	// 从 2022 年 4 月 1 日起，每次查 1 天
 	res := make(map[string]int64)
 	str := "2022-04-01"
-	startTime, _ := time.Parse("2006-01-02", str)
+	startTime, _ := time.ParseInLocation("2006-01-02", str, time.Local)
 	endTime := startTime.Add(24 * 60 * 60 * time.Second)
 
 	for {
@@ -664,7 +665,6 @@ func PostEveryHourCount(db *gorm.DB, startTime time.Time) (definition.DBcode, ma
 	res := make(map[int]int64)
 
 	for i := 0; i < 24; i++ {
-		startTime = startTime.Add(time.Duration(i) * time.Hour)
 		endTime := startTime.Add(time.Hour)
 
 		var n int64
@@ -674,6 +674,7 @@ func PostEveryHourCount(db *gorm.DB, startTime time.Time) (definition.DBcode, ma
 		} else {
 			res[i] = n
 		}
+		startTime = startTime.Add(time.Hour)
 	}
 
 	return definition.DB_SUCCESS, res

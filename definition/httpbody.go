@@ -11,9 +11,11 @@ type CommonResponse struct {
 }
 
 type RegisterRequest struct {
-	UName     string `json:"u_name" binding:"required"`
-	UPassword string `json:"u_password" binding:"required"`
-	UNickname string `json:"u_nickname" binding:"required"`
+	UName            string `json:"u_name" binding:"required"`
+	UPassword        string `json:"u_password" binding:"required"`
+	UNickname        string `json:"u_nickname" binding:"required"`
+	PasswordQuestion string `json:"password_question" binding:"required"`
+	PasswordAnswer   string `json:"password_answer" binding:"required"`
 }
 type RegisterResponse struct {
 	State        int    `json:"state"`
@@ -29,6 +31,22 @@ type LoginResponse struct {
 	StateMessage string `json:"state_message"`
 	UNickname    string `json:"u_nickname"`
 	UId          uint64 `json:"u_id"`
+}
+
+type PasswordQuestionResponse struct {
+	State            int    `json:"state"`
+	StateMessage     string `json:"state_message"`
+	PasswordQuestion string `json:"password_question"`
+}
+
+type ResetPasswordRequest struct {
+	UName            string `json:"u_name" binding:"required"`
+	NewPassword string `json:"u_password" binding:"required"`
+	PasswordAnswer   string `json:"password_answer" binding:"required"`
+}
+type ResetPasswordResponse struct {
+	State        int    `json:"state"`
+	StateMessage string `json:"state_message"`
 }
 
 type UploadImgRequest struct {

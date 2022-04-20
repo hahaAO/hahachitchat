@@ -3,7 +3,6 @@ package ServiceV2
 import (
 	"code/Hahachitchat/dataLayer"
 	"code/Hahachitchat/definition"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"time"
@@ -73,9 +72,6 @@ func PostStatisticsPieChart(c *gin.Context) {
 	startTime := time.UnixMilli(req.StartTimeSTP)
 	endTime := time.UnixMilli(req.EndTimeSTP)
 
-	fmt.Println(startTime)
-	fmt.Println(endTime)
-
 	if startTime.After(endTime) {
 		SetParamErrorResponse(c)
 		return
@@ -124,7 +120,7 @@ func PostStatisticsBarChart(c *gin.Context) {
 		return
 	}
 
-	startTime, err := time.Parse("2006-01-02", req.Date)
+	startTime, err := time.ParseInLocation("2006-01-02", req.Date,time.Local)
 	if err != nil {
 		SetParamErrorResponse(c)
 		return

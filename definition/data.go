@@ -18,7 +18,9 @@ type User struct {
 	//PrivacySetting 128 64 32 16 8关注的人 4收藏帖子 2评论和回复记录 1发帖记录
 	PrivacySetting     byte   `gorm:"column:privacy_setting; default:0" json:"privacy_setting"`              //用户隐私设置，为8位byte
 	DisableSendMsgTime string `gorm:"column:disable_send_msg_time; default:''" json:"disable_send_msg_time"` // 用户禁言到什么时候
-	NeedApproval       bool   `gorm:"column:need_approval; default:false" json:"need_approval"`                //用户的发帖是否需要审批
+	NeedApproval       bool   `gorm:"column:need_approval; default:false" json:"need_approval"`              //用户的发帖是否需要审批
+	PasswordQuestion   string `gorm:"column:password_question" json:"password_question"`
+	PasswordAnswer     string `gorm:"column:password_answer" json:"password_answer"`
 }
 
 func (User) TableName() string {
@@ -143,7 +145,7 @@ type PostStatistic struct {
 	ID       uint64    `gorm:"column:id; primaryKey"` //唯一主键
 	Zone     ZoneType  `gorm:"column:zone; index; not null" json:"zone"`
 	PostTime time.Time `gorm:"column:post_time; index; autoCreateTime"`
-	HaveImg  bool      `gorm:"column:have_img;"`
+	HaveImg  bool      `gorm:"column:have_img; default:false"`
 }
 
 func (PostStatistic) TableName() string {

@@ -9,7 +9,7 @@ import (
 )
 
 //根据name password Unickname插入user
-func CreateUser(uNname string, uPassword string, uNickname string) (definition.DBcode, *definition.User) {
+func CreateUser(uNname string, uPassword string, uNickname string, passwordQuestion string, passwordAnswer string) (definition.DBcode, *definition.User) {
 	code, content := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
 		if code, _ := SelectUserByname(tx, uNname); code == definition.DB_EXIST {
 			return definition.DB_ERROR_UNAME_UNIQUE, nil
@@ -20,9 +20,11 @@ func CreateUser(uNname string, uPassword string, uNickname string) (definition.D
 		}
 
 		user := definition.User{
-			UName:     uNname,
-			UPassword: utils.Md5(uPassword), // 密码md5加密后存储
-			UNickname: uNickname,
+			UName:            uNname,
+			UPassword:        utils.Md5(uPassword), // 密码md5加密后存储
+			UNickname:        uNickname,
+			PasswordQuestion: passwordQuestion,
+			PasswordAnswer:   passwordAnswer,
 		}
 		err := tx.Model(&definition.User{}).Create(&user).Error
 		if err != nil {
@@ -39,6 +41,32 @@ func CreateUser(uNname string, uPassword string, uNickname string) (definition.D
 	} else {
 		return code, nil
 	}
+}
+
+func UpdatePassword(uName string, newPassword string, passwordAnswer string) definition.DBcode {
+	code, _ := runTX(func(tx *gorm.DB) (definition.DBcode, interface{}) {
+		code, user := SelectUserByname(tx, uName)
+		switch code {
+		case definition.DB_EXIST:
+			if user.PasswordAnswer == passwordAnswer {
+				user.UPassword = utils.Md5(newPassword)
+				err := tx.Save(&user).Error
+				if err != nil {
+					DBlog.Println("[UpdatePassword] err: ", err)
+					return definition.DB_ERROR, nil
+				} else {
+					return definition.DB_SUCCESS, nil
+				}
+			} else {
+				return definition.DB_ERROR_PARAM, nil // 密保答案不对
+			}
+		case definition.DB_NOEXIST:
+			return definition.DB_NOEXIST_USER, nil // 查无此人
+		default:
+			return definition.DB_ERROR, nil
+		}
+	})
+	return code
 }
 
 ////根据uid post_name post_txt post_txthtml插入post
@@ -257,12 +285,16 @@ func CreateReply(commentId uint64, uId uint64, replyTxt string, target uint64, s
 		var targetUid uint64
 
 		if target == 0 { // 直接回复层主
-			scode3 = definition.DB_EXIST
-			targetUid = comment.UId
+			if scode2 == definition.DB_EXIST && comment != nil { // 层主存在
+				scode3 = definition.DB_EXIST
+				targetUid = comment.UId
+			}
 		} else {
 			var targetReply *definition.Reply
 			scode3, targetReply = SelectReplyById(tx, target)
-			targetUid = targetReply.UId
+			if targetReply != nil {
+				targetUid = targetReply.UId
+			}
 		}
 		if scode == definition.DB_EXIST && scode2 == definition.DB_EXIST && scode3 == definition.DB_EXIST { // 评论和用户和回复目标都存在
 			someoneBeAtStr := utils.MapToString(someoneBeAt)

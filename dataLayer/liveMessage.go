@@ -56,7 +56,7 @@ func RunNotificationHub() {
 				for range tick {
 					select {
 					case <-stop:
-						break
+						return
 					default:
 						Ping(register.uId, register.wsConn)
 					}
