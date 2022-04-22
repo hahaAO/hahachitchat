@@ -1749,6 +1749,7 @@ func GetUserState(c *gin.Context) {
 			State:               definition.Success,
 			StateMessage:        "查询用户状态成功",
 			MyUserId:            myUid,
+			MyUName:             user.UName,
 			DisableSendMsgTime:  user.DisableSendMsgTime,
 			UnreadMessageNumber: unreadCommentNumber + unreadReplyNumber + unreadChatNumber + unreadAtNumber,
 			UnreadCommentNumber: unreadCommentNumber,

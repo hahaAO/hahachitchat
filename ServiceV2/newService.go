@@ -25,7 +25,7 @@ func ServiceInit() {
 	definition.DeleteComentsChan = make(chan uint64, 10) //初始化创建待删除评论通知消息队列
 	go dataLayer.DeleteCommentsConsumer()                //启动一个协程去订阅id删除评论
 
-	InitClientLog()
+	InitClientLog() // 初始化日志通道
 
 	go dataLayer.RunNotificationHub() // 在线消息通知中心
 
@@ -55,7 +55,7 @@ func StartService(port string) {
 
 	clientRoute.POST("/register", Register)
 	clientRoute.POST("/login", Login)
-	clientRoute.POST("/passwordQuestion/:u_name",PasswordQuestion)
+	clientRoute.GET("/password-question/:u_name",PasswordQuestion)
 	clientRoute.POST("/reset-password",ResetPassword)
 
 	//可能需要登录态的操作 个人资料(根据用户隐私设置判断是否展示)

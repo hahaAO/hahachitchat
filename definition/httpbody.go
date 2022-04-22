@@ -40,9 +40,9 @@ type PasswordQuestionResponse struct {
 }
 
 type ResetPasswordRequest struct {
-	UName            string `json:"u_name" binding:"required"`
-	NewPassword string `json:"u_password" binding:"required"`
-	PasswordAnswer   string `json:"password_answer" binding:"required"`
+	UName          string `json:"u_name" binding:"required"`
+	NewPassword    string `json:"u_password" binding:"required"`
+	PasswordAnswer string `json:"password_answer" binding:"required"`
 }
 type ResetPasswordResponse struct {
 	State        int    `json:"state"`
@@ -340,6 +340,7 @@ type GetUserStateResponse struct {
 	State               int    `json:"state"`
 	StateMessage        string `json:"state_message"`
 	MyUserId            uint64 `json:"my_user_id"`
+	MyUName             string `json:"my_u_name"`
 	DisableSendMsgTime  string `json:"disable_send_msg_time"`
 	UnreadMessageNumber uint64 `json:"unread_message_number"`
 	UnreadCommentNumber uint64 `json:"unread_comment_number"`
