@@ -128,7 +128,7 @@ func StartService(port string) {
 	adminRoute.POST("/set-approval-user", SetApprovalUser)
 	adminRoute.GET("/need-approval-post", GetNeedApprovalPost)
 	adminRoute.POST("/approval-post", ApprovalPost)
-	//日志功能
+	// 日志功能
 	adminRoute.GET("/log-ws-connect", LogWebSocketConnect)
 	// 查看统计图
 	postStatisticsRoute := adminRoute.Group("/post-statistics")

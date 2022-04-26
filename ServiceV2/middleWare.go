@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 func ForbiddenMiddleWare() gin.HandlerFunc {
@@ -115,9 +116,10 @@ func ClientLogMiddleWare() gin.HandlerFunc {
 				OperateName:    operateName,
 				HttpStatusCode: c.Writer.Status(),
 				ResponseMessage: definition.ResponseMessage{
-					State:        responseMessage.State,
+					StateCode:    responseMessage.State,
 					StateMessage: responseMessage.StateMessage,
 				},
+				OperateTime: time.Now().Format("2006-01-02 15:04:05"),
 			}
 
 			userId, exists := c.Get("u_id")
@@ -131,8 +133,8 @@ func ClientLogMiddleWare() gin.HandlerFunc {
 			default: // 阻塞时先消费 50 个再写入
 				for i := 0; i < 50; i++ {
 					select {
-						case <-definition.ClientLogChan:
-						default: // 防止消费阻塞
+					case <-definition.ClientLogChan:
+					default: // 防止消费阻塞
 					}
 				}
 				definition.ClientLogChan <- string(b)

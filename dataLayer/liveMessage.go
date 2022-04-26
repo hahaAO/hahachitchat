@@ -22,12 +22,12 @@ type notification struct {
 }
 
 type notificationHub struct {
-	registerChan     chan registrant
-	unregisterChan   chan registrant
-	pingChan         chan registrant
-	notificationChan chan notification
+	registerChan     chan registrant // 注册消息队列
+	unregisterChan   chan registrant // 登出消息队列
+	pingChan         chan registrant // Ping消息队列
+	notificationChan chan notification // 通知消息队列
 
-	register map[uint64][]*websocket.Conn
+	register map[uint64][]*websocket.Conn // u_id与其对应的连接数组
 }
 
 var hub notificationHub
